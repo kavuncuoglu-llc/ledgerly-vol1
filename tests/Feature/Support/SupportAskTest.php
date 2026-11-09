@@ -35,6 +35,9 @@ class SupportAskTest extends TestCase
         $response->assertOk()->assertExactJson([
             'answer' => 'A late fee is an extra charge.',
             'truncated' => false,
+            'rounds' => 1,
+            'hit_cap' => false,
+            'pending' => [],
         ]);
         Http::assertSent(fn (Request $request): bool => $request['messages'] === SupportPrompt::messages('What is a late fee?')
             && $request['max_tokens'] === 400

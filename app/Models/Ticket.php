@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'status',
     'received_at',
     'resolved_at',
+    'idempotency_key',
+    'source',
 ])]
 class Ticket extends Model
 {
@@ -32,6 +34,15 @@ class Ticket extends Model
             'received_at' => 'datetime',
             'resolved_at' => 'datetime',
         ];
+    }
+
+    public static function nextNumber(): string
+    {
+        $highest = (int) static::query()
+            ->selectRaw('max(cast(substr(number, 3) as integer)) as highest')
+            ->value('highest');
+
+        return 'T-'.($highest + 1);
     }
 
     public function customer(): BelongsTo

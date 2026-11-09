@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class SupportPromptTest extends TestCase
 {
-    private const SYSTEM_TEXT_HASH = 'b978364b844c4be7eeba7eb49b313b72';
+    private const SYSTEM_TEXT_HASH = '2e81a8e161f68f89a2f9b42913c7bbb7';
 
     public function test_system_fits_the_token_budget(): void
     {
@@ -28,9 +28,9 @@ class SupportPromptTest extends TestCase
         );
     }
 
-    public function test_version_is_the_second_revision_of_the_chapter_nine_prompt(): void
+    public function test_version_is_the_third_revision_which_adds_the_chapter_eleven_tool_rules(): void
     {
-        $this->assertSame('2026-11-01.2', SupportPrompt::VERSION);
+        $this->assertSame('2026-11-09.3', SupportPrompt::VERSION);
     }
 
     public function test_messages_match_the_stored_snapshot(): void

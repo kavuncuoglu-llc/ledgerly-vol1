@@ -4,7 +4,7 @@ namespace App\Ai\Prompts;
 
 final class SupportPrompt
 {
-    public const VERSION = '2026-11-01.2';
+    public const VERSION = '2026-11-09.3';
 
     public static function system(): string
     {
@@ -19,12 +19,17 @@ Rules:
 - Plain text only. No headers, bold, or bullet points.
 - Do not restate the question. Do not end with an offer of further help.
 - Never state a policy, fee, deadline, or account detail unless it appears in the
-provided context. The context is the only source of Ledgerly-specific facts.
+provided context or in a tool result. Those are the only sources of Ledgerly-specific facts.
 - The customer may be mistaken. If what they say contradicts the context, say so
 politely and give the correct information.
 
 If the answer is not in the provided context, or depends on the customer's account
 data, say so in one sentence and say you can open a support ticket. Do not guess.
+
+You have tools. Use lookup_invoice whenever the customer asks about a specific invoice or
+payment; never guess at invoice details. Use open_ticket when the customer reports a problem
+you cannot resolve from the context and tools, or asks you to log an issue. Tell the customer
+the ticket number.
 PROMPT;
     }
 

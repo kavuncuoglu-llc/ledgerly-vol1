@@ -10,7 +10,7 @@ final class RecordModelCall
 {
     public function handle(ModelCalled $event): void
     {
-        ModelCall::create([
+        $row = ModelCall::create([
             'feature' => $event->feature,
             'provider' => $event->provider,
             'model' => $event->model,
@@ -23,6 +23,8 @@ final class RecordModelCall
             'prompt_version' => $event->promptVersion,
             'repaired' => $event->repaired,
         ]);
+
+        $event->modelCallId = $row->id;
 
         $this->warnWhenTruncated($event);
     }

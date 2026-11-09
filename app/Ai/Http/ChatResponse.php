@@ -14,7 +14,22 @@ final readonly class ChatResponse
         public string $finishReason,
         public Usage $usage,
         public array $raw,
+        public ?int $modelCallId = null,
     ) {}
+
+    public function withModelCallId(?int $modelCallId): self
+    {
+        return new self(
+            id: $this->id,
+            model: $this->model,
+            content: $this->content,
+            toolCalls: $this->toolCalls,
+            finishReason: $this->finishReason,
+            usage: $this->usage,
+            raw: $this->raw,
+            modelCallId: $modelCallId,
+        );
+    }
 
     public static function fromArray(array $body): self
     {

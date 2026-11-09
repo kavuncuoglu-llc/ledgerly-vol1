@@ -6,6 +6,7 @@ use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\StreamTruncated;
 use App\Ai\Exceptions\UnknownSamplingProfile;
 use App\Ai\Http\AiHttpClient;
+use App\Ai\Http\ToolCallStarted;
 use Generator;
 use Illuminate\Console\Command;
 
@@ -53,7 +54,7 @@ class AiStream extends Command
     private function printStream(Generator $stream): int
     {
         foreach ($stream as $delta) {
-            $this->output->write($delta);
+            $this->printDelta($delta);
         }
 
         $final = $stream->getReturn();
@@ -62,5 +63,16 @@ class AiStream extends Command
         $this->line("[{$final->finishReason} · in {$final->usage->promptTokens} out {$final->usage->completionTokens}]");
 
         return Command::SUCCESS;
+    }
+
+    private function printDelta(string|ToolCallStarted $delta): void
+    {
+        if ($delta instanceof ToolCallStarted) {
+            $this->line("[calling {$delta->name}...]");
+
+            return;
+        }
+
+        $this->output->write($delta);
     }
 }

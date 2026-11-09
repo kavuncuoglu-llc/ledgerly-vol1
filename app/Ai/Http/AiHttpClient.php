@@ -34,7 +34,7 @@ final class AiHttpClient
 
         $chat = ChatResponse::fromArray($response->json());
 
-        ModelCalled::dispatch(
+        $event = new ModelCalled(
             $feature,
             $this->config['provider'],
             $chat->model,
@@ -45,7 +45,9 @@ final class AiHttpClient
             repaired: $repaired,
         );
 
-        return $chat;
+        event($event);
+
+        return $chat->withModelCallId($event->modelCallId);
     }
 
     public function stream(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null): Generator
@@ -77,6 +79,10 @@ final class AiHttpClient
                 }
 
                 $delta = $accumulator->absorb($this->decodeChunk($payload));
+
+                foreach ($accumulator->drainStartedToolCalls() as $toolCallStarted) {
+                    yield $toolCallStarted;
+                }
 
                 if ($delta === '') {
                     continue;

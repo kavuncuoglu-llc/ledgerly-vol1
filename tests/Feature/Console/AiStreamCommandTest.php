@@ -70,6 +70,20 @@ class AiStreamCommandTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_handle_prints_a_marker_when_the_model_starts_a_tool_call(): void
+    {
+        $call = ['index' => 0, 'id' => 'call_1', 'function' => ['name' => 'lookup_invoice', 'arguments' => '{}']];
+        $body = 'data: '.json_encode(['id' => 'c', 'model' => 'm', 'choices' => [['index' => 0, 'delta' => ['tool_calls' => [$call]], 'finish_reason' => null]]])."\n\n"
+            .'data: '.json_encode(['id' => 'c', 'model' => 'm', 'choices' => [['index' => 0, 'delta' => [], 'finish_reason' => 'tool_calls']], 'usage' => ['prompt_tokens' => 5, 'completion_tokens' => 3]])."\n\n"
+            ."data: [DONE]\n\n";
+        Http::fake(['*' => Http::response($body)]);
+
+        $this->artisan('ai:stream', ['prompt' => 'Invoice 4471?'])
+            ->expectsOutputToContain('[calling lookup_invoice...]')
+            ->expectsOutputToContain('[tool_calls')
+            ->assertSuccessful();
+    }
+
     private function stream(array $deltas, bool $done): string
     {
         $lines = array_map(

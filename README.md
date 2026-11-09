@@ -54,12 +54,20 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Console/Commands/AiSample.php` | `php artisan ai:sample`: sends a prompt with explicit sampling parameters and prints completion, finish reason, and token counts |
 | `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
 | `app/Ai/Http` | `AiHttpClient` (`chat()`, the `stream()` generator, and the retrying `post()` that `Embedder` also uses), `ChatResponse`, `Usage`, `RetryPolicy` (3 attempts, exponential backoff with jitter, `Retry-After` honored), and `StreamAccumulator`. Every `chat()` and `stream()` call dispatches `ModelCalled`, so it lands in `model_calls` |
-| `app/Ai/Support` | `SupportAssistant` (the first reply, no retrieval or tools), `ClassifyTicket` (returns a `TicketCategory` through `StructuredClient`), and `TicketSamples` (reads the labeled sample file) |
-| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v2), `TicketClassifyPrompt`, and `TicketExtractPrompt`. The version is logged in `model_calls.prompt_version` |
+| `app/Ai/Support` | `SupportAssistant` (answers through `ToolRunner`; no retrieval yet), `ClassifyTicket` (returns a `TicketCategory` through `StructuredClient`), and `TicketSamples` (reads the labeled sample file) |
+| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v3), `TicketClassifyPrompt`, and `TicketExtractPrompt`. The version is logged in `model_calls.prompt_version` |
 | `app/Console/Commands/TicketClassify.php`, `storage/samples/tickets.json` | `php artisan ticket:classify`: classifies the twenty labeled sample messages and reports agreement and misses |
 | `app/Events/TicketReceived.php`, `app/Ai/Listeners/ClassifyReceivedTicket.php` | Classifies a received ticket and stores its category (nothing dispatches the event yet) |
 | `app/Http/Controllers/LoginController.php` | `POST /login` (JSON): session login so the `curl -b cookies.txt` examples work |
 | `app/Http/Controllers/SupportController.php`, `app/Http/Requests/AskRequest.php` | `POST /support/ask` (authenticated, `throttle:ai`): `{"question": "..."}` in, `{"answer": "...", "truncated": false}` out |
+| `app/Ai/Tools` | The tool layer: `Tool` interface, `ToolKind` (read, low-risk write, high-risk write), `ToolContext` (the authenticated user, never model-supplied), `ToolResult`, `ToolRegistry` (emits the `tools` array, dispatches by name), `ToolRunner` (the capped five-round loop, argument validation, gate, audit), `ToolGate` and `GateDecision`, `ToolApprovals` (approve or decline a paused call and resume the run) |
+| `app/Ai/Tools/LookupInvoice`, `ListInvoices`, `OpenTicket` | The three native tools and their argument DTOs. Each query is scoped to `ToolContext::customer()`; `lookup_invoice` and `open_ticket` normalize `4471`, `#4471` and `INV-4471` to the stored `INV-4471` |
+| `app/Ai/Tools/Mcp` | MCP as a consumer: `McpToolSource` merges tools from `config('ai.mcp_servers')` into the registry (names are prefixed `server_`, undeclared tools need approval), `McpClient` over the `laravel/mcp` client |
+| `app/Mcp`, `routes/ai.php` | MCP as a server: `Servers/Ledgerly` serves the registry's native tools through `McpToolAdapter`, help articles and a customer's invoices as resources, and `SupportPrompt` and `TicketClassifyPrompt` as prompts. HTTP at `POST /mcp/ledgerly` behind Sanctum bearer tokens; stdio via `php artisan mcp:start ledgerly` |
+| `app/Console/Commands/McpToken.php` | `php artisan ledgerly:mcp-token <email> <name>` prints a Sanctum token for an MCP client |
+| `app/Http/Controllers/ToolApprovalController.php` | `GET /support/approvals/{id}`, `POST /support/approve/{id}`, `POST /support/decline/{id}` (owner only) |
+| `app/Models/ToolCall.php`, `PendingToolCall.php` | The `tool_calls` audit log and the `pending_tool_calls` approval queue |
+| `database/migrations/2026_01_05_*` to `2026_01_08_*` | `tool_calls`, `pending_tool_calls`, `tickets.idempotency_key` and `tickets.source`, `personal_access_tokens` |
 | `app/Console/Commands/AiStream.php` | `php artisan ai:stream "<prompt>"`: prints the reply token by token, then `[finish_reason · in N out N]`; warns when the stream ends without `[DONE]` |
 | `app/Ai/Embeddings` | `Embedder` (`/embeddings`, with the `search_query:` / `search_document:` prefixes), `MarkdownChunker`, and `HelpIndexer` |
 | `app/Console/Commands/HelpEmbed.php`, `HelpSearch.php` | `php artisan help:embed` chunks and embeds the help center; `php artisan help:search "<question>"` prints the five nearest chunks |
@@ -72,7 +80,7 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Ai/Schemas` | `InvoiceData`, `LineItem`, and `TicketData`: readonly DTOs with `rules()`, `afterRules()`, and `fromArray()` |
 | `app/Console/Commands/TicketExtract.php` | `php artisan ticket:extract [path]`: extracts category, invoice number, email, amount, and date from the twenty sample messages and reports valid, repaired, failed, and fill counts |
 | `storage/samples/` | `clean.pdf`, `phone-photo.jpg`, `bad-scan.jpg`: three renderings of one synthetic invoice (Northgate Paper Co, NP-20931), plus `tickets.json`, twenty support messages with human labels |
-| `config/ai.php` | `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
+| `config/ai.php` | `mcp_servers`, `tool_allow_lists`, `mcp_stdio_user_email`, `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php`, `2026_01_03_000000_add_prompt_version_to_model_calls_table.php`, `2026_01_04_000000_add_repaired_to_model_calls_table.php` | The usage log table, and its `prompt_version` and `repaired` columns |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |

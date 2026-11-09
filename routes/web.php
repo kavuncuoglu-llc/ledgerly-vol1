@@ -6,6 +6,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\ToolApprovalController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', 'customers');
@@ -28,3 +29,11 @@ Route::post('support/ask', [SupportController::class, 'ask'])->middleware([
     'auth',
     'throttle:ai',
 ]);
+
+Route::middleware('auth')->group(function () {
+    Route::get('support/approvals/{pendingToolCall}', [ToolApprovalController::class, 'show'])->name('tool-approvals.show');
+
+    Route::post('support/approve/{pendingToolCall}', [ToolApprovalController::class, 'approve'])->middleware('throttle:ai');
+
+    Route::post('support/decline/{pendingToolCall}', [ToolApprovalController::class, 'decline'])->middleware('throttle:ai');
+});

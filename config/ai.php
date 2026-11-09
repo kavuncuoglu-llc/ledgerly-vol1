@@ -57,6 +57,12 @@ return [
         'context' => 3500,
     ],
 
+    'mcp_servers' => [],
+
+    'tool_allow_lists' => [],
+
+    'mcp_stdio_user_email' => env('MCP_STDIO_USER_EMAIL'),
+
     'rates' => [
         'ollama' => [
             'llama3.1:8b' => [

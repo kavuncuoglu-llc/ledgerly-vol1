@@ -5,17 +5,27 @@ namespace App\Providers;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
 use App\Ai\Events\ModelCalled;
+use App\Ai\Events\ToolCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
 use App\Ai\Http\AiHttpClient;
 use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Ai\Listeners\RecordModelCall;
+use App\Ai\Listeners\RecordToolCall;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
+use App\Ai\Tools\ListInvoices\ListInvoices;
+use App\Ai\Tools\LookupInvoice\LookupInvoice;
+use App\Ai\Tools\Mcp\McpClientFactory;
+use App\Ai\Tools\Mcp\McpToolSource;
+use App\Ai\Tools\OpenTicket\OpenTicket;
+use App\Ai\Tools\ToolRegistry;
 use App\Events\TicketReceived;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,6 +43,19 @@ class AiServiceProvider extends ServiceProvider
             dimensions: config('ai.embed_dimensions'),
         ));
 
+        $this->app->singleton(McpClientFactory::class);
+
+        $this->app->singleton(McpToolSource::class, fn () => new McpToolSource(
+            servers: config('ai.mcp_servers'),
+            clientFor: fn (string $server, array $config) => $this->app->make(McpClientFactory::class)->make($server, $config),
+        ));
+
+        $this->app->singleton(ToolRegistry::class, fn () => (new ToolRegistry)
+            ->add(new LookupInvoice)
+            ->add(new ListInvoices)
+            ->add(new OpenTicket)
+            ->addSource($this->app->make(McpToolSource::class)));
+
         $this->app->singleton(MarkdownChunker::class, fn () => new MarkdownChunker(
             tokens: $this->app->make(TokenCounter::class),
             minTokens: config('ai.chunking.min_tokens'),
@@ -43,6 +66,10 @@ class AiServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(ModelCalled::class, RecordModelCall::class);
+
+        Event::listen(ToolCalled::class, RecordToolCall::class);
+
+        Gate::define('use-tool', fn (User $user, string $tool, ?string $tokenName = null): bool => $this->mayUseTool($user, $tool, $tokenName));
 
         Event::listen(TicketReceived::class, ClassifyReceivedTicket::class);
 
@@ -58,5 +85,24 @@ class AiServiceProvider extends ServiceProvider
             'tiktoken' => new TiktokenCounter,
             default => throw new UnsupportedTokenCounter($driver),
         };
+    }
+
+    private function mayUseTool(User $user, string $tool, ?string $tokenName): bool
+    {
+        if ($user->customer_id === null) {
+            return false;
+        }
+
+        if ($tokenName === null) {
+            return true;
+        }
+
+        $allowList = config('ai.tool_allow_lists', [])[$tokenName] ?? null;
+
+        if ($allowList === null) {
+            return true;
+        }
+
+        return in_array($tool, $allowList, true);
     }
 }

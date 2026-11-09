@@ -8,6 +8,8 @@ final class ModelCalled
 {
     use Dispatchable;
 
+    public ?int $modelCallId = null;
+
     public function __construct(
         public readonly string $feature,
         public readonly string $provider,
