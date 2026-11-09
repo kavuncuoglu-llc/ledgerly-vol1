@@ -5,12 +5,20 @@ namespace Tests\Feature\Console;
 use App\Models\HelpChunk;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class HelpSearchCommandTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        DB::statement('SET LOCAL enable_indexscan = off');
+    }
 
     public function test_handle_prints_the_nearest_chunks_with_similarity_source_and_heading(): void
     {

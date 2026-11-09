@@ -4,6 +4,8 @@ Fixes go on `main`. Chapter tags never move once published; a chapter whose code
 
 ## Unreleased
 
+- Fix a flaky `help:search` test at and after `ch06`: `RefreshDatabase` rolls back the bulk inserts of the `help:embed` tests, which leaves dead entries in the HNSW index, and an approximate index scan over a handful of rows could then miss the right chunk. The two search tests now turn off index scans for their transaction so they compare exactly; no application code changed. Test-only, so the `ch06` tag is unaffected.
+
 ## ch06
 
 - `App\Ai\Embeddings\Embedder` (`query()` and `document()` add the `search_query: ` / `search_document: ` prefixes, POST `/embeddings`, and check the vector length against `AI_EMBED_DIMENSIONS`), `MarkdownChunker` (splits on `##` headings, keeps `Title › Heading` in every chunk, merges short neighbouring sections and splits long ones on paragraphs to stay within 200 to 400 tokens of the bound `TokenCounter`), and `HelpIndexer`.

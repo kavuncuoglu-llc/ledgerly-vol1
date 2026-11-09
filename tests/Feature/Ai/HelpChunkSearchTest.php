@@ -5,11 +5,19 @@ namespace Tests\Feature\Ai;
 use App\Models\HelpChunk;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class HelpChunkSearchTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        DB::statement('SET LOCAL enable_indexscan = off');
+    }
 
     public function test_nearest_to_orders_chunks_by_cosine_similarity_with_the_closest_first(): void
     {
@@ -52,6 +60,13 @@ class HelpChunkSearchTest extends TestCase
         $this->expectException(QueryException::class);
 
         $this->chunk(position: 1, vector: $this->unitVector(1));
+    }
+
+    public function test_help_chunks_has_an_hnsw_cosine_index_on_the_embedding_column(): void
+    {
+        $definition = DB::scalar("select indexdef from pg_indexes where indexname = 'help_chunks_embedding_idx'");
+
+        $this->assertStringContainsString('USING hnsw (embedding vector_cosine_ops)', $definition);
     }
 
     private function chunk(int $position, array $vector): HelpChunk
