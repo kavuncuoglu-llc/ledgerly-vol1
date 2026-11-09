@@ -122,7 +122,7 @@ class SupportToolsTest extends TestCase
         $this->assertSame(['ok' => true, 'found' => false], json_decode($toolTurn['content'], true));
     }
 
-    public function test_ask_sends_the_tool_definitions_and_prompt_version_three(): void
+    public function test_ask_sends_the_tool_definitions_and_prompt_version_four(): void
     {
         Http::fake(['*' => Http::response($this->answerResponse('Hi'))]);
 
@@ -131,7 +131,7 @@ class SupportToolsTest extends TestCase
         $request = Http::recorded()[0][0];
         $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
         $this->assertStringContainsString('You have tools.', $request['messages'][0]['content']);
-        $this->assertSame('2026-11-09.3', ModelCall::query()->sole()->prompt_version);
+        $this->assertSame('2026-11-09.4', ModelCall::query()->sole()->prompt_version);
     }
 
     public function test_ask_reports_the_cap_without_failing(): void

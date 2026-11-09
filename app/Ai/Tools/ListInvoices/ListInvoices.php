@@ -4,6 +4,7 @@ namespace App\Ai\Tools\ListInvoices;
 
 use App\Ai\Encoding\DataEncoder;
 use App\Ai\Shapes\InvoiceSummaryShape;
+use App\Ai\Tools\CompactsResult;
 use App\Ai\Tools\DtoBackedTool;
 use App\Ai\Tools\Tool;
 use App\Ai\Tools\ToolContext;
@@ -11,8 +12,9 @@ use App\Ai\Tools\ToolKind;
 use App\Ai\Tools\ToolResult;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
-final class ListInvoices implements Tool
+final class ListInvoices implements CompactsResult, Tool
 {
     use DtoBackedTool;
 
@@ -59,6 +61,38 @@ final class ListInvoices implements Tool
             format: config('ai.encoding.features.list_invoices'),
             key: 'invoices',
         ));
+    }
+
+    public function compactResult(string $content): string
+    {
+        $rows = $this->overdueFlagsByNumber($content);
+
+        if ($rows === []) {
+            return Str::limit(Str::before(trim($content), "\n"), 120);
+        }
+
+        $overdue = array_keys(array_filter($rows));
+
+        if ($overdue === []) {
+            return count($rows).' invoices listed; none overdue';
+        }
+
+        return count($rows).' invoices listed; '.count($overdue).' overdue: '.implode(', ', $overdue);
+    }
+
+    private function overdueFlagsByNumber(string $content): array
+    {
+        $flags = [];
+
+        foreach (preg_split('/(?=INV-\d+)/', $content, -1, PREG_SPLIT_NO_EMPTY) as $segment) {
+            if (preg_match('/^(INV-\d+)/', $segment, $match) !== 1) {
+                continue;
+            }
+
+            $flags[$match[1]] = str_contains($segment, 'overdue');
+        }
+
+        return $flags;
     }
 
     private function scopedQuery(ListInvoicesArgs $args, ToolContext $ctx): Builder

@@ -2,6 +2,7 @@
 
 namespace App\Ai\Tools\LookupInvoice;
 
+use App\Ai\Tools\CompactsResult;
 use App\Ai\Tools\DtoBackedTool;
 use App\Ai\Tools\InvoiceNumber;
 use App\Ai\Tools\InvoiceSummary;
@@ -11,7 +12,7 @@ use App\Ai\Tools\ToolKind;
 use App\Ai\Tools\ToolResult;
 use App\Models\Invoice;
 
-final class LookupInvoice implements Tool
+final class LookupInvoice implements CompactsResult, Tool
 {
     use DtoBackedTool;
 
@@ -49,6 +50,25 @@ final class LookupInvoice implements Tool
             'found' => true,
             'invoice' => InvoiceSummary::of($invoice),
         ]);
+    }
+
+    public function compactResult(string $content): string
+    {
+        $invoice = json_decode($content, true)['invoice'] ?? null;
+
+        if (! is_array($invoice)) {
+            return 'no matching invoice found';
+        }
+
+        return sprintf(
+            'returned invoice %s: %s, %d days overdue, total %s %.2f, due %s',
+            $invoice['number'],
+            $invoice['status'],
+            $invoice['days_overdue'],
+            $invoice['currency'],
+            $invoice['total'],
+            $invoice['due_date'],
+        );
     }
 
     private function findInvoice(LookupInvoiceArgs $args, ToolContext $ctx): Invoice

@@ -11,7 +11,15 @@ class SupportController extends Controller
 {
     public function ask(AskRequest $request, SupportAssistant $assistant): JsonResponse
     {
-        $run = $assistant->answer($request->user(), $request->validated('question'));
+        $conversation = $request->conversation();
+
+        $run = $assistant->answer(
+            user: $request->user(),
+            question: $request->validated('question'),
+            conversation: $conversation->exists
+                ? $conversation
+                : null,
+        );
 
         return response()->json((new ToolRunResource($run))->resolve());
     }

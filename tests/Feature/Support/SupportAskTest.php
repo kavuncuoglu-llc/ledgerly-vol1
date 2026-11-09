@@ -3,6 +3,7 @@
 namespace Tests\Feature\Support;
 
 use App\Ai\Prompts\SupportPrompt;
+use App\Models\Conversation;
 use App\Models\ModelCall;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,6 +35,7 @@ class SupportAskTest extends TestCase
 
         $response->assertOk()->assertExactJson([
             'answer' => 'A late fee is an extra charge.',
+            'conversation_id' => Conversation::query()->sole()->id,
             'truncated' => false,
             'rounds' => 1,
             'hit_cap' => false,

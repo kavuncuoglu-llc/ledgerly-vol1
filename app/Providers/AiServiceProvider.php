@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Ai\Conversations\ConversationStore;
+use App\Ai\Conversations\EloquentConversationStore;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
 use App\Ai\Encoding\DataEncoder;
@@ -28,6 +30,7 @@ use App\Ai\Tools\OpenTicket\OpenTicket;
 use App\Ai\Tools\ToolRegistry;
 use App\Events\TicketReceived;
 use App\Models\User;
+use App\Support\Tenancy\CurrentTenant;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -40,6 +43,10 @@ class AiServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TokenCounter::class, fn () => $this->tokenCounter());
+
+        $this->app->singleton(CurrentTenant::class);
+
+        $this->app->singleton(ConversationStore::class, EloquentConversationStore::class);
 
         $this->app->singleton(AiHttpClient::class, fn () => new AiHttpClient(config('ai')));
 

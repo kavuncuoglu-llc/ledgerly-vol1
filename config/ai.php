@@ -57,6 +57,25 @@ return [
         'context' => 3500,
     ],
 
+    'conversation' => [
+        'keep_recent_exchanges' => (int) env('AI_CONVERSATION_KEEP_RECENT', 4),
+        'compact_after_exchanges' => (int) env('AI_CONVERSATION_COMPACT_AFTER', 2),
+        'summary_trigger_tokens' => env('AI_SUMMARY_TRIGGER_TOKENS') ?: null,
+        'summary_max_tokens' => 400,
+        'summary_input_tokens' => 4000,
+        'message_overhead_tokens' => 4,
+    ],
+
+    'memory' => [
+        'max_facts' => 12,
+        'min_confidence' => 0.7,
+        'expire_after_days' => 365,
+    ],
+
+    'retention' => [
+        'closed_conversation_days' => (int) env('AI_RETENTION_CLOSED_CONVERSATION_DAYS', 90),
+    ],
+
     'encoding' => [
         'default' => env('AI_ENCODING_DEFAULT', 'toon'),
         'features' => [

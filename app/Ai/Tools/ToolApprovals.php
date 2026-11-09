@@ -2,13 +2,17 @@
 
 namespace App\Ai\Tools;
 
+use App\Ai\Conversations\ConversationStore;
 use App\Ai\Exceptions\ApprovalAlreadyResolved;
 use App\Models\PendingToolCall;
 use Illuminate\Support\Facades\DB;
 
 final class ToolApprovals
 {
-    public function __construct(private readonly ToolRunner $runner) {}
+    public function __construct(
+        private readonly ToolRunner $runner,
+        private readonly ConversationStore $conversations,
+    ) {}
 
     public function approve(PendingToolCall $pending): ApprovalOutcome
     {
@@ -71,6 +75,25 @@ final class ToolApprovals
             return new ApprovalOutcome($resolved);
         }
 
-        return new ApprovalOutcome($resolved, $this->runner->resume($resolved->run_id));
+        $run = $this->runner->resume($resolved->run_id);
+
+        $this->recordInConversation($resolved, $run);
+
+        return new ApprovalOutcome($resolved, $run);
+    }
+
+    private function recordInConversation(PendingToolCall $resolved, ToolRunResult $run): void
+    {
+        if ($resolved->conversation_id === null) {
+            return;
+        }
+
+        $conversation = $this->conversations->find($resolved->conversation_id);
+
+        if (! $conversation->exists) {
+            return;
+        }
+
+        $this->conversations->appendRun($conversation, $run->forConversation($conversation->id));
     }
 }

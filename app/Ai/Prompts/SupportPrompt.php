@@ -2,11 +2,36 @@
 
 namespace App\Ai\Prompts;
 
+use App\Ai\Memory\MemoryStore;
+use App\Models\User;
+
 final class SupportPrompt
 {
-    public const VERSION = '2026-11-09.3';
+    public const VERSION = '2026-11-09.4';
 
-    public static function system(): string
+    public static function system(?User $user = null): string
+    {
+        $base = self::baseSystem();
+
+        if ($user === null) {
+            return $base;
+        }
+
+        $memories = app(MemoryStore::class)->block($user);
+
+        if ($memories === '') {
+            return $base;
+        }
+
+        return $base."\n\n".$memories;
+    }
+
+    public static function summaryNote(string $summary): string
+    {
+        return "Summary of the earlier part of this conversation (the turns it covers are no longer shown):\n".$summary;
+    }
+
+    private static function baseSystem(): string
     {
         return <<<'PROMPT'
 You are the support assistant for Ledgerly, an invoicing product for small businesses.
@@ -33,17 +58,32 @@ the ticket number.
 PROMPT;
     }
 
-    public static function messages(string $question, array $contextChunks = [], array $history = []): array
+    public static function messages(string $question, ?User $user = null, ?string $summary = null, array $history = [], array $contextChunks = []): array
     {
         return [
             [
                 'role' => 'system',
-                'content' => self::system(),
+                'content' => self::system($user),
             ],
+            ...self::summaryMessages($summary),
             ...$history,
             [
                 'role' => 'user',
                 'content' => "Context:\n".self::renderContext($contextChunks)."\n\nQuestion: {$question}",
+            ],
+        ];
+    }
+
+    private static function summaryMessages(?string $summary): array
+    {
+        if ($summary === null) {
+            return [];
+        }
+
+        return [
+            [
+                'role' => 'system',
+                'content' => self::summaryNote($summary),
             ],
         ];
     }

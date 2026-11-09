@@ -117,13 +117,19 @@ final class ToolRunner
     {
         $requestOptions = $this->withToolOptions($options);
 
+        $inputCount = count($messages);
+
+        $modelCallIds = [];
+
         $response = null;
 
         for ($round = $firstRound; $round <= self::MAX_ROUNDS; $round++) {
-            $response = $this->client->chat($messages, $requestOptions, $feature, $promptVersion);
+            $response = $this->client->chat($messages, $requestOptions, $feature, $promptVersion, conversationId: $ctx->conversationId);
+
+            $modelCallIds[] = $response->modelCallId;
 
             if ($response->toolCalls === []) {
-                return new ToolRunResult($response, $messages, rounds: $round);
+                return new ToolRunResult($response, $messages, rounds: $round, inputCount: $inputCount, modelCallIds: $modelCallIds);
             }
 
             $messages[] = [
@@ -139,11 +145,11 @@ final class ToolRunner
             if ($outcome['pending'] !== []) {
                 $this->bindPendingToRun($outcome['pending'], $messages, $options, $feature, $promptVersion, $round);
 
-                return new ToolRunResult($response, $messages, rounds: $round, pending: $outcome['pending']);
+                return new ToolRunResult($response, $messages, rounds: $round, pending: $outcome['pending'], inputCount: $inputCount, modelCallIds: $modelCallIds);
             }
         }
 
-        return new ToolRunResult($response, $messages, rounds: self::MAX_ROUNDS, hitCap: true);
+        return new ToolRunResult($response, $messages, rounds: self::MAX_ROUNDS, hitCap: true, inputCount: $inputCount, modelCallIds: $modelCallIds);
     }
 
     private function withToolOptions(array $options): array

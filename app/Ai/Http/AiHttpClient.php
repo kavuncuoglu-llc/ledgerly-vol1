@@ -19,7 +19,7 @@ final class AiHttpClient
 {
     public function __construct(private readonly array $config) {}
 
-    public function chat(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null, bool $repaired = false): ChatResponse
+    public function chat(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null, bool $repaired = false, ?int $conversationId = null): ChatResponse
     {
         $body = [
             ...$this->buildBody($messages, $options),
@@ -41,6 +41,7 @@ final class AiHttpClient
             $chat->usage->toArray(),
             $chat->finishReason,
             $latencyMs,
+            conversationId: $conversationId,
             promptVersion: $promptVersion,
             repaired: $repaired,
         );

@@ -44,7 +44,7 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 
 | Path | What it is |
 | --- | --- |
-| `app/Models` | Customer, Invoice, InvoiceItem, Payment, Ticket, User, ModelCall |
+| `app/Models` | Customer, Invoice, InvoiceItem, Payment, Ticket, User, ModelCall, Conversation, Message, UserMemory |
 | `app/Support/HelpCenter.php` | Reads the Markdown help center from `resources/help/` |
 | `app/Ai/Tokens` | `TokenCounter` interface with `TiktokenCounter` (exact, OpenAI-family) and `RatioCounter` (estimate) |
 | `app/Ai/Events/ModelCalled.php` | Event every model call will dispatch with its usage, finish reason, and latency |
@@ -55,11 +55,11 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
 | `app/Ai/Http` | `AiHttpClient` (`chat()`, the `stream()` generator, and the retrying `post()` that `Embedder` also uses), `ChatResponse`, `Usage`, `RetryPolicy` (3 attempts, exponential backoff with jitter, `Retry-After` honored), and `StreamAccumulator`. Every `chat()` and `stream()` call dispatches `ModelCalled`, so it lands in `model_calls` |
 | `app/Ai/Support` | `SupportAssistant` (answers through `ToolRunner`; no retrieval yet), `ClassifyTicket` (returns a `TicketCategory` through `StructuredClient`), and `TicketSamples` (reads the labeled sample file) |
-| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v3), `TicketClassifyPrompt`, and `TicketExtractPrompt`. The version is logged in `model_calls.prompt_version` |
+| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v4), `SummarizePrompt`, `ExtractMemoriesPrompt`, `TicketClassifyPrompt`, and `TicketExtractPrompt`. The version is logged in `model_calls.prompt_version` |
 | `app/Console/Commands/TicketClassify.php`, `storage/samples/tickets.json` | `php artisan ticket:classify`: classifies the twenty labeled sample messages and reports agreement and misses |
 | `app/Events/TicketReceived.php`, `app/Ai/Listeners/ClassifyReceivedTicket.php` | Classifies a received ticket and stores its category (nothing dispatches the event yet) |
 | `app/Http/Controllers/LoginController.php` | `POST /login` (JSON): session login so the `curl -b cookies.txt` examples work |
-| `app/Http/Controllers/SupportController.php`, `app/Http/Requests/AskRequest.php` | `POST /support/ask` (authenticated, `throttle:ai`): `{"question": "..."}` in, `{"answer": "...", "truncated": false}` out |
+| `app/Http/Controllers/SupportController.php`, `app/Http/Requests/AskRequest.php` | `POST /support/ask` (authenticated, `throttle:ai`): `{"question": "...", "conversation_id": 77}` in (`conversation_id` optional; omitted starts a conversation), `{"answer": "...", "conversation_id": 77, ...}` out |
 | `app/Ai/Tools` | The tool layer: `Tool` interface, `ToolKind` (read, low-risk write, high-risk write), `ToolContext` (the authenticated user, never model-supplied), `ToolResult`, `ToolRegistry` (emits the `tools` array, dispatches by name), `ToolRunner` (the capped five-round loop, argument validation, gate, audit), `ToolGate` and `GateDecision`, `ToolApprovals` (approve or decline a paused call and resume the run) |
 | `app/Ai/Tools/LookupInvoice`, `ListInvoices`, `OpenTicket` | The three native tools and their argument DTOs (`list_invoices` returns an encoded table through `DataEncoder`, not JSON). Each query is scoped to `ToolContext::customer()`; `lookup_invoice` and `open_ticket` normalize `4471`, `#4471` and `INV-4471` to the stored `INV-4471` |
 | `app/Ai/Tools/Mcp` | MCP as a consumer: `McpToolSource` merges tools from `config('ai.mcp_servers')` into the registry (names are prefixed `server_`, undeclared tools need approval), `McpClient` over the `laravel/mcp` client |
@@ -83,8 +83,15 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Ai/Schemas` | `InvoiceData`, `LineItem`, and `TicketData`: readonly DTOs with `rules()`, `afterRules()`, and `fromArray()` |
 | `app/Console/Commands/TicketExtract.php` | `php artisan ticket:extract [path]`: extracts category, invoice number, email, amount, and date from the twenty sample messages and reports valid, repaired, failed, and fill counts |
 | `storage/samples/` | `clean.pdf`, `phone-photo.jpg`, `bad-scan.jpg`: three renderings of one synthetic invoice (Northgate Paper Co, NP-20931), plus `tickets.json`, twenty support messages with human labels |
-| `config/ai.php` | `mcp_servers`, `tool_allow_lists`, `mcp_stdio_user_email`, `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `encoding`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
+| `config/ai.php` | `mcp_servers`, `tool_allow_lists`, `mcp_stdio_user_email`, `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `conversation`, `memory`, `retention`, `encoding`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php`, `2026_01_03_000000_add_prompt_version_to_model_calls_table.php`, `2026_01_04_000000_add_repaired_to_model_calls_table.php` | The usage log table, and its `prompt_version` and `repaired` columns |
+| `app/Ai/Conversations` | `ConversationStore` (interface) and `EloquentConversationStore` (`start`, `append` with a stored token count, `history()` in whole exchanges with the first exchange pinned, `compact`, `close`), `Exchange`, `HistoryBudget` (history allowance measured against the live system text), `ToolResultCompactor`, `SummarizeConversation` (the queued job: compaction, then the rolling summary), `ReplayScript` |
+| `app/Ai/Memory` | `MemoryStore` (the per-user key/value facts, the system-message block, expiry), `ExtractMemories` (queued on close), `StatedFactGuard` (drops extracted facts the customer did not say) |
+| `app/Models/Conversation.php`, `Message.php`, `UserMemory.php`, `app/Models/Scopes`, `app/Support/Tenancy/CurrentTenant.php` | The conversation tables and their tenant scoping: `TenantScope` on conversations and memories, `ConversationTenantScope` on messages; the tenant is the signed-in user's `customer_id` unless `CurrentTenant::runAs()` says otherwise |
+| `app/Http/Controllers/ConversationController.php`, `MemoryController.php` | `POST /support/conversations/{id}/close` (owner only; queues memory extraction), `GET /support/memories`, `DELETE /support/memories/{id}` (owner only) |
+| `app/Console/Commands/ConversationReplay.php`, `storage/samples/long-conversation.json` | `php artisan conversation:replay storage/samples/long-conversation.json --user=12 [--close]`: replays thirty customer messages plus a follow-up through the assistant and prints prompt tokens and summary state per turn (runs the queue inline for the replay) |
+| `app/Console/Commands/ConversationsRetain.php`, `UserForget.php` | `php artisan conversations:retain` (scheduled daily at 02:00: archives closed conversations older than `AI_RETENTION_CLOSED_CONVERSATION_DAYS`, expires memories unused for a year) and `php artisan user:forget <id> --confirm` |
+| `database/migrations/2026_01_09_*`, `2026_01_10_*` | `conversations` and `messages`; `user_memories` |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
 | `docker-compose.yml` | Postgres with pgvector, and Redis |

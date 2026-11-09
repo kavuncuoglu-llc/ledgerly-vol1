@@ -28,9 +28,9 @@ class SupportPromptTest extends TestCase
         );
     }
 
-    public function test_version_is_the_third_revision_which_adds_the_chapter_eleven_tool_rules(): void
+    public function test_version_is_the_fourth_revision_which_adds_the_chapter_thirteen_memories_block(): void
     {
-        $this->assertSame('2026-11-09.3', SupportPrompt::VERSION);
+        $this->assertSame('2026-11-09.4', SupportPrompt::VERSION);
     }
 
     public function test_messages_match_the_stored_snapshot(): void
@@ -100,5 +100,39 @@ class SupportPromptTest extends TestCase
         $this->assertGreaterThan($identity, $rules);
         $this->assertGreaterThan($rules, $output);
         $this->assertGreaterThan($output, $escapeHatch);
+    }
+
+    public function test_messages_order_is_system_then_summary_then_history_then_the_new_question(): void
+    {
+        $messages = SupportPrompt::messages(
+            question: 'What about the April one?',
+            summary: 'Problem: INV-4471 disputed',
+            history: [
+                [
+                    'role' => 'user',
+                    'content' => 'recent question',
+                ],
+                [
+                    'role' => 'assistant',
+                    'content' => 'recent reply',
+                ],
+            ],
+        );
+
+        $this->assertSame(['system', 'system', 'user', 'assistant', 'user'], array_column($messages, 'role'));
+        $this->assertSame(SupportPrompt::summaryNote('Problem: INV-4471 disputed'), $messages[1]['content']);
+        $this->assertStringContainsString('Problem: INV-4471 disputed', $messages[1]['content']);
+    }
+
+    public function test_messages_without_a_summary_have_no_summary_slot(): void
+    {
+        $messages = SupportPrompt::messages(question: 'Hi');
+
+        $this->assertSame(['system', 'user'], array_column($messages, 'role'));
+    }
+
+    public function test_system_without_a_user_is_the_unchanged_base_text(): void
+    {
+        $this->assertSame(self::SYSTEM_TEXT_HASH, md5(SupportPrompt::system(null)));
     }
 }

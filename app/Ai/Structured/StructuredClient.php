@@ -25,13 +25,14 @@ final class StructuredClient
         string $feature = 'structured',
         ?string $promptVersion = null,
         string $sourceText = '',
+        ?int $conversationId = null,
     ): object {
         $options = $this->requestOptions($class, $options);
 
         $attempts = [];
 
         foreach ([false, true] as $repaired) {
-            $response = $this->client->chat($messages, $options, $feature, $promptVersion, repaired: $repaired);
+            $response = $this->client->chat($messages, $options, $feature, $promptVersion, repaired: $repaired, conversationId: $conversationId);
 
             $data = $this->decode($class, (string) $response->content);
 
