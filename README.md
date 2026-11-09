@@ -53,7 +53,12 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Providers/AiServiceProvider.php` | Binds `TokenCounter` from `AI_TOKEN_COUNTER` and registers the listener |
 | `app/Console/Commands/AiSample.php` | `php artisan ai:sample`: sends a prompt with explicit sampling parameters and prints completion, finish reason, and token counts |
 | `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
-| `config/ai.php` | `base_url`, `api_key`, `model`, timeouts, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
+| `app/Ai/Http/ModelEndpoint.php` | One authenticated POST to the OpenAI-compatible base URL, with timeouts and typed failures |
+| `app/Ai/Embeddings` | `Embedder` (`/embeddings`, with the `search_query:` / `search_document:` prefixes), `MarkdownChunker`, and `HelpIndexer` |
+| `app/Console/Commands/HelpEmbed.php`, `HelpSearch.php` | `php artisan help:embed` chunks and embeds the help center; `php artisan help:search "<question>"` prints the five nearest chunks |
+| `app/Models/HelpChunk.php`, `app/Casts/Vector.php` | The `help_chunks` model (with a `nearestTo` scope using pgvector's `<=>`) and its pgvector cast |
+| `database/migrations/2026_01_02_000000_create_help_chunks_table.php` | `help_chunks` with `vector(768)` and an HNSW cosine index |
+| `config/ai.php` | `base_url`, `api_key`, `model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php` | The usage log table |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
@@ -65,6 +70,8 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 ```sh
 php artisan test
 ```
+
+From `ch06` the tests run on the Postgres service from `docker compose`, in a separate `ledgerly_test` database with the `vector` extension (`docker/postgres/init.sql` creates both on a fresh volume). If your Postgres volume predates this, create it once: `docker exec ledgerly-postgres psql -U ledgerly -d ledgerly -c 'CREATE DATABASE ledgerly_test'`, then `docker exec ledgerly-postgres psql -U ledgerly -d ledgerly_test -c 'CREATE EXTENSION IF NOT EXISTS vector'`. Host and port come from your `.env`. No test calls a real model; HTTP is faked.
 
 ## If something goes wrong
 

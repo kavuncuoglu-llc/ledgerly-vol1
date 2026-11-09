@@ -3,6 +3,7 @@
 namespace Tests\Unit\Ai\Sampling;
 
 use App\Ai\Exceptions\ModelRequestFailed;
+use App\Ai\Http\ModelEndpoint;
 use App\Ai\Sampling\ChatSampler;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -18,7 +19,7 @@ class ChatSamplerTest extends TestCase
             'model.test/*' => Http::response($this->completion()),
         ]);
 
-        (new ChatSampler)->sample(
+        $this->sampler()->sample(
             prompt: 'Hello',
             parameters: [
                 'temperature' => 0,
@@ -45,7 +46,7 @@ class ChatSamplerTest extends TestCase
             '*' => Http::response($this->completion()),
         ]);
 
-        (new ChatSampler)->sample(prompt: 'Hello');
+        $this->sampler()->sample(prompt: 'Hello');
 
         Http::assertSent(fn (Request $request): bool => $request['model'] === 'configured:8b');
     }
@@ -56,7 +57,7 @@ class ChatSamplerTest extends TestCase
             '*' => Http::response($this->completion(content: 'billing', finishReason: 'length')),
         ]);
 
-        $result = (new ChatSampler)->sample(prompt: 'Hello');
+        $result = $this->sampler()->sample(prompt: 'Hello');
 
         $this->assertSame('billing', $result->content);
         $this->assertSame('length', $result->finishReason);
@@ -73,7 +74,7 @@ class ChatSamplerTest extends TestCase
         $this->expectException(ModelRequestFailed::class);
         $this->expectExceptionMessage('HTTP 404');
 
-        (new ChatSampler)->sample(prompt: 'Hello');
+        $this->sampler()->sample(prompt: 'Hello');
     }
 
     public function test_sample_throws_when_the_server_is_unreachable(): void
@@ -85,7 +86,7 @@ class ChatSamplerTest extends TestCase
         $this->expectException(ModelRequestFailed::class);
         $this->expectExceptionMessage('Is it running?');
 
-        (new ChatSampler)->sample(prompt: 'Hello');
+        $this->sampler()->sample(prompt: 'Hello');
     }
 
     public function test_sample_throws_when_the_body_has_no_message_content(): void
@@ -96,7 +97,12 @@ class ChatSamplerTest extends TestCase
 
         $this->expectException(ModelRequestFailed::class);
 
-        (new ChatSampler)->sample(prompt: 'Hello');
+        $this->sampler()->sample(prompt: 'Hello');
+    }
+
+    private function sampler(): ChatSampler
+    {
+        return new ChatSampler(new ModelEndpoint);
     }
 
     private function completion(string $content = 'ok', string $finishReason = 'stop'): array

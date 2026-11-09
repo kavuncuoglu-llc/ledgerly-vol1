@@ -4,6 +4,15 @@ Fixes go on `main`. Chapter tags never move once published; a chapter whose code
 
 ## Unreleased
 
+## ch06
+
+- `App\Ai\Embeddings\Embedder` (`query()` and `document()` add the `search_query: ` / `search_document: ` prefixes, POST `/embeddings`, and check the vector length against `AI_EMBED_DIMENSIONS`), `MarkdownChunker` (splits on `##` headings, keeps `Title › Heading` in every chunk, merges short neighbouring sections and splits long ones on paragraphs to stay within 200 to 400 tokens of the bound `TokenCounter`), and `HelpIndexer`.
+- `php artisan help:embed` chunks `resources/help/**`, embeds every chunk, and upserts `help_chunks` by `(source, position)`, removing chunks of vanished articles or positions. `php artisan help:search "<question>" [--limit=5]` embeds the question and prints `similarity source › heading` for the nearest chunks.
+- Migration `2026_01_02_000000_create_help_chunks_table.php`: pgvector extension, `help_chunks` (`source`, `position`, `heading`, `content`, `tokens`, `vector(768)` column) with an HNSW cosine index and a unique `(source, position)` index. `App\Models\HelpChunk` and `App\Casts\Vector`.
+- `config/ai.php`: `embed_model` (`AI_EMBED_MODEL`, `nomic-embed-text`), `embed_dimensions` (`AI_EMBED_DIMENSIONS`, 768), `chunking`. `.env.example` gains the two env vars.
+- `App\Ai\Http\ModelEndpoint` is the shared HTTP call for `ChatSampler` and `Embedder`; `AiHttpClient` still arrives in Chapter 8, so `Embedder` takes `ModelEndpoint` rather than the book's `AiHttpClient`.
+- The test suite now runs on a Postgres `ledgerly_test` database with the `vector` extension (`phpunit.xml`, `docker/postgres/init.sql`). Embedding calls in tests are faked with `Http::fake()`.
+
 ## ch05
 
 - `php artisan ai:sample "<prompt>"` with `--profile`, `--model`, `--runs`, `--temperature`, `--top-p`, `--top-k`, `--min-p`, `--max-tokens`, `--seed`, `--frequency-penalty`, `--presence-penalty`, `--repeat-penalty`, and repeatable `--stop` (`\n` is read as a newline). Prints `[n] completion  finish_reason · in N out M` per run.

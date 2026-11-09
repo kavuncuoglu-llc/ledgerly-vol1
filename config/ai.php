@@ -8,6 +8,10 @@ return [
 
     'model' => env('AI_MODEL', 'llama3.1:8b'),
 
+    'embed_model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
+
+    'embed_dimensions' => (int) env('AI_EMBED_DIMENSIONS', 768),
+
     'connect_timeout' => env('AI_CONNECT_TIMEOUT', 2),
 
     'timeout' => env('AI_TIMEOUT', 120),
@@ -32,6 +36,11 @@ return [
             'temperature' => 1.0,
             'top_p' => 0.95,
         ],
+    ],
+
+    'chunking' => [
+        'min_tokens' => 200,
+        'max_tokens' => 400,
     ],
 
     'budget' => [
