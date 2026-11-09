@@ -1,0 +1,68 @@
+Ledgerly Companion Code License
+Personal and Educational Use
+
+Copyright (c) 2026 Kavuncuoglu LLC. All rights reserved except as granted below.
+
+This repository contains the companion code for "Large Language Models for
+Laravel Developers, Volume 1: The Foundations of Large Language Models" (the
+"Book"). The code in this repository, including the Ledgerly application, its
+help-center articles, seed data, and tests (the "Software"), is made available
+to readers of the Book under the terms below.
+
+1. Grant of license
+
+   You may, free of charge and without any proof of purchase:
+
+   a. Read, clone, download, and run the Software on your own machines.
+   b. Modify the Software and use it, or any part of it, to learn, to follow the
+      Book's chapters and exercises, and to experiment.
+   c. Adapt the techniques and any portion of the code into your own projects,
+      including commercial products and client work, provided that the result is
+      a new work of your own and not a copy of the Software or the Book.
+   d. Quote short excerpts of the Software in blog posts, talks, code reviews,
+      and questions for the purpose of commentary, teaching, or support.
+
+2. Restrictions
+
+   You may not, without prior written permission from the copyright holder:
+
+   a. Republish, redistribute, mirror, or resell the Software, or a substantial
+      portion of it, whether modified or unmodified, as a repository, package,
+      course, template, starter kit, tutorial series, book, or any other product
+      or service, free or paid.
+   b. Publish the help-center articles in resources/help, or substantial parts
+      of them, as a standalone dataset, corpus, or content product.
+   c. Use the Software to build a competing educational product based on the
+      Book.
+   d. Remove or alter this license or the copyright notice.
+
+3. Third-party software
+
+   This license covers only the original code and content in this repository.
+   Laravel, the packages installed through Composer, and other third-party
+   software are the property of their respective authors and are governed by
+   their own licenses. Nothing in this license changes those terms.
+
+4. No warranty
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+   OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+5. Fictional content
+
+   Ledgerly, its customers, invoices, support tickets, and help-center articles
+   are fictional and exist for teaching purposes only. Any resemblance to a real
+   product, company, or person is coincidental. Do not rely on the help-center
+   content for tax, legal, or accounting advice.
+
+6. Termination
+
+   Your rights under this license end automatically if you breach it. Sections 2
+   through 6 survive termination.
+
+Questions or permission requests: https://kavuncuoglu.com
