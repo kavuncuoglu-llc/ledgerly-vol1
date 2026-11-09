@@ -6,12 +6,15 @@ use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
-use App\Ai\Http\ModelEndpoint;
+use App\Ai\Http\AiHttpClient;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AiServiceProvider extends ServiceProvider
@@ -20,8 +23,10 @@ class AiServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TokenCounter::class, fn () => $this->tokenCounter());
 
+        $this->app->singleton(AiHttpClient::class, fn () => new AiHttpClient(config('ai')));
+
         $this->app->singleton(Embedder::class, fn () => new Embedder(
-            endpoint: $this->app->make(ModelEndpoint::class),
+            client: $this->app->make(AiHttpClient::class),
             model: config('ai.embed_model'),
             dimensions: config('ai.embed_dimensions'),
         ));
@@ -36,6 +41,8 @@ class AiServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(ModelCalled::class, RecordModelCall::class);
+
+        RateLimiter::for('ai', fn (Request $request): Limit => Limit::perMinute((int) config('ai.rate_limit'))->by($request->user()?->id ?: $request->ip()));
     }
 
     private function tokenCounter(): TokenCounter

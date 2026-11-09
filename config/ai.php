@@ -2,6 +2,8 @@
 
 return [
 
+    'provider' => env('AI_PROVIDER', 'ollama'),
+
     'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
 
     'api_key' => env('AI_API_KEY', 'ollama'),
@@ -17,6 +19,8 @@ return [
     'connect_timeout' => env('AI_CONNECT_TIMEOUT', 2),
 
     'timeout' => env('AI_TIMEOUT', 120),
+
+    'rate_limit' => (int) env('AI_RATE_LIMIT', 30),
 
     'token_counter' => env('AI_TOKEN_COUNTER', 'ratio'),
 

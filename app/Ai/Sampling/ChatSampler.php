@@ -2,17 +2,15 @@
 
 namespace App\Ai\Sampling;
 
-use App\Ai\Exceptions\ModelRequestFailed;
-use App\Ai\Http\ModelEndpoint;
-use Illuminate\Http\Client\Response;
+use App\Ai\Http\AiHttpClient;
 
 final class ChatSampler
 {
     public function __construct(
-        private readonly ModelEndpoint $endpoint,
+        private readonly AiHttpClient $client,
     ) {}
 
-    public function sample(string $prompt, array $parameters = [], ?string $model = null): SampleResult
+    public function sample(string $prompt, array $parameters = [], ?string $model = null, string $feature = 'cli.sample'): SampleResult
     {
         return $this->chat(
             messages: [
@@ -23,34 +21,32 @@ final class ChatSampler
             ],
             parameters: $parameters,
             model: $model,
+            feature: $feature,
         );
     }
 
-    public function chat(array $messages, array $parameters = [], ?string $model = null): SampleResult
+    public function chat(array $messages, array $parameters = [], ?string $model = null, string $feature = 'cli.sample'): SampleResult
     {
-        $response = $this->endpoint->post('/chat/completions', [
-            ...$parameters,
-            'model' => $model ?? config('ai.model'),
-            'messages' => $messages,
-            'stream' => false,
-        ]);
-
-        return $this->toResult($response);
-    }
-
-    private function toResult(Response $response): SampleResult
-    {
-        $choice = $response->json('choices.0');
-
-        if (! isset($choice['message']['content'])) {
-            throw ModelRequestFailed::malformed();
-        }
+        $response = $this->client->chat(
+            messages: $messages,
+            options: $this->options($parameters, $model),
+            feature: $feature,
+        );
 
         return new SampleResult(
-            content: $choice['message']['content'],
-            finishReason: $choice['finish_reason'] ?? 'unknown',
-            promptTokens: (int) $response->json('usage.prompt_tokens', 0),
-            completionTokens: (int) $response->json('usage.completion_tokens', 0),
+            content: $response->content ?? '',
+            finishReason: $response->finishReason,
+            promptTokens: $response->usage->promptTokens,
+            completionTokens: $response->usage->completionTokens,
         );
+    }
+
+    private function options(array $parameters, ?string $model): array
+    {
+        return [
+            ...$parameters,
+            'profile' => null,
+            'model' => $model ?? config('ai.model'),
+        ];
     }
 }

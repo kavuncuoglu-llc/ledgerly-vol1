@@ -17,6 +17,11 @@ final class ModelRequestFailed extends RuntimeException
         return new self("The model server answered HTTP {$status}: {$body}");
     }
 
+    public static function malformedStreamChunk(string $payload): self
+    {
+        return new self("The model server sent a stream chunk that is not a JSON object: {$payload}");
+    }
+
     public static function malformed(): self
     {
         return new self('The model server answered with a body that has no choices[0].message.content.');

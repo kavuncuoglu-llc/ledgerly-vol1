@@ -3,15 +3,26 @@
 namespace Tests\Unit\Ai\Sampling;
 
 use App\Ai\Exceptions\ModelRequestFailed;
-use App\Ai\Http\ModelEndpoint;
+use App\Ai\Http\AiHttpClient;
 use App\Ai\Sampling\ChatSampler;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class ChatSamplerTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Sleep::fake();
+    }
+
     public function test_sample_posts_the_prompt_and_parameters_to_chat_completions(): void
     {
         config()->set('ai.base_url', 'http://model.test/v1');
@@ -130,7 +141,7 @@ class ChatSamplerTest extends TestCase
 
     private function sampler(): ChatSampler
     {
-        return new ChatSampler(new ModelEndpoint);
+        return new ChatSampler(new AiHttpClient(config('ai')));
     }
 
     private function completion(string $content = 'ok', string $finishReason = 'stop'): array

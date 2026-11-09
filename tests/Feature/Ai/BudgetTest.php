@@ -4,6 +4,8 @@ namespace Tests\Feature\Ai;
 
 use App\Ai\Exceptions\PromptTooLarge;
 use App\Ai\Prompt\Budget;
+use App\Ai\Support\SupportPrompt;
+use App\Ai\Tokens\TokenCounter;
 use Tests\TestCase;
 
 class BudgetTest extends TestCase
@@ -46,6 +48,13 @@ class BudgetTest extends TestCase
             + $budget->historyAllowance();
 
         $this->assertSame(config('ai.budget.window'), $total);
+    }
+
+    public function test_the_support_system_prompt_fits_its_budget(): void
+    {
+        $tokens = app(TokenCounter::class)->count(SupportPrompt::system());
+
+        $this->assertLessThanOrEqual(config('ai.budget.system'), $tokens);
     }
 
     public function test_assert_fits_accepts_a_prompt_that_leaves_room_for_the_answer(): void

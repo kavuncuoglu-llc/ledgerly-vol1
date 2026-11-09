@@ -2,12 +2,23 @@
 
 namespace Tests\Feature\Console;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class AiSampleCommandTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Sleep::fake();
+    }
+
     public function test_handle_prints_one_line_per_run_with_finish_reason_and_tokens(): void
     {
         Http::fake([

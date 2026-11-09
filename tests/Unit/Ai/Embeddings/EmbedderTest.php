@@ -5,13 +5,21 @@ namespace Tests\Unit\Ai\Embeddings;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\ModelRequestFailed;
-use App\Ai\Http\ModelEndpoint;
+use App\Ai\Http\AiHttpClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class EmbedderTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Sleep::fake();
+    }
+
     public function test_query_prefixes_the_text_with_search_query(): void
     {
         Http::fake(['*' => Http::response($this->embeddingBody([0.1, 0.2, 0.3]))]);
@@ -81,7 +89,7 @@ class EmbedderTest extends TestCase
     private function embedder(int $dimensions, string $model = 'nomic-embed-text'): Embedder
     {
         return new Embedder(
-            endpoint: new ModelEndpoint,
+            client: new AiHttpClient(config('ai')),
             model: $model,
             dimensions: $dimensions,
         );

@@ -3,6 +3,7 @@
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,3 +20,8 @@ Route::get('help/{category}/{slug}', [HelpCenterController::class, 'show']);
 
 Route::get('inbox', [TicketController::class, 'index']);
 Route::get('inbox/{ticket}', [TicketController::class, 'show']);
+
+Route::post('support/ask', [SupportController::class, 'ask'])->middleware([
+    'auth',
+    'throttle:ai',
+]);

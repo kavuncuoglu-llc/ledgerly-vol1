@@ -66,6 +66,7 @@ class InvoiceRead extends Command
             ],
             parameters: config('ai.profiles.deterministic'),
             model: config('ai.vision_model'),
+            feature: 'invoice.read',
         );
     }
 

@@ -3,12 +3,12 @@
 namespace App\Ai\Embeddings;
 
 use App\Ai\Exceptions\EmbeddingFailed;
-use App\Ai\Http\ModelEndpoint;
+use App\Ai\Http\AiHttpClient;
 
 final class Embedder
 {
     public function __construct(
-        private readonly ModelEndpoint $endpoint,
+        private readonly AiHttpClient $client,
         private readonly string $model,
         private readonly int $dimensions,
     ) {}
@@ -30,7 +30,7 @@ final class Embedder
 
     private function embed(string $input): array
     {
-        $response = $this->endpoint->post('/embeddings', [
+        $response = $this->client->post('/embeddings', [
             'model' => $this->model,
             'input' => $input,
         ]);

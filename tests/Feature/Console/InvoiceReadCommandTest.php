@@ -2,12 +2,23 @@
 
 namespace Tests\Feature\Console;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class InvoiceReadCommandTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Sleep::fake();
+    }
+
     public function test_handle_sends_the_image_as_a_data_url_to_the_vision_model_with_the_deterministic_profile(): void
     {
         Http::fake(['*' => Http::response($this->completion($this->reply(total: 1284.50)))]);

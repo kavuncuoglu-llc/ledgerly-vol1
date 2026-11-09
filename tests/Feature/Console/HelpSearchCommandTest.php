@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 class HelpSearchCommandTest extends TestCase
@@ -16,6 +17,8 @@ class HelpSearchCommandTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        Sleep::fake();
 
         DB::statement('SET LOCAL enable_indexscan = off');
     }

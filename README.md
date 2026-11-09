@@ -53,7 +53,10 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Providers/AiServiceProvider.php` | Binds `TokenCounter` from `AI_TOKEN_COUNTER` and registers the listener |
 | `app/Console/Commands/AiSample.php` | `php artisan ai:sample`: sends a prompt with explicit sampling parameters and prints completion, finish reason, and token counts |
 | `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
-| `app/Ai/Http/ModelEndpoint.php` | One authenticated POST to the OpenAI-compatible base URL, with timeouts and typed failures |
+| `app/Ai/Http` | `AiHttpClient` (`chat()`, the `stream()` generator, and the retrying `post()` that `Embedder` also uses), `ChatResponse`, `Usage`, `RetryPolicy` (3 attempts, exponential backoff with jitter, `Retry-After` honored), and `StreamAccumulator`. Every `chat()` and `stream()` call dispatches `ModelCalled`, so it lands in `model_calls` |
+| `app/Ai/Support` | `SupportAssistant` (the first reply, no retrieval or tools) and `SupportPrompt` (system prompt v1) |
+| `app/Http/Controllers/SupportController.php`, `app/Http/Requests/AskRequest.php` | `POST /support/ask` (authenticated, `throttle:ai`): `{"question": "..."}` in, `{"answer": "...", "truncated": false}` out |
+| `app/Console/Commands/AiStream.php` | `php artisan ai:stream "<prompt>"`: prints the reply token by token, then `[finish_reason · in N out N]`; warns when the stream ends without `[DONE]` |
 | `app/Ai/Embeddings` | `Embedder` (`/embeddings`, with the `search_query:` / `search_document:` prefixes), `MarkdownChunker`, and `HelpIndexer` |
 | `app/Console/Commands/HelpEmbed.php`, `HelpSearch.php` | `php artisan help:embed` chunks and embeds the help center; `php artisan help:search "<question>"` prints the five nearest chunks |
 | `app/Models/HelpChunk.php`, `app/Casts/Vector.php` | The `help_chunks` model (with a `nearestTo` scope using pgvector's `<=>`) and its pgvector cast |
@@ -61,7 +64,7 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Console/Commands/InvoiceRead.php` | `php artisan invoice:read <path>`: sends an invoice image or PDF to a vision model and cross-checks the extracted total against the line items |
 | `app/Ai/Vision` | `ImageEncoder` (resize to about 1 MP, JPEG, base64 data URL), `PdfPageRenderer` (first page via `pdftoppm`), `InvoicePrompt` (prompts and lenient JSON parser), `ExtractedInvoice` (display and totals check) |
 | `storage/samples/` | `clean.pdf`, `phone-photo.jpg`, `bad-scan.jpg`: three renderings of one synthetic invoice (Northgate Paper Co, NP-20931) |
-| `config/ai.php` | `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
+| `config/ai.php` | `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php` | The usage log table |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
