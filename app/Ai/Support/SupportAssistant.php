@@ -4,6 +4,7 @@ namespace App\Ai\Support;
 
 use App\Ai\Http\AiHttpClient;
 use App\Ai\Http\ChatResponse;
+use App\Ai\Prompts\SupportPrompt;
 use App\Models\User;
 
 final class SupportAssistant
@@ -13,21 +14,13 @@ final class SupportAssistant
     public function answer(User $user, string $question): ChatResponse
     {
         return $this->client->chat(
-            messages: [
-                [
-                    'role' => 'system',
-                    'content' => SupportPrompt::system(),
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $question,
-                ],
-            ],
+            messages: SupportPrompt::messages($question),
             options: [
                 'profile' => 'assistant',
                 'max_tokens' => config('ai.budget.answer'),
             ],
             feature: 'support.reply',
+            promptVersion: SupportPrompt::VERSION,
         );
     }
 }

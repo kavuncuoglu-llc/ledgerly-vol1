@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Support;
 
-use App\Ai\Support\SupportPrompt;
+use App\Ai\Prompts\SupportPrompt;
 use App\Models\ModelCall;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,10 +36,7 @@ class SupportAskTest extends TestCase
             'answer' => 'A late fee is an extra charge.',
             'truncated' => false,
         ]);
-        Http::assertSent(fn (Request $request): bool => $request['messages'] === [
-            ['role' => 'system', 'content' => SupportPrompt::system()],
-            ['role' => 'user', 'content' => 'What is a late fee?'],
-        ]
+        Http::assertSent(fn (Request $request): bool => $request['messages'] === SupportPrompt::messages('What is a late fee?')
             && $request['max_tokens'] === 400
             && $request['temperature'] === 0.7);
     }
@@ -66,6 +63,27 @@ class SupportAskTest extends TestCase
         $this->assertSame(31, $call->prompt_tokens);
         $this->assertSame(2, $call->completion_tokens);
         $this->assertSame('stop', $call->finish_reason);
+    }
+
+    public function test_ask_records_the_support_prompt_version_on_the_model_calls_row(): void
+    {
+        Http::fake(['*' => Http::response($this->completion('ok'))]);
+
+        $this->actingAs($this->user())->postJson('support/ask', ['question' => 'Hi']);
+
+        $this->assertSame(SupportPrompt::VERSION, ModelCall::query()->sole()->prompt_version);
+    }
+
+    public function test_ask_sends_no_context_yet_so_the_assistant_is_told_none_was_provided(): void
+    {
+        Http::fake(['*' => Http::response($this->completion('ok'))]);
+
+        $this->actingAs($this->user())->postJson('support/ask', ['question' => 'What late fee does Ledgerly charge?']);
+
+        Http::assertSent(fn (Request $request): bool => str_contains(
+            $request['messages'][1]['content'],
+            "Context:\n(no context provided)\n\nQuestion: What late fee does Ledgerly charge?",
+        ));
     }
 
     public function test_ask_rejects_a_guest_with_401(): void

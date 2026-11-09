@@ -7,10 +7,12 @@ use App\Ai\Embeddings\MarkdownChunker;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
 use App\Ai\Http\AiHttpClient;
+use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
+use App\Events\TicketReceived;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +43,8 @@ class AiServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(ModelCalled::class, RecordModelCall::class);
+
+        Event::listen(TicketReceived::class, ClassifyReceivedTicket::class);
 
         RateLimiter::for('ai', fn (Request $request): Limit => Limit::perMinute((int) config('ai.rate_limit'))->by($request->user()?->id ?: $request->ip()));
     }

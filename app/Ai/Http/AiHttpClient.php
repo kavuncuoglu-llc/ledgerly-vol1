@@ -19,7 +19,7 @@ final class AiHttpClient
 {
     public function __construct(private readonly array $config) {}
 
-    public function chat(array $messages, array $options = [], string $feature = 'unknown'): ChatResponse
+    public function chat(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null): ChatResponse
     {
         $body = [
             ...$this->buildBody($messages, $options),
@@ -41,12 +41,13 @@ final class AiHttpClient
             $chat->usage->toArray(),
             $chat->finishReason,
             $latencyMs,
+            promptVersion: $promptVersion,
         );
 
         return $chat;
     }
 
-    public function stream(array $messages, array $options = [], string $feature = 'unknown'): Generator
+    public function stream(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null): Generator
     {
         $body = [
             ...$this->buildBody($messages, $options),
@@ -95,6 +96,7 @@ final class AiHttpClient
             $accumulator->usage()->toArray(),
             $this->streamFinishReason($accumulator),
             $this->elapsedMilliseconds($started),
+            promptVersion: $promptVersion,
         );
 
         if (! $accumulator->isDone()) {

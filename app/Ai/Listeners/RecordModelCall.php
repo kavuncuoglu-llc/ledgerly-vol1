@@ -20,6 +20,7 @@ final class RecordModelCall
             'latency_ms' => $event->latencyMs,
             'cost_micros' => $this->costMicros($event),
             'conversation_id' => $event->conversationId,
+            'prompt_version' => $event->promptVersion,
         ]);
 
         $this->warnWhenTruncated($event);

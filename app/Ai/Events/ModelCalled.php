@@ -16,5 +16,6 @@ final class ModelCalled
         public readonly string $finishReason,
         public readonly int $latencyMs,
         public readonly ?int $conversationId = null,
+        public readonly ?string $promptVersion = null,
     ) {}
 }

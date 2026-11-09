@@ -28,6 +28,20 @@ class RecordModelCallTest extends TestCase
         $this->assertNull($call->conversation_id);
     }
 
+    public function test_handle_stores_the_prompt_version_of_the_event(): void
+    {
+        event($this->modelCalled(promptVersion: '2026-11-01.2'));
+
+        $this->assertSame('2026-11-01.2', ModelCall::query()->sole()->prompt_version);
+    }
+
+    public function test_handle_stores_a_null_prompt_version_for_calls_without_a_prompt_class(): void
+    {
+        event($this->modelCalled());
+
+        $this->assertNull(ModelCall::query()->sole()->prompt_version);
+    }
+
     public function test_handle_costs_a_model_without_a_rate_at_zero(): void
     {
         event($this->modelCalled(provider: 'ollama', model: 'unlisted:1b'));
@@ -99,6 +113,7 @@ class RecordModelCallTest extends TestCase
         string $model = 'llama3.1:8b',
         string $finishReason = 'stop',
         ?int $conversationId = null,
+        ?string $promptVersion = null,
     ): ModelCalled {
         return new ModelCalled(
             feature: 'support.reply',
@@ -111,6 +126,7 @@ class RecordModelCallTest extends TestCase
             finishReason: $finishReason,
             latencyMs: 2840,
             conversationId: $conversationId,
+            promptVersion: $promptVersion,
         );
     }
 }

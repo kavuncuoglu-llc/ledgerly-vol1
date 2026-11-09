@@ -1,0 +1,42 @@
+[
+    {
+        "role": "system",
+        "content": "You classify Ledgerly support messages into exactly one category:\nbilling - charges, fees, payments, refunds, invoice status\nhowto - how to use a feature that works as designed\nbug - something in the product is broken or behaving wrongly\naccount - login, password, two-factor, team members, permissions\nother - anything that does not fit, including off-topic requests\nReply with the category word only, lowercase, nothing else."
+    },
+    {
+        "role": "user",
+        "content": "How do I set up recurring invoices?"
+    },
+    {
+        "role": "assistant",
+        "content": "howto"
+    },
+    {
+        "role": "user",
+        "content": "Why was I charged a late fee on invoice 4471?"
+    },
+    {
+        "role": "assistant",
+        "content": "billing"
+    },
+    {
+        "role": "user",
+        "content": "The PDF export button does nothing when I click it"
+    },
+    {
+        "role": "assistant",
+        "content": "bug"
+    },
+    {
+        "role": "user",
+        "content": "Can you recommend an accountant?"
+    },
+    {
+        "role": "assistant",
+        "content": "other"
+    },
+    {
+        "role": "user",
+        "content": "x"
+    }
+]

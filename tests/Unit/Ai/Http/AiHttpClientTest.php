@@ -125,6 +125,28 @@ class AiHttpClientTest extends TestCase
             && $event->latencyMs >= 0);
     }
 
+    public function test_chat_passes_the_prompt_version_to_model_called(): void
+    {
+        Http::fake(['*' => Http::response($this->completion())]);
+
+        $this->client()->chat(
+            messages: [$this->userMessage('Hi')],
+            feature: 'ticket.classify',
+            promptVersion: '2026-11-01.1',
+        );
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->promptVersion === '2026-11-01.1');
+    }
+
+    public function test_chat_leaves_the_prompt_version_null_when_none_is_given(): void
+    {
+        Http::fake(['*' => Http::response($this->completion())]);
+
+        $this->client()->chat(messages: [$this->userMessage('Hi')]);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->promptVersion === null);
+    }
+
     public function test_chat_does_not_dispatch_model_called_when_the_call_fails(): void
     {
         Http::fake(['*' => Http::response('model not found', 404)]);
@@ -260,6 +282,18 @@ class AiHttpClientTest extends TestCase
             && $event->model === 'served:8b'
             && $event->usage['prompt_tokens'] === 18
             && $event->finishReason === 'stop');
+    }
+
+    public function test_stream_passes_the_prompt_version_to_model_called(): void
+    {
+        Http::fake(['*' => Http::response($this->sse([
+            $this->chunk(['content' => 'Hi']),
+            $this->chunk([], 'stop', ['prompt_tokens' => 18, 'completion_tokens' => 2]),
+        ], done: true))]);
+
+        iterator_to_array($this->client()->stream(messages: [$this->userMessage('Hi')], feature: 'support.reply', promptVersion: '2026-11-01.2'), false);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->promptVersion === '2026-11-01.2');
     }
 
     public function test_stream_records_zero_usage_when_the_server_omits_it(): void

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
     'latency_ms',
     'cost_micros',
     'conversation_id',
+    'prompt_version',
 ])]
 class ModelCall extends Model
 {

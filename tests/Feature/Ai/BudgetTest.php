@@ -4,7 +4,7 @@ namespace Tests\Feature\Ai;
 
 use App\Ai\Exceptions\PromptTooLarge;
 use App\Ai\Prompt\Budget;
-use App\Ai\Support\SupportPrompt;
+use App\Ai\Prompts\SupportPrompt;
 use App\Ai\Tokens\TokenCounter;
 use Tests\TestCase;
 

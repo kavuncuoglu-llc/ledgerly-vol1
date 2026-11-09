@@ -1,0 +1,82 @@
+[
+    {
+        "message": "Hi, my client at acme@example.com says they paid $1,284.50 on March 3 but invoice 4471 still shows unpaid",
+        "label": "billing"
+    },
+    {
+        "message": "How do I set up a recurring invoice for a retainer client?",
+        "label": "howto"
+    },
+    {
+        "message": "The PDF export button does nothing when I click it on Safari",
+        "label": "bug"
+    },
+    {
+        "message": "Why was I charged a late fee on invoice 4438?",
+        "label": "billing"
+    },
+    {
+        "message": "I forgot my password and the reset email never arrives",
+        "label": "account"
+    },
+    {
+        "message": "How do I add my logo to the invoice template?",
+        "label": "howto"
+    },
+    {
+        "message": "My card was charged twice for the Business plan this month",
+        "label": "billing"
+    },
+    {
+        "message": "Export is broken, the CSV is empty every time",
+        "label": "bug"
+    },
+    {
+        "message": "Can you recommend a good bookkeeper in Jacksonville?",
+        "label": "other"
+    },
+    {
+        "message": "How do I turn on two-factor authentication?",
+        "label": "account"
+    },
+    {
+        "message": "Invoice shows paid but my bank shows nothing",
+        "label": "billing"
+    },
+    {
+        "message": "Can I invite my accountant?",
+        "label": "howto"
+    },
+    {
+        "message": "Where do I change the payment terms on a single invoice?",
+        "label": "howto"
+    },
+    {
+        "message": "The dashboard total does not match the revenue report for last month",
+        "label": "bug"
+    },
+    {
+        "message": "Please remove the late fee on INV-4471, the client has a payment plan with me",
+        "label": "billing"
+    },
+    {
+        "message": "I cannot sign in, it says my account is locked",
+        "label": "account"
+    },
+    {
+        "message": "How do I record a check payment against an invoice?",
+        "label": "howto"
+    },
+    {
+        "message": "What is the refund policy if I downgrade in the middle of the month?",
+        "label": "billing"
+    },
+    {
+        "message": "Do you integrate with my bookkeeping tool?",
+        "label": "other"
+    },
+    {
+        "message": "How do I add sales tax to a single line item?",
+        "label": "howto"
+    }
+]
