@@ -57,6 +57,13 @@ return [
         'context' => 3500,
     ],
 
+    'encoding' => [
+        'default' => env('AI_ENCODING_DEFAULT', 'toon'),
+        'features' => [
+            'list_invoices' => env('AI_ENCODING_LIST_INVOICES') ?: null,
+        ],
+    ],
+
     'mcp_servers' => [],
 
     'tool_allow_lists' => [],

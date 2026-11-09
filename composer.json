@@ -11,6 +11,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
+        "helgesverre/toon": "^3.3",
         "intervention/image-laravel": "^4.1",
         "laravel/framework": "^13.17",
         "laravel/mcp": "^1.1",

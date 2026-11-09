@@ -42,4 +42,21 @@ class ToolResultTest extends TestCase
         $this->assertFalse($result->ok);
         $this->assertFalse(ToolResult::ok()->isPending());
     }
+
+    public function test_text_is_sent_to_the_model_verbatim_instead_of_as_json(): void
+    {
+        $result = ToolResult::text("Today is 2026-04-20.\ninvoices[1]{number}:\n  INV-4471");
+
+        $this->assertTrue($result->ok);
+        $this->assertTrue($result->isText());
+        $this->assertSame("Today is 2026-04-20.\ninvoices[1]{number}:\n  INV-4471", $result->toJson());
+    }
+
+    public function test_text_is_audited_as_an_ok_result_carrying_the_text(): void
+    {
+        $result = ToolResult::text('rows');
+
+        $this->assertSame(['ok' => true, 'text' => 'rows'], $result->auditArray());
+        $this->assertFalse(ToolResult::ok(['a' => 1])->isText());
+    }
 }

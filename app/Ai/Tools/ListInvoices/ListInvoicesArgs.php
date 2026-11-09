@@ -14,6 +14,8 @@ final readonly class ListInvoicesArgs implements ToolArguments
         public ?InvoiceStatus $status,
         #[Describe('Only invoices issued in this month, as YYYY-MM. Null for every month.')]
         public ?string $month,
+        #[Describe('How many months back to look when no month is given. Null for the default of 6.')]
+        public ?int $months = null,
     ) {}
 
     public static function rules(): array
@@ -28,6 +30,11 @@ final readonly class ListInvoicesArgs implements ToolArguments
                 'string',
                 'date_format:Y-m',
             ],
+            'months' => [
+                'nullable',
+                'integer',
+                'between:1,24',
+            ],
         ];
     }
 
@@ -36,6 +43,9 @@ final readonly class ListInvoicesArgs implements ToolArguments
         return new self(
             status: InvoiceStatus::tryFrom((string) ($data['status'] ?? '')),
             month: $data['month'] ?? null,
+            months: isset($data['months'])
+                ? (int) $data['months']
+                : null,
         );
     }
 }

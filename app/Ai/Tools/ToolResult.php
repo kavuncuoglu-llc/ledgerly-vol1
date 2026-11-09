@@ -28,6 +28,7 @@ final readonly class ToolResult
         public string $pendingId = '',
         public string $summary = '',
         public string $approvalUrl = '',
+        public string $text = '',
     ) {}
 
     public static function ok(array $data = []): self
@@ -36,6 +37,15 @@ final readonly class ToolResult
             ok: true,
             status: self::STATUS_OK,
             data: $data,
+        );
+    }
+
+    public static function text(string $text): self
+    {
+        return new self(
+            ok: true,
+            status: self::STATUS_OK,
+            text: $text,
         );
     }
 
@@ -85,8 +95,20 @@ final readonly class ToolResult
         return $this->status === self::STATUS_PENDING;
     }
 
+    public function isText(): bool
+    {
+        return $this->text !== '';
+    }
+
     public function toArray(): array
     {
+        if ($this->isText()) {
+            return [
+                'ok' => true,
+                'text' => $this->text,
+            ];
+        }
+
         if ($this->ok) {
             return [
                 'ok' => true,
@@ -123,6 +145,10 @@ final readonly class ToolResult
 
     public function toJson(): string
     {
+        if ($this->isText()) {
+            return $this->text;
+        }
+
         return json_encode($this->toArray(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
     }
 }

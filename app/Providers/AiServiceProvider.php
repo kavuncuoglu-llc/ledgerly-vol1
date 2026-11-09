@@ -4,6 +4,12 @@ namespace App\Providers;
 
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
+use App\Ai\Encoding\DataEncoder;
+use App\Ai\Encoding\Formats\JsonFormat;
+use App\Ai\Encoding\Formats\MarkdownFormat;
+use App\Ai\Encoding\Formats\ToonFormat;
+use App\Ai\Encoding\Formats\TsvFormat;
+use App\Ai\Encoding\Formats\YamlFormat;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Events\ToolCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
@@ -43,6 +49,15 @@ class AiServiceProvider extends ServiceProvider
             dimensions: config('ai.embed_dimensions'),
         ));
 
+        $this->app->singleton(DataEncoder::class, fn () => new DataEncoder([
+            'toon' => new ToonFormat,
+            'tsv' => new TsvFormat,
+            'markdown' => new MarkdownFormat,
+            'json' => new JsonFormat,
+            'json-pretty' => new JsonFormat(pretty: true),
+            'yaml' => new YamlFormat,
+        ]));
+
         $this->app->singleton(McpClientFactory::class);
 
         $this->app->singleton(McpToolSource::class, fn () => new McpToolSource(
@@ -52,7 +67,7 @@ class AiServiceProvider extends ServiceProvider
 
         $this->app->singleton(ToolRegistry::class, fn () => (new ToolRegistry)
             ->add(new LookupInvoice)
-            ->add(new ListInvoices)
+            ->add(new ListInvoices($this->app->make(DataEncoder::class)))
             ->add(new OpenTicket)
             ->addSource($this->app->make(McpToolSource::class)));
 

@@ -48,6 +48,48 @@ class SupportToolsTest extends TestCase
         $this->assertSame('allowed', $audit->decision);
     }
 
+    public function test_ask_hands_the_model_the_invoice_list_as_an_encoded_table(): void
+    {
+        $user = $this->customerUser();
+        $this->invoiceFor($user, 'INV-4471', 18);
+        $this->invoiceFor($user, 'INV-4438', 41);
+        Http::fakeSequence()
+            ->push($this->toolCallResponse([$this->toolCall('call_1', 'list_invoices', ['status' => 'overdue', 'month' => null, 'months' => null])]))
+            ->push($this->answerResponse('You have two overdue invoices.'));
+
+        $this->actingAs($user)->postJson('support/ask', ['question' => 'How are my invoices looking overall?'])->assertOk();
+
+        $toolTurn = collect(Http::recorded()[1][0]['messages'])->last();
+        $this->assertSame('tool', $toolTurn['role']);
+        $this->assertStringContainsString('invoices[2]{number,status,due,total,days_overdue,late_fee}:', $toolTurn['content']);
+        $this->assertStringContainsString('Data below is in TOON format', $toolTurn['content']);
+        $this->assertStringNotContainsString('"ok"', $toolTurn['content']);
+        $this->assertStringNotContainsString('created_at', $toolTurn['content']);
+    }
+
+    public function test_ask_sends_fewer_characters_in_toon_than_in_json_for_the_same_invoices(): void
+    {
+        $user = $this->customerUser();
+        $this->invoiceFor($user, 'INV-4471', 18);
+        $this->invoiceFor($user, 'INV-4438', 41);
+        $listCall = $this->toolCallResponse([$this->toolCall('call_1', 'list_invoices', ['status' => null, 'month' => null, 'months' => null])]);
+        Http::fakeSequence()
+            ->push($listCall)
+            ->push($this->answerResponse('ok'))
+            ->push($listCall)
+            ->push($this->answerResponse('ok'));
+
+        config()->set('ai.encoding.default', 'toon');
+        $this->actingAs($user)->postJson('support/ask', ['question' => 'List them.'])->assertOk();
+        config()->set('ai.encoding.default', 'json');
+        $this->actingAs($user)->postJson('support/ask', ['question' => 'List them.'])->assertOk();
+
+        $toon = collect(Http::recorded()[1][0]['messages'])->last()['content'];
+        $json = collect(Http::recorded()[3][0]['messages'])->last()['content'];
+        $this->assertLessThan(strlen($json), strlen($toon));
+        $this->assertStringContainsString('{"invoices":[', $json);
+    }
+
     public function test_ask_looks_up_the_invoice_then_opens_a_ticket_in_three_model_calls(): void
     {
         $user = $this->customerUser();

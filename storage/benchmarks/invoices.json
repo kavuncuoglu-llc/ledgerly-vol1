@@ -1,0 +1,1085 @@
+{
+    "today": "2026-06-30",
+    "invoices": [
+        {
+            "number": "INV-4600",
+            "status": "void",
+            "currency": "USD",
+            "total": 1980.26,
+            "issued_at": "2026-06-30T09:14:00",
+            "due_at": "2026-07-30T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4599",
+            "status": "sent",
+            "currency": "USD",
+            "total": 3852.0,
+            "issued_at": "2026-06-27T09:14:00",
+            "due_at": "2026-07-27T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4598",
+            "status": "sent",
+            "currency": "USD",
+            "total": 2568.0,
+            "issued_at": "2026-06-26T09:14:00",
+            "due_at": "2026-07-26T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4597",
+            "status": "sent",
+            "currency": "USD",
+            "total": 1979.56,
+            "issued_at": "2026-06-24T09:14:00",
+            "due_at": "2026-07-24T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4596",
+            "status": "sent",
+            "currency": "USD",
+            "total": 2568.37,
+            "issued_at": "2026-06-21T09:14:00",
+            "due_at": "2026-07-21T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4595",
+            "status": "sent",
+            "currency": "USD",
+            "total": 192.6,
+            "issued_at": "2026-06-20T09:14:00",
+            "due_at": "2026-07-20T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4594",
+            "status": "sent",
+            "currency": "USD",
+            "total": 1284.0,
+            "issued_at": "2026-06-18T09:14:00",
+            "due_at": "2026-07-18T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4593",
+            "status": "sent",
+            "currency": "USD",
+            "total": 685.41,
+            "issued_at": "2026-06-15T09:14:00",
+            "due_at": "2026-07-15T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4592",
+            "status": "sent",
+            "currency": "USD",
+            "total": 1285.01,
+            "issued_at": "2026-06-14T09:14:00",
+            "due_at": "2026-07-14T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4591",
+            "status": "sent",
+            "currency": "USD",
+            "total": 481.92,
+            "issued_at": "2026-06-11T09:14:00",
+            "due_at": "2026-07-11T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4590",
+            "status": "void",
+            "currency": "USD",
+            "total": 856.68,
+            "issued_at": "2026-06-10T09:14:00",
+            "due_at": "2026-07-10T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4589",
+            "status": "sent",
+            "currency": "USD",
+            "total": 1284.85,
+            "issued_at": "2026-06-08T09:14:00",
+            "due_at": "2026-07-08T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4588",
+            "status": "sent",
+            "currency": "USD",
+            "total": 342.4,
+            "issued_at": "2026-06-06T09:14:00",
+            "due_at": "2026-07-06T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4587",
+            "status": "sent",
+            "currency": "USD",
+            "total": 343.02,
+            "issued_at": "2026-06-03T09:14:00",
+            "due_at": "2026-07-03T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4586",
+            "status": "sent",
+            "currency": "USD",
+            "total": 685.25,
+            "issued_at": "2026-06-02T09:14:00",
+            "due_at": "2026-07-02T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4585",
+            "status": "sent",
+            "currency": "USD",
+            "total": 856.67,
+            "issued_at": "2026-05-31T09:14:00",
+            "due_at": "2026-06-30T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4584",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1979.76,
+            "issued_at": "2026-05-28T09:14:00",
+            "due_at": "2026-06-27T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4583",
+            "status": "paid",
+            "currency": "USD",
+            "total": 684.8,
+            "issued_at": "2026-05-26T09:14:00",
+            "due_at": "2026-06-25T00:00:00",
+            "paid_at": "2026-06-21T00:00:00"
+        },
+        {
+            "number": "INV-4582",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.16,
+            "issued_at": "2026-05-25T09:14:00",
+            "due_at": "2026-06-24T00:00:00",
+            "paid_at": "2026-06-17T00:00:00"
+        },
+        {
+            "number": "INV-4581",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 343.0,
+            "issued_at": "2026-05-23T09:14:00",
+            "due_at": "2026-06-22T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4580",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.67,
+            "issued_at": "2026-05-20T09:14:00",
+            "due_at": "2026-06-19T00:00:00",
+            "paid_at": "2026-05-29T00:00:00"
+        },
+        {
+            "number": "INV-4579",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1979.64,
+            "issued_at": "2026-05-18T09:14:00",
+            "due_at": "2026-06-17T00:00:00",
+            "paid_at": "2026-06-05T00:00:00"
+        },
+        {
+            "number": "INV-4578",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 685.55,
+            "issued_at": "2026-05-17T09:14:00",
+            "due_at": "2026-06-16T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4577",
+            "status": "paid",
+            "currency": "USD",
+            "total": 192.76,
+            "issued_at": "2026-05-14T09:14:00",
+            "due_at": "2026-06-13T00:00:00",
+            "paid_at": "2026-05-23T00:00:00"
+        },
+        {
+            "number": "INV-4576",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 856.55,
+            "issued_at": "2026-05-12T09:14:00",
+            "due_at": "2026-06-11T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4575",
+            "status": "void",
+            "currency": "USD",
+            "total": 1979.5,
+            "issued_at": "2026-05-11T09:14:00",
+            "due_at": "2026-06-10T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4574",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1285.06,
+            "issued_at": "2026-05-08T09:14:00",
+            "due_at": "2026-06-07T00:00:00",
+            "paid_at": "2026-06-04T00:00:00"
+        },
+        {
+            "number": "INV-4573",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1284.54,
+            "issued_at": "2026-05-06T09:14:00",
+            "due_at": "2026-06-05T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4572",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.82,
+            "issued_at": "2026-05-05T09:14:00",
+            "due_at": "2026-06-04T00:00:00",
+            "paid_at": "2026-05-29T00:00:00"
+        },
+        {
+            "number": "INV-4571",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 481.5,
+            "issued_at": "2026-05-02T09:14:00",
+            "due_at": "2026-06-01T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4570",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 193.04,
+            "issued_at": "2026-05-01T09:14:00",
+            "due_at": "2026-05-31T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4569",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.09,
+            "issued_at": "2026-04-29T09:14:00",
+            "due_at": "2026-05-29T00:00:00",
+            "paid_at": "2026-05-19T00:00:00"
+        },
+        {
+            "number": "INV-4568",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.56,
+            "issued_at": "2026-04-27T09:14:00",
+            "due_at": "2026-05-27T00:00:00",
+            "paid_at": "2026-05-08T00:00:00"
+        },
+        {
+            "number": "INV-4567",
+            "status": "paid",
+            "currency": "USD",
+            "total": 342.72,
+            "issued_at": "2026-04-25T09:14:00",
+            "due_at": "2026-05-25T00:00:00",
+            "paid_at": "2026-05-19T00:00:00"
+        },
+        {
+            "number": "INV-4566",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 342.89,
+            "issued_at": "2026-04-23T09:14:00",
+            "due_at": "2026-05-23T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4565",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 856.0,
+            "issued_at": "2026-04-21T09:14:00",
+            "due_at": "2026-05-21T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4564",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 2568.5,
+            "issued_at": "2026-04-18T09:14:00",
+            "due_at": "2026-05-18T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4563",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1979.89,
+            "issued_at": "2026-04-17T09:14:00",
+            "due_at": "2026-05-17T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4562",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 684.82,
+            "issued_at": "2026-04-14T09:14:00",
+            "due_at": "2026-05-14T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4561",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 685.36,
+            "issued_at": "2026-04-13T09:14:00",
+            "due_at": "2026-05-13T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4560",
+            "status": "paid",
+            "currency": "USD",
+            "total": 342.65,
+            "issued_at": "2026-04-11T09:14:00",
+            "due_at": "2026-05-11T00:00:00",
+            "paid_at": "2026-04-23T00:00:00"
+        },
+        {
+            "number": "INV-4559",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1980.32,
+            "issued_at": "2026-04-08T09:14:00",
+            "due_at": "2026-05-08T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4558",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.6,
+            "issued_at": "2026-04-07T09:14:00",
+            "due_at": "2026-05-07T00:00:00",
+            "paid_at": "2026-05-04T00:00:00"
+        },
+        {
+            "number": "INV-4557",
+            "status": "void",
+            "currency": "USD",
+            "total": 192.79,
+            "issued_at": "2026-04-04T09:14:00",
+            "due_at": "2026-05-04T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4556",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.8,
+            "issued_at": "2026-04-03T09:14:00",
+            "due_at": "2026-05-03T00:00:00",
+            "paid_at": "2026-04-11T00:00:00"
+        },
+        {
+            "number": "INV-4555",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.93,
+            "issued_at": "2026-04-01T09:14:00",
+            "due_at": "2026-05-01T00:00:00",
+            "paid_at": "2026-04-14T00:00:00"
+        },
+        {
+            "number": "INV-4554",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.41,
+            "issued_at": "2026-03-29T09:14:00",
+            "due_at": "2026-04-28T00:00:00",
+            "paid_at": "2026-04-09T00:00:00"
+        },
+        {
+            "number": "INV-4553",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1284.29,
+            "issued_at": "2026-03-28T09:14:00",
+            "due_at": "2026-04-27T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4552",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.74,
+            "issued_at": "2026-03-26T09:14:00",
+            "due_at": "2026-04-25T00:00:00",
+            "paid_at": "2026-04-01T00:00:00"
+        },
+        {
+            "number": "INV-4551",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 3852.86,
+            "issued_at": "2026-03-24T09:14:00",
+            "due_at": "2026-04-23T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4550",
+            "status": "void",
+            "currency": "USD",
+            "total": 1980.06,
+            "issued_at": "2026-03-21T09:14:00",
+            "due_at": "2026-04-20T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4549",
+            "status": "paid",
+            "currency": "USD",
+            "total": 684.98,
+            "issued_at": "2026-03-20T09:14:00",
+            "due_at": "2026-04-19T00:00:00",
+            "paid_at": "2026-03-26T00:00:00"
+        },
+        {
+            "number": "INV-4548",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.97,
+            "issued_at": "2026-03-18T09:14:00",
+            "due_at": "2026-04-17T00:00:00",
+            "paid_at": "2026-03-22T00:00:00"
+        },
+        {
+            "number": "INV-4547",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 2568.66,
+            "issued_at": "2026-03-16T09:14:00",
+            "due_at": "2026-04-15T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4546",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 2568.47,
+            "issued_at": "2026-03-13T09:14:00",
+            "due_at": "2026-04-12T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4545",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.64,
+            "issued_at": "2026-03-12T09:14:00",
+            "due_at": "2026-04-11T00:00:00",
+            "paid_at": "2026-04-08T00:00:00"
+        },
+        {
+            "number": "INV-4544",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1979.68,
+            "issued_at": "2026-03-10T09:14:00",
+            "due_at": "2026-04-09T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4543",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 3852.37,
+            "issued_at": "2026-03-08T09:14:00",
+            "due_at": "2026-04-07T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4542",
+            "status": "paid",
+            "currency": "USD",
+            "total": 481.69,
+            "issued_at": "2026-03-06T09:14:00",
+            "due_at": "2026-04-05T00:00:00",
+            "paid_at": "2026-04-03T00:00:00"
+        },
+        {
+            "number": "INV-4541",
+            "status": "overdue",
+            "currency": "USD",
+            "total": 1284.46,
+            "issued_at": "2026-03-03T09:14:00",
+            "due_at": "2026-04-02T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4540",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.73,
+            "issued_at": "2026-03-01T09:14:00",
+            "due_at": "2026-03-31T00:00:00",
+            "paid_at": "2026-03-20T00:00:00"
+        },
+        {
+            "number": "INV-4539",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.05,
+            "issued_at": "2026-02-27T09:14:00",
+            "due_at": "2026-03-29T00:00:00",
+            "paid_at": "2026-03-19T00:00:00"
+        },
+        {
+            "number": "INV-4538",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1980.31,
+            "issued_at": "2026-02-25T09:14:00",
+            "due_at": "2026-03-27T00:00:00",
+            "paid_at": "2026-03-08T00:00:00"
+        },
+        {
+            "number": "INV-4537",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.82,
+            "issued_at": "2026-02-23T09:14:00",
+            "due_at": "2026-03-25T00:00:00",
+            "paid_at": "2026-03-19T00:00:00"
+        },
+        {
+            "number": "INV-4536",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.33,
+            "issued_at": "2026-02-22T09:14:00",
+            "due_at": "2026-03-24T00:00:00",
+            "paid_at": "2026-03-11T00:00:00"
+        },
+        {
+            "number": "INV-4535",
+            "status": "paid",
+            "currency": "USD",
+            "total": 192.9,
+            "issued_at": "2026-02-19T09:14:00",
+            "due_at": "2026-03-21T00:00:00",
+            "paid_at": "2026-03-06T00:00:00"
+        },
+        {
+            "number": "INV-4534",
+            "status": "paid",
+            "currency": "USD",
+            "total": 342.49,
+            "issued_at": "2026-02-17T09:14:00",
+            "due_at": "2026-03-19T00:00:00",
+            "paid_at": "2026-03-08T00:00:00"
+        },
+        {
+            "number": "INV-4533",
+            "status": "paid",
+            "currency": "USD",
+            "total": 343.17,
+            "issued_at": "2026-02-16T09:14:00",
+            "due_at": "2026-03-18T00:00:00",
+            "paid_at": "2026-03-05T00:00:00"
+        },
+        {
+            "number": "INV-4532",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.95,
+            "issued_at": "2026-02-14T09:14:00",
+            "due_at": "2026-03-16T00:00:00",
+            "paid_at": "2026-02-28T00:00:00"
+        },
+        {
+            "number": "INV-4531",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.8,
+            "issued_at": "2026-02-11T09:14:00",
+            "due_at": "2026-03-13T00:00:00",
+            "paid_at": "2026-03-10T00:00:00"
+        },
+        {
+            "number": "INV-4530",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.24,
+            "issued_at": "2026-02-10T09:14:00",
+            "due_at": "2026-03-12T00:00:00",
+            "paid_at": "2026-02-19T00:00:00"
+        },
+        {
+            "number": "INV-4529",
+            "status": "paid",
+            "currency": "USD",
+            "total": 481.9,
+            "issued_at": "2026-02-07T09:14:00",
+            "due_at": "2026-03-09T00:00:00",
+            "paid_at": "2026-03-03T00:00:00"
+        },
+        {
+            "number": "INV-4528",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.56,
+            "issued_at": "2026-02-05T09:14:00",
+            "due_at": "2026-03-07T00:00:00",
+            "paid_at": "2026-02-26T00:00:00"
+        },
+        {
+            "number": "INV-4527",
+            "status": "paid",
+            "currency": "USD",
+            "total": 482.02,
+            "issued_at": "2026-02-04T09:14:00",
+            "due_at": "2026-03-06T00:00:00",
+            "paid_at": "2026-02-26T00:00:00"
+        },
+        {
+            "number": "INV-4526",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.73,
+            "issued_at": "2026-02-02T09:14:00",
+            "due_at": "2026-03-04T00:00:00",
+            "paid_at": "2026-02-14T00:00:00"
+        },
+        {
+            "number": "INV-4525",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.24,
+            "issued_at": "2026-01-31T09:14:00",
+            "due_at": "2026-03-02T00:00:00",
+            "paid_at": "2026-02-08T00:00:00"
+        },
+        {
+            "number": "INV-4524",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.79,
+            "issued_at": "2026-01-28T09:14:00",
+            "due_at": "2026-02-27T00:00:00",
+            "paid_at": "2026-02-19T00:00:00"
+        },
+        {
+            "number": "INV-4523",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.2,
+            "issued_at": "2026-01-26T09:14:00",
+            "due_at": "2026-02-25T00:00:00",
+            "paid_at": "2026-02-03T00:00:00"
+        },
+        {
+            "number": "INV-4522",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1979.57,
+            "issued_at": "2026-01-24T09:14:00",
+            "due_at": "2026-02-23T00:00:00",
+            "paid_at": "2026-02-10T00:00:00"
+        },
+        {
+            "number": "INV-4521",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.86,
+            "issued_at": "2026-01-22T09:14:00",
+            "due_at": "2026-02-21T00:00:00",
+            "paid_at": "2026-01-25T00:00:00"
+        },
+        {
+            "number": "INV-4520",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1285.04,
+            "issued_at": "2026-01-21T09:14:00",
+            "due_at": "2026-02-20T00:00:00",
+            "paid_at": "2026-02-04T00:00:00"
+        },
+        {
+            "number": "INV-4519",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.06,
+            "issued_at": "2026-01-18T09:14:00",
+            "due_at": "2026-02-17T00:00:00",
+            "paid_at": "2026-02-01T00:00:00"
+        },
+        {
+            "number": "INV-4518",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.16,
+            "issued_at": "2026-01-17T09:14:00",
+            "due_at": "2026-02-16T00:00:00",
+            "paid_at": "2026-02-09T00:00:00"
+        },
+        {
+            "number": "INV-4517",
+            "status": "paid",
+            "currency": "USD",
+            "total": 343.13,
+            "issued_at": "2026-01-15T09:14:00",
+            "due_at": "2026-02-14T00:00:00",
+            "paid_at": "2026-02-11T00:00:00"
+        },
+        {
+            "number": "INV-4516",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1979.95,
+            "issued_at": "2026-01-13T09:14:00",
+            "due_at": "2026-02-12T00:00:00",
+            "paid_at": "2026-01-29T00:00:00"
+        },
+        {
+            "number": "INV-4515",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1980.05,
+            "issued_at": "2026-01-11T09:14:00",
+            "due_at": "2026-02-10T00:00:00",
+            "paid_at": "2026-01-23T00:00:00"
+        },
+        {
+            "number": "INV-4514",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.63,
+            "issued_at": "2026-01-09T09:14:00",
+            "due_at": "2026-02-08T00:00:00",
+            "paid_at": "2026-01-17T00:00:00"
+        },
+        {
+            "number": "INV-4513",
+            "status": "paid",
+            "currency": "USD",
+            "total": 192.77,
+            "issued_at": "2026-01-07T09:14:00",
+            "due_at": "2026-02-06T00:00:00",
+            "paid_at": "2026-01-30T00:00:00"
+        },
+        {
+            "number": "INV-4512",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.34,
+            "issued_at": "2026-01-04T09:14:00",
+            "due_at": "2026-02-03T00:00:00",
+            "paid_at": "2026-01-12T00:00:00"
+        },
+        {
+            "number": "INV-4511",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1979.8,
+            "issued_at": "2026-01-03T09:14:00",
+            "due_at": "2026-02-02T00:00:00",
+            "paid_at": "2026-01-30T00:00:00"
+        },
+        {
+            "number": "INV-4510",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1979.53,
+            "issued_at": "2026-01-01T09:14:00",
+            "due_at": "2026-01-31T00:00:00",
+            "paid_at": "2026-01-17T00:00:00"
+        },
+        {
+            "number": "INV-4509",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.46,
+            "issued_at": "2025-12-30T09:14:00",
+            "due_at": "2026-01-29T00:00:00",
+            "paid_at": "2026-01-09T00:00:00"
+        },
+        {
+            "number": "INV-4508",
+            "status": "paid",
+            "currency": "USD",
+            "total": 192.95,
+            "issued_at": "2025-12-28T09:14:00",
+            "due_at": "2026-01-27T00:00:00",
+            "paid_at": "2026-01-17T00:00:00"
+        },
+        {
+            "number": "INV-4507",
+            "status": "paid",
+            "currency": "USD",
+            "total": 342.96,
+            "issued_at": "2025-12-26T09:14:00",
+            "due_at": "2026-01-25T00:00:00",
+            "paid_at": "2026-01-12T00:00:00"
+        },
+        {
+            "number": "INV-4506",
+            "status": "paid",
+            "currency": "USD",
+            "total": 684.94,
+            "issued_at": "2025-12-23T09:14:00",
+            "due_at": "2026-01-22T00:00:00",
+            "paid_at": "2026-01-09T00:00:00"
+        },
+        {
+            "number": "INV-4505",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.58,
+            "issued_at": "2025-12-22T09:14:00",
+            "due_at": "2026-01-21T00:00:00",
+            "paid_at": "2025-12-25T00:00:00"
+        },
+        {
+            "number": "INV-4504",
+            "status": "paid",
+            "currency": "USD",
+            "total": 343.46,
+            "issued_at": "2025-12-20T09:14:00",
+            "due_at": "2026-01-19T00:00:00",
+            "paid_at": "2025-12-23T00:00:00"
+        },
+        {
+            "number": "INV-4503",
+            "status": "paid",
+            "currency": "USD",
+            "total": 482.41,
+            "issued_at": "2025-12-17T09:14:00",
+            "due_at": "2026-01-16T00:00:00",
+            "paid_at": "2026-01-02T00:00:00"
+        },
+        {
+            "number": "INV-4502",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.48,
+            "issued_at": "2025-12-16T09:14:00",
+            "due_at": "2026-01-15T00:00:00",
+            "paid_at": "2025-12-19T00:00:00"
+        },
+        {
+            "number": "INV-4501",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.22,
+            "issued_at": "2025-12-13T09:14:00",
+            "due_at": "2026-01-12T00:00:00",
+            "paid_at": "2025-12-23T00:00:00"
+        },
+        {
+            "number": "INV-4500",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.11,
+            "issued_at": "2025-12-12T09:14:00",
+            "due_at": "2026-01-11T00:00:00",
+            "paid_at": "2025-12-23T00:00:00"
+        },
+        {
+            "number": "INV-4499",
+            "status": "paid",
+            "currency": "USD",
+            "total": 1284.39,
+            "issued_at": "2025-12-09T09:14:00",
+            "due_at": "2026-01-08T00:00:00",
+            "paid_at": "2025-12-22T00:00:00"
+        },
+        {
+            "number": "INV-4498",
+            "status": "paid",
+            "currency": "USD",
+            "total": 342.45,
+            "issued_at": "2025-12-07T09:14:00",
+            "due_at": "2026-01-06T00:00:00",
+            "paid_at": "2025-12-26T00:00:00"
+        },
+        {
+            "number": "INV-4497",
+            "status": "void",
+            "currency": "USD",
+            "total": 685.62,
+            "issued_at": "2025-12-06T09:14:00",
+            "due_at": "2026-01-05T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4496",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.71,
+            "issued_at": "2025-12-03T09:14:00",
+            "due_at": "2026-01-02T00:00:00",
+            "paid_at": "2025-12-15T00:00:00"
+        },
+        {
+            "number": "INV-4495",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.13,
+            "issued_at": "2025-12-02T09:14:00",
+            "due_at": "2026-01-01T00:00:00",
+            "paid_at": "2025-12-28T00:00:00"
+        },
+        {
+            "number": "INV-4494",
+            "status": "paid",
+            "currency": "USD",
+            "total": 481.61,
+            "issued_at": "2025-11-29T09:14:00",
+            "due_at": "2025-12-29T00:00:00",
+            "paid_at": "2025-12-03T00:00:00"
+        },
+        {
+            "number": "INV-4493",
+            "status": "paid",
+            "currency": "USD",
+            "total": 193.31,
+            "issued_at": "2025-11-27T09:14:00",
+            "due_at": "2025-12-27T00:00:00",
+            "paid_at": "2025-12-03T00:00:00"
+        },
+        {
+            "number": "INV-4492",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.28,
+            "issued_at": "2025-11-26T09:14:00",
+            "due_at": "2025-12-26T00:00:00",
+            "paid_at": "2025-12-10T00:00:00"
+        },
+        {
+            "number": "INV-4491",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.51,
+            "issued_at": "2025-11-23T09:14:00",
+            "due_at": "2025-12-23T00:00:00",
+            "paid_at": "2025-11-28T00:00:00"
+        },
+        {
+            "number": "INV-4490",
+            "status": "void",
+            "currency": "USD",
+            "total": 1980.51,
+            "issued_at": "2025-11-22T09:14:00",
+            "due_at": "2025-12-22T00:00:00",
+            "paid_at": null
+        },
+        {
+            "number": "INV-4489",
+            "status": "paid",
+            "currency": "USD",
+            "total": 856.89,
+            "issued_at": "2025-11-20T09:14:00",
+            "due_at": "2025-12-20T00:00:00",
+            "paid_at": "2025-12-06T00:00:00"
+        },
+        {
+            "number": "INV-4488",
+            "status": "paid",
+            "currency": "USD",
+            "total": 3852.09,
+            "issued_at": "2025-11-17T09:14:00",
+            "due_at": "2025-12-17T00:00:00",
+            "paid_at": "2025-11-27T00:00:00"
+        },
+        {
+            "number": "INV-4487",
+            "status": "paid",
+            "currency": "USD",
+            "total": 2568.96,
+            "issued_at": "2025-11-15T09:14:00",
+            "due_at": "2025-12-15T00:00:00",
+            "paid_at": "2025-11-26T00:00:00"
+        },
+        {
+            "number": "INV-4486",
+            "status": "paid",
+            "currency": "USD",
+            "total": 481.6,
+            "issued_at": "2025-11-14T09:14:00",
+            "due_at": "2025-12-14T00:00:00",
+            "paid_at": "2025-12-03T00:00:00"
+        },
+        {
+            "number": "INV-4485",
+            "status": "paid",
+            "currency": "USD",
+            "total": 343.19,
+            "issued_at": "2025-11-11T09:14:00",
+            "due_at": "2025-12-11T00:00:00",
+            "paid_at": "2025-11-18T00:00:00"
+        },
+        {
+            "number": "INV-4484",
+            "status": "paid",
+            "currency": "USD",
+            "total": 192.89,
+            "issued_at": "2025-11-10T09:14:00",
+            "due_at": "2025-12-10T00:00:00",
+            "paid_at": "2025-11-23T00:00:00"
+        },
+        {
+            "number": "INV-4483",
+            "status": "paid",
+            "currency": "USD",
+            "total": 481.57,
+            "issued_at": "2025-11-07T09:14:00",
+            "due_at": "2025-12-07T00:00:00",
+            "paid_at": "2025-11-27T00:00:00"
+        },
+        {
+            "number": "INV-4482",
+            "status": "paid",
+            "currency": "USD",
+            "total": 684.91,
+            "issued_at": "2025-11-06T09:14:00",
+            "due_at": "2025-12-06T00:00:00",
+            "paid_at": "2025-11-23T00:00:00"
+        },
+        {
+            "number": "INV-4481",
+            "status": "paid",
+            "currency": "USD",
+            "total": 685.27,
+            "issued_at": "2025-11-03T09:14:00",
+            "due_at": "2025-12-03T00:00:00",
+            "paid_at": "2025-11-24T00:00:00"
+        }
+    ]
+}

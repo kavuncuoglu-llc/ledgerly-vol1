@@ -2,8 +2,9 @@
 
 namespace App\Ai\Tools\ListInvoices;
 
+use App\Ai\Encoding\DataEncoder;
+use App\Ai\Shapes\InvoiceSummaryShape;
 use App\Ai\Tools\DtoBackedTool;
-use App\Ai\Tools\InvoiceSummary;
 use App\Ai\Tools\Tool;
 use App\Ai\Tools\ToolContext;
 use App\Ai\Tools\ToolKind;
@@ -15,7 +16,11 @@ final class ListInvoices implements Tool
 {
     use DtoBackedTool;
 
-    public const MAX_INVOICES = 20;
+    public function __construct(private readonly DataEncoder $encoder) {}
+
+    public const DEFAULT_MONTHS = 6;
+
+    public const NO_MATCHES = 'No invoices match.';
 
     public function name(): string
     {
@@ -34,7 +39,7 @@ final class ListInvoices implements Tool
 
     public function description(): string
     {
-        return 'List the current customer\'s invoices, newest first, optionally only one status or one month (YYYY-MM). Returns number, status, dates, days overdue, and amounts for up to 20 invoices. Use when the customer asks about several invoices at once, such as which ones are overdue. Do not use to look up one specific invoice; use lookup_invoice for that.';
+        return 'List the current customer\'s invoices, newest first, optionally only one status or one month (YYYY-MM); otherwise the last 6 months, or the number of months given. Returns a table with number, status, due date, total, days overdue, and late fee for up to 25 invoices. Use when the customer asks about several invoices at once, such as which ones are overdue. Do not use to look up one specific invoice; use lookup_invoice for that.';
     }
 
     public function handle(object $args, ToolContext $ctx): ToolResult
@@ -42,18 +47,18 @@ final class ListInvoices implements Tool
         $invoices = $this->scopedQuery($args, $ctx)
             ->with('customer')
             ->latest('issued_at')
-            ->limit(self::MAX_INVOICES + 1)
             ->get();
 
-        return ToolResult::ok([
-            'count' => min($invoices->count(), self::MAX_INVOICES),
-            'more_available' => $invoices->count() > self::MAX_INVOICES,
-            'invoices' => $invoices
-                ->take(self::MAX_INVOICES)
-                ->map(fn (Invoice $invoice): array => InvoiceSummary::of($invoice))
-                ->values()
-                ->all(),
-        ]);
+        if ($invoices->isEmpty()) {
+            return ToolResult::text(self::NO_MATCHES);
+        }
+
+        return ToolResult::text($this->encoder->encode(
+            rows: $invoices,
+            shape: new InvoiceSummaryShape,
+            format: config('ai.encoding.features.list_invoices'),
+            key: 'invoices',
+        ));
     }
 
     private function scopedQuery(ListInvoicesArgs $args, ToolContext $ctx): Builder
@@ -61,6 +66,7 @@ final class ListInvoices implements Tool
         return Invoice::query()
             ->where('customer_id', $ctx->customer()->id)
             ->when($args->status, fn (Builder $query) => $query->where('status', $args->status))
-            ->when($args->month, fn (Builder $query) => $query->whereYearMonth('issued_at', $args->month));
+            ->when($args->month, fn (Builder $query) => $query->whereYearMonth('issued_at', $args->month))
+            ->unless($args->month, fn (Builder $query) => $query->where('issued_at', '>=', now()->subMonths($args->months ?? self::DEFAULT_MONTHS)));
     }
 }

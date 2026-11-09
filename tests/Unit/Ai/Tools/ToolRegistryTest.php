@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Ai\Tools;
 
+use App\Ai\Encoding\DataEncoder;
 use App\Ai\Exceptions\DuplicateTool;
 use App\Ai\Exceptions\UnknownTool;
 use App\Ai\Tools\ListInvoices\ListInvoices;
@@ -47,7 +48,7 @@ class ToolRegistryTest extends TestCase
             {
                 public function tools(): array
                 {
-                    return [new ListInvoices];
+                    return [new ListInvoices(new DataEncoder([]))];
                 }
             });
 

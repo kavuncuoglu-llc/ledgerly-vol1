@@ -1,0 +1,82 @@
+[
+    {
+        "question": "Which invoice has the largest total?",
+        "expected": "INV-4532"
+    },
+    {
+        "question": "Which invoice has the smallest total?",
+        "expected": "INV-4595"
+    },
+    {
+        "question": "Which invoice has the earliest due date?",
+        "expected": "INV-4481"
+    },
+    {
+        "question": "Which overdue invoice has the most days overdue?",
+        "expected": "INV-4541"
+    },
+    {
+        "question": "How many invoices are overdue?",
+        "expected": "21"
+    },
+    {
+        "question": "How many invoices are paid?",
+        "expected": "78"
+    },
+    {
+        "question": "How many invoices are void?",
+        "expected": "7"
+    },
+    {
+        "question": "How many invoices have the status sent?",
+        "expected": "14"
+    },
+    {
+        "question": "How many invoices have a total above 1000?",
+        "expected": "55"
+    },
+    {
+        "question": "How many invoices were issued in 2026-06?",
+        "expected": "15"
+    },
+    {
+        "question": "What is the combined total of the overdue invoices?",
+        "expected": "32312.51"
+    },
+    {
+        "question": "What is the due date of INV-4599?",
+        "expected": "2026-07-27"
+    },
+    {
+        "question": "What is the due date of INV-4540?",
+        "expected": "2026-03-31"
+    },
+    {
+        "question": "What is the due date of INV-4481?",
+        "expected": "2025-12-03"
+    },
+    {
+        "question": "What is the status of INV-4597?",
+        "expected": "sent"
+    },
+    {
+        "question": "What is the status of INV-4481?",
+        "expected": "paid"
+    },
+    {
+        "question": "What is the total of INV-4595?",
+        "expected": "192.6"
+    },
+    {
+        "question": "What is the total of INV-4592?",
+        "expected": "1285.01"
+    },
+    {
+        "question": "Which invoice is due on 2026-07-15?",
+        "expected": "INV-4593"
+    },
+    {
+        "question": "How many days overdue is INV-4584?",
+        "expected": "3"
+    }
+]

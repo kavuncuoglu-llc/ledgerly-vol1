@@ -72,6 +72,10 @@ final class McpToolAdapter extends ServerTool
             return Response::error($result->toJson());
         }
 
+        if ($result->isText()) {
+            return Response::text($result->text);
+        }
+
         return Response::json($result->toArray());
     }
 }
