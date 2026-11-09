@@ -8,6 +8,7 @@ final readonly class AssembledPrompt
         public array $messages,
         public array $breakdown,
         public array $overBudget = [],
+        public array $labelMap = [],
     ) {}
 
     public function total(): int

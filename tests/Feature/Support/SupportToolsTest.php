@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Support;
 
+use App\Ai\Prompts\SupportPrompt;
 use App\Models\ModelCall;
 use App\Models\Ticket;
 use App\Models\ToolCall;
@@ -122,7 +123,7 @@ class SupportToolsTest extends TestCase
         $this->assertSame(['ok' => true, 'found' => false], json_decode($toolTurn['content'], true));
     }
 
-    public function test_ask_sends_the_tool_definitions_sorted_by_name_and_prompt_version_five(): void
+    public function test_ask_sends_the_tool_definitions_sorted_by_name_and_the_current_prompt_version(): void
     {
         Http::fake(['*' => Http::response($this->answerResponse('Hi'))]);
 
@@ -131,7 +132,7 @@ class SupportToolsTest extends TestCase
         $request = Http::recorded()[0][0];
         $this->assertSame(['list_invoices', 'lookup_invoice', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
         $this->assertStringContainsString('Tools: use lookup_invoice', $request['messages'][0]['content']);
-        $this->assertSame('2026-11-09.5', ModelCall::query()->sole()->prompt_version);
+        $this->assertSame(SupportPrompt::VERSION, ModelCall::query()->sole()->prompt_version);
     }
 
     public function test_ask_reports_the_cap_without_failing(): void

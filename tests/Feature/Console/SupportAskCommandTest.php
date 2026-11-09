@@ -9,12 +9,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Tests\Support\FakesSemanticCache;
+use Tests\Support\SeedsHelpChunks;
 use Tests\TestCase;
 
 class SupportAskCommandTest extends TestCase
 {
     use FakesSemanticCache;
     use RefreshDatabase;
+    use SeedsHelpChunks;
 
     private const QUESTION = 'How do I set up recurring invoices?';
 
@@ -37,6 +39,17 @@ class SupportAskCommandTest extends TestCase
             ->assertSuccessful();
 
         $this->assertSame(1, CachedAnswer::query()->count());
+    }
+
+    public function test_it_prints_the_sources_the_answer_cited(): void
+    {
+        $user = $this->customerUser();
+        $this->seedChunk('set-up-recurring-invoice', 'How do I create a recurring schedule?', 'Open Recurring and choose New recurring invoice to create a schedule.', $this->unitVector(0), category: 'recurring');
+        $this->fakeSemanticStack([self::QUESTION => $this->unitVector(0)], answer: 'Open Recurring and choose New recurring invoice [set-up-recurring-invoice › How do I create a recurring schedule?].');
+
+        $this->artisan('support:ask', ['question' => self::QUESTION, '--user' => $user->id])
+            ->expectsOutputToContain('source: [set-up-recurring-invoice › How do I create a recurring schedule?] /help/recurring/set-up-recurring-invoice#how-do-i-create-a-recurring-schedule')
+            ->assertSuccessful();
     }
 
     public function test_it_names_the_cached_question_and_similarity_on_a_hit(): void

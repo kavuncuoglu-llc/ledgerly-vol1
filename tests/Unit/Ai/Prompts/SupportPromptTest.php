@@ -3,12 +3,13 @@
 namespace Tests\Unit\Ai\Prompts;
 
 use App\Ai\Prompts\SupportPrompt;
+use App\Ai\Retrieval\RetrievedChunk;
 use App\Ai\Tokens\TokenCounter;
 use Tests\TestCase;
 
 class SupportPromptTest extends TestCase
 {
-    private const SYSTEM_TEXT_HASH = 'e4323b3382edc014b551739177dd3d37';
+    private const SYSTEM_TEXT_HASH = '768e0f70f0ab854fe1a5fc7fb79b4ab9';
 
     public function test_system_fits_the_token_budget(): void
     {
@@ -17,11 +18,11 @@ class SupportPromptTest extends TestCase
         $this->assertLessThanOrEqual(config('ai.budget.system'), $tokens);
     }
 
-    public function test_system_text_is_shorter_than_the_chapter_thirteen_version(): void
+    public function test_system_text_stays_below_the_chapter_fifteen_ceiling(): void
     {
         $tokens = app(TokenCounter::class)->count(SupportPrompt::system());
 
-        $this->assertLessThan(320, $tokens);
+        $this->assertLessThan(420, $tokens);
     }
 
     public function test_system_text_carries_no_date_so_the_prefix_does_not_change_daily(): void
@@ -41,9 +42,9 @@ class SupportPromptTest extends TestCase
         );
     }
 
-    public function test_version_is_the_fifth_revision_which_compresses_the_system_text_for_chapter_fourteen(): void
+    public function test_version_is_the_sixth_revision_which_adds_the_grounding_rules_for_chapter_fifteen(): void
     {
-        $this->assertSame('2026-11-09.5', SupportPrompt::VERSION);
+        $this->assertSame('2026-11-09.6', SupportPrompt::VERSION);
     }
 
     public function test_messages_match_the_stored_snapshot(): void
@@ -51,14 +52,22 @@ class SupportPromptTest extends TestCase
         $messages = SupportPrompt::messages(
             question: 'What late fee does Ledgerly charge?',
             contextChunks: [
-                [
-                    'source' => 'billing/late-fees',
-                    'content' => 'Late fees are 1.5% per month, applied 30 days after the due date.',
-                ],
-                [
-                    'source' => 'billing/disputes',
-                    'content' => 'A disputed invoice does not accrue late fees.',
-                ],
+                new RetrievedChunk(
+                    id: 1,
+                    source: 'help/billing/late-fees.md',
+                    title: 'Understanding late fees',
+                    headingPath: 'Billing › Understanding late fees › How the fee is calculated',
+                    content: "Understanding late fees › How the fee is calculated\n\nThe fee is 1.5% of the outstanding balance per month, prorated by day.",
+                    helpVersion: '7b2e9d0',
+                ),
+                new RetrievedChunk(
+                    id: 2,
+                    source: 'help/billing/late-fees.md',
+                    title: 'Understanding late fees',
+                    headingPath: 'Billing › Understanding late fees › When a late fee is applied',
+                    content: "Understanding late fees › When a late fee is applied\n\nA late fee is applied automatically 30 days after the due date.",
+                    helpVersion: '7b2e9d0',
+                ),
             ],
             history: [
                 [

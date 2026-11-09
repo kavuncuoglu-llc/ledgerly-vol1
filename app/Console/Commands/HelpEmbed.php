@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Ai\Cache\HelpVersion;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\HelpIndexer;
 use App\Ai\Exceptions\EmbeddingFailed;
@@ -13,9 +14,9 @@ class HelpEmbed extends Command
 {
     protected $signature = 'help:embed';
 
-    protected $description = 'Chunk the help center, embed every chunk, and store the vectors in help_chunks';
+    protected $description = 'Chunk the help center, re-embed every chunk, and store the vectors in help_chunks (help:ingest embeds only what changed)';
 
-    public function handle(HelpIndexer $indexer, Embedder $embedder): int
+    public function handle(HelpIndexer $indexer, Embedder $embedder, HelpVersion $helpVersion): int
     {
         $chunks = $indexer->chunks();
 
@@ -25,7 +26,7 @@ class HelpEmbed extends Command
         $started = microtime(true);
 
         try {
-            $this->embedWithProgress($indexer, $chunks);
+            $this->embedWithProgress($indexer, $chunks, $helpVersion->current());
         } catch (ModelRequestFailed|EmbeddingFailed $exception) {
             $this->error($exception->getMessage());
 
@@ -40,11 +41,11 @@ class HelpEmbed extends Command
         return Command::SUCCESS;
     }
 
-    private function embedWithProgress(HelpIndexer $indexer, Collection $chunks): void
+    private function embedWithProgress(HelpIndexer $indexer, Collection $chunks, string $version): void
     {
         $bar = $this->output->createProgressBar($chunks->count());
 
-        $indexer->embedAndStore($chunks, fn () => $bar->advance());
+        $indexer->ingest($indexer->diff($chunks, force: true), $version, fn () => $bar->advance());
 
         $bar->finish();
 

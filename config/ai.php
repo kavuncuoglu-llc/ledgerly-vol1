@@ -74,7 +74,25 @@ return [
             'howto' => 0.92,
         ],
         'ttl_days' => 30,
-        'require_grounding' => (bool) env('AI_SEMANTIC_CACHE_REQUIRE_GROUNDING', false),
+        'require_grounding' => (bool) env('AI_SEMANTIC_CACHE_REQUIRE_GROUNDING', true),
+    ],
+
+    'retrieval' => [
+        'mode' => env('AI_RETRIEVAL_MODE', 'hybrid'),
+        'similarity_floor' => (float) env('AI_RETRIEVAL_FLOOR', 0.70),
+        'k' => 5,
+        'rrf_constant' => 60,
+        'candidate_pool' => 20,
+        'golden_set' => 'storage/golden/retrieval.jsonl',
+    ],
+
+    'ingestion' => [
+        'boilerplate_patterns' => [
+            '/^\s*(Was this (article|page) helpful\?|Did this answer your question\?).*$/mi',
+            '/^\s*(Back to (the )?help center|Skip to (main )?content)\s*$/mi',
+            '/^\s*(Last updated|Article last reviewed):.*$/mi',
+            '/^\s*(This article is provided for information only|Ledgerly may change this policy)[^\n]*$/mi',
+        ],
     ],
 
     'conversation' => [

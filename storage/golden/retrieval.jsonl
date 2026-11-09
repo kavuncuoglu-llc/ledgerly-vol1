@@ -1,0 +1,120 @@
+{"id": 1, "question": "What late fee does Ledgerly charge?", "chunks": ["late-fees›How the fee is calculated"]}
+{"id": 2, "question": "can I make an invoice repeat every month", "chunks": ["set-up-recurring-invoice›How do I create a recurring schedule?"]}
+{"id": 3, "question": "status of invoice 4471", "chunks": ["statuses›Overview", "statuses›Overdue"]}
+{"id": 4, "question": "best pizza near me", "chunks": []}
+{"id": 5, "question": "How do I create an API key?", "chunks": ["api-keys›How do I create a key?"]}
+{"id": 6, "question": "I lost my phone, how do I get in with a backup code?", "chunks": ["backup-codes›How do I sign in with a backup code?"]}
+{"id": 7, "question": "How can I change the email address on my account?", "chunks": ["change-your-email-address›How do I change my email?"]}
+{"id": 8, "question": "I forgot my password, what now?", "chunks": ["change-your-password›What if I forgot my password?"]}
+{"id": 9, "question": "What should I do before closing my account?", "chunks": ["close-your-account›What should I do before closing?"]}
+{"id": 10, "question": "Which plan do I need for the QuickBooks integration?", "chunks": ["connect-quickbooks-xero-and-zapier›Which plan do I need?"]}
+{"id": 11, "question": "How do I send invoices from my own domain instead of Ledgerly's?", "chunks": ["custom-sending-domain›How do I set it up?"]}
+{"id": 12, "question": "Does Ledgerly store my clients' card numbers?", "chunks": ["data-security-and-backups›Does Ledgerly store card numbers?"]}
+{"id": 13, "question": "How do I download a copy of all my data?", "chunks": ["export-my-data›How do I request an export?"]}
+{"id": 14, "question": "How do I add a colleague to my account?", "chunks": ["invite-or-remove-a-team-member›How do I invite someone?"]}
+{"id": 15, "question": "Can I log in with Google instead of a password?", "chunks": ["magic-link-and-google-sign-in›How does Google sign-in work?"]}
+{"id": 16, "question": "How does my time zone affect overdue dates?", "chunks": ["profile›How does my time zone affect due dates and overdue checks?"]}
+{"id": 17, "question": "What can each team role do?", "chunks": ["team-seats-and-roles›What can each role do?"]}
+{"id": 18, "question": "How do I turn on two-factor authentication with an authenticator app?", "chunks": ["two-factor-authentication›How do I turn on 2FA with an authenticator app?"]}
+{"id": 19, "question": "How do I add a second person to receive a client's invoices?", "chunks": ["billing-contacts›How do I add or change billing contacts?"]}
+{"id": 20, "question": "What late fee rates can I choose?", "chunks": ["changing-late-fee-percent›What rates can I choose?"]}
+{"id": 21, "question": "What is a good follow-up routine for overdue invoices?", "chunks": ["collections-best-practices›What follow-up routine works well?"]}
+{"id": 22, "question": "How do I mark an invoice as disputed?", "chunks": ["disputes›How do I mark an invoice as disputed?"]}
+{"id": 23, "question": "What does the Pro plan cost per month?", "chunks": ["ledgerly-subscription›What do the plans cost?"]}
+{"id": 24, "question": "How do I record a deposit on an invoice?", "chunks": ["partial-payments›How do I record a deposit or partial payment?"]}
+{"id": 25, "question": "What does it cost to accept online payments?", "chunks": ["payment-fees-and-payouts›What does it cost to accept online payments?"]}
+{"id": 26, "question": "What does my client see when they open the payment page?", "chunks": ["payment-page›What does the payment page show?"]}
+{"id": 27, "question": "What happens if a client misses an installment of their payment plan?", "chunks": ["payment-plans›What happens if an installment is missed?"]}
+{"id": 28, "question": "What payment terms can I offer, like net 30?", "chunks": ["payment-terms›What payment term options are available?"]}
+{"id": 29, "question": "What are the rules for refunds?", "chunks": ["refunds›What are the refund rules?"]}
+{"id": 30, "question": "When does Ledgerly send automatic payment reminders?", "chunks": ["reminders›Automatic reminder schedule"]}
+{"id": 31, "question": "How do I email a statement of account to a client?", "chunks": ["statement-of-account›How do I email a statement to a client?"]}
+{"id": 32, "question": "How do I add a new client?", "chunks": ["add-a-client›How do I create a client?"]}
+{"id": 33, "question": "How do I tag my clients?", "chunks": ["client-notes-and-tags›How do I add tags?"]}
+{"id": 34, "question": "What can a client do in the client portal?", "chunks": ["client-portal›What can a client do in the portal?"]}
+{"id": 35, "question": "How do I archive a client I no longer work with?", "chunks": ["edit-archive-or-delete-a-client›What does archiving do?"]}
+{"id": 36, "question": "Which columns can I import from a CSV of clients?", "chunks": ["import-clients-from-csv›Which columns can I import?"]}
+{"id": 37, "question": "I have two records for the same client, can I combine them?", "chunks": ["merge-duplicate-clients›How do I merge two clients?"]}
+{"id": 38, "question": "What do extra billing contacts receive?", "chunks": ["multiple-billing-contacts-for-a-client›What do the contacts receive?"]}
+{"id": 39, "question": "How do I set a client's currency?", "chunks": ["per-client-currency-and-payment-terms›How do I set a client's currency?"]}
+{"id": 40, "question": "Where does a client's VAT number appear?", "chunks": ["tax-ids-for-clients›Where does the tax ID appear?"]}
+{"id": 41, "question": "What are the plan limits when I add my first client?", "chunks": ["add-your-first-client›What are the plan limits?"]}
+{"id": 42, "question": "How do I put my logo on invoices?", "chunks": ["add-your-logo-and-branding›How do I upload my logo?"]}
+{"id": 43, "question": "What do I need to connect payments?", "chunks": ["connect-payments›What do I need to connect payments?"]}
+{"id": 44, "question": "What do I need to sign up for a Ledgerly account?", "chunks": ["create-your-account›What do I need to sign up?"]}
+{"id": 45, "question": "Why can't I save my first invoice?", "chunks": ["create-your-first-invoice›Why can't I save my invoice?"]}
+{"id": 46, "question": "How do I start a chat with support?", "chunks": ["getting-help›How do I start a chat?"]}
+{"id": 47, "question": "How should I prepare a spreadsheet before importing?", "chunks": ["import-data-from-spreadsheets›How do I prepare my spreadsheet?"]}
+{"id": 48, "question": "What does my client receive when I send an invoice for the first time?", "chunks": ["send-your-first-invoice›How do I send an invoice by email?"]}
+{"id": 49, "question": "How do I change my default payment terms?", "chunks": ["set-default-payment-terms›How do I change the account default?"]}
+{"id": 50, "question": "What does the tax ID in my business details do?", "chunks": ["set-up-your-business-details›What does the Tax ID do?"]}
+{"id": 51, "question": "What happens when the free trial ends?", "chunks": ["the-14-day-trial›What happens when the trial ends?"]}
+{"id": 52, "question": "What do the summary cards on the dashboard show?", "chunks": ["tour-of-the-dashboard›What do the summary cards show?"]}
+{"id": 53, "question": "How do I give a client an early payment discount?", "chunks": ["add-discounts›What about discounts for paying early?"]}
+{"id": 54, "question": "How big can an invoice attachment be?", "chunks": ["attach-files›What are the attachment limits?"]}
+{"id": 55, "question": "How do I create a new invoice?", "chunks": ["create-invoice›How do I create a new invoice?"]}
+{"id": 56, "question": "How do I get a PDF of one invoice?", "chunks": ["download-invoice-pdf›How do I download a single invoice?"]}
+{"id": 57, "question": "How do I change the next invoice number?", "chunks": ["invoice-numbering›How do I change the prefix or next number?"]}
+{"id": 58, "question": "How many line items can one invoice have?", "chunks": ["line-items-and-quantities›How many line items can an invoice have?"]}
+{"id": 59, "question": "A client paid by cheque, how do I mark the invoice as paid?", "chunks": ["mark-invoice-paid›How do I record a payment?"]}
+{"id": 60, "question": "What is the minimum invoice amount?", "chunks": ["minimum-invoice-amount›What is the minimum invoice amount?"]}
+{"id": 61, "question": "Does Ledgerly convert between currencies?", "chunks": ["multi-currency-invoices›Does Ledgerly convert currencies?"]}
+{"id": 62, "question": "Why wasn't my invoice email delivered to the client?", "chunks": ["send-invoice-by-email›Why was my invoice email not delivered?"]}
+{"id": 63, "question": "Can I void an invoice that was already paid?", "chunks": ["void-invoice›Can I void an invoice that has been paid?"]}
+{"id": 64, "question": "How do I turn on card payments?", "chunks": ["accept-online-card-payments›How do I turn on card payments?"]}
+{"id": 65, "question": "How much does an ACH bank transfer cost?", "chunks": ["bank-transfer-ach-payments›How much does ACH cost?"]}
+{"id": 66, "question": "When will I get my first payout?", "chunks": ["connect-your-bank-account-for-payouts›When will I get my first payout?"]}
+{"id": 67, "question": "How do I respond to a chargeback?", "chunks": ["handle-a-chargeback›How do I respond?"]}
+{"id": 68, "question": "How long does it take for a refund to reach my client?", "chunks": ["issue-a-refund›When does the client get the money?"]}
+{"id": 69, "question": "Does the payment link ever expire?", "chunks": ["payment-links-and-the-client-payment-page›Does the link ever expire?"]}
+{"id": 70, "question": "How do I resend a payment receipt?", "chunks": ["payment-receipts›How do I resend a receipt?"]}
+{"id": 71, "question": "Why is my first payout slower than the others?", "chunks": ["payout-schedule›Why is my first payout slower?"]}
+{"id": 72, "question": "What does a pending payment mean?", "chunks": ["pending-payments-explained›What does pending mean?"]}
+{"id": 73, "question": "Can I pass processing fees on to my client?", "chunks": ["processing-fees›Can I pass fees on to my client?"]}
+{"id": 74, "question": "A client paid me by bank transfer outside Ledgerly, how do I record it?", "chunks": ["record-an-offline-payment›How do I record a payment?"]}
+{"id": 75, "question": "Which currencies can I invoice in?", "chunks": ["supported-countries-and-currencies-for-payments›Which currencies can I invoice in?"]}
+{"id": 76, "question": "How much do I save with annual billing?", "chunks": ["annual-billing›How much does annual billing save?"]}
+{"id": 77, "question": "How do I cancel my subscription?", "chunks": ["cancel-subscription›How do I cancel?"]}
+{"id": 78, "question": "What is included in the Free plan?", "chunks": ["compare-plans›What is included in Free?"]}
+{"id": 79, "question": "What gets locked if I downgrade from Pro to Free?", "chunks": ["downgrade-your-plan›What locks when I go from Pro to Free?"]}
+{"id": 80, "question": "How many clients can I have on the Free plan?", "chunks": ["free-plan-limits›What are the Free plan limits?"]}
+{"id": 81, "question": "Where do I find the receipts for my Ledgerly subscription?", "chunks": ["ledgerly-invoices-and-receipts›Where do I find my subscription invoices?"]}
+{"id": 82, "question": "How do I start the 14-day trial?", "chunks": ["start-the-14-day-trial›How do I get the trial?"]}
+{"id": 83, "question": "When does my upgrade take effect and what will I be charged?", "chunks": ["upgrade-your-plan›When does the upgrade take effect?", "upgrade-your-plan›How much will I be charged?"]}
+{"id": 84, "question": "Should my recurring invoices send automatically or stay as drafts?", "chunks": ["auto-send-vs-draft-recurring-invoices›What is the difference between auto-send and draft?"]}
+{"id": 85, "question": "How do I stop a recurring schedule for good?", "chunks": ["edit-or-end-a-recurring-schedule›How do I end a schedule?"]}
+{"id": 86, "question": "How do I add a late fee to my recurring invoices?", "chunks": ["late-fees-on-recurring-invoices›How do I add a late fee to recurring invoices?"]}
+{"id": 87, "question": "Can I pause a recurring invoice while a client is on holiday?", "chunks": ["pause-or-resume-a-recurring-schedule›How do I pause a schedule?"]}
+{"id": 88, "question": "How do I raise the price on a recurring invoice?", "chunks": ["price-changes-on-a-recurring-schedule›How do I change the price?"]}
+{"id": 89, "question": "How are recurring invoices numbered?", "chunks": ["recurring-invoice-numbering›How does Ledgerly assign the number?"]}
+{"id": 90, "question": "How do I add tax to a recurring schedule?", "chunks": ["recurring-invoices-and-taxes›How do I add tax to a recurring schedule?"]}
+{"id": 91, "question": "What intervals are available for recurring invoices?", "chunks": ["set-up-recurring-invoice›What intervals are available?"]}
+{"id": 92, "question": "What happens when a monthly schedule starts on the 31st?", "chunks": ["start-dates-and-time-zones-for-recurring-invoices›What happens on the 29th, 30th and 31st?"]}
+{"id": 93, "question": "Why did a recurring invoice fail to generate?", "chunks": ["what-happens-when-a-recurring-run-fails›Why might a run fail?"]}
+{"id": 94, "question": "What are the aging buckets in the Aging report?", "chunks": ["aging-report›What are the aging buckets?"]}
+{"id": 95, "question": "Which time zone does Ledgerly use for reports?", "chunks": ["date-ranges-and-time-zones›Which time zone does Ledgerly use?"]}
+{"id": 96, "question": "Can I schedule regular backups of my data?", "chunks": ["export-all-your-data›Can I schedule regular backups?"]}
+{"id": 97, "question": "Which reports can I export to CSV?", "chunks": ["export-to-csv›Which reports can I export?"]}
+{"id": 98, "question": "How do I match the payments report to my bank statement?", "chunks": ["payments-received-report›How do I match this report to my bank?"]}
+{"id": 99, "question": "Why don't my revenue numbers match my bank?", "chunks": ["revenue-report›Why don't my numbers match my bank?"]}
+{"id": 100, "question": "Can my accountant get reports by email every month?", "chunks": ["scheduling-report-emails›Can my accountant receive them?"]}
+{"id": 101, "question": "How do I run the tax summary report?", "chunks": ["tax-summary-report›How do I run the report?"]}
+{"id": 102, "question": "Why don't the dashboard numbers match a report?", "chunks": ["understanding-the-dashboard›Why don't the dashboard numbers match a report?"]}
+{"id": 103, "question": "What should I do when my tax rate changes mid-year?", "chunks": ["changing-a-tax-rate-mid-year›How do I switch to a new rate cleanly?"]}
+{"id": 104, "question": "What is the difference between inclusive and exclusive tax?", "chunks": ["inclusive-vs-exclusive-tax›What is the difference?"]}
+{"id": 105, "question": "How do I charge two taxes on one line item?", "chunks": ["multiple-taxes-on-one-line›How do I add several taxes to a line?"]}
+{"id": 106, "question": "Does Ledgerly work out the right VAT rate for me?", "chunks": ["sales-tax-vs-vat-gst-basics›Does Ledgerly work out the right rate for me?"]}
+{"id": 107, "question": "How do I add a tax rate?", "chunks": ["set-up-tax-rates›How do I add a tax rate?"]}
+{"id": 108, "question": "How do I mark a client as tax exempt?", "chunks": ["tax-exempt-clients›How do I mark a client as tax-exempt?"]}
+{"id": 109, "question": "How do I hide my tax ID on invoices?", "chunks": ["tax-ids-on-invoices›Can I hide the tax ID?"]}
+{"id": 110, "question": "who won the football game last night", "chunks": []}
+{"id": 111, "question": "what is the capital of France", "chunks": []}
+{"id": 112, "question": "recipe for chocolate chip cookies", "chunks": []}
+{"id": 113, "question": "how tall is Mount Everest", "chunks": []}
+{"id": 114, "question": "write me a poem about the sea", "chunks": []}
+{"id": 115, "question": "best laptop for gaming in 2026", "chunks": []}
+{"id": 116, "question": "how do I train for a marathon", "chunks": []}
+{"id": 117, "question": "translate good morning into Japanese", "chunks": []}
+{"id": 118, "question": "what is the weather in Paris tomorrow", "chunks": []}
+{"id": 119, "question": "how do I fix a leaking tap", "chunks": []}
+{"id": 120, "question": "who painted the Mona Lisa", "chunks": []}

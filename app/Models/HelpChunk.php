@@ -14,15 +14,30 @@ use Illuminate\Database\Eloquent\Model;
     'content',
     'tokens',
     'embedding',
+    'title',
+    'heading_path',
+    'tags',
+    'help_version',
+    'source_modified_at',
+    'chunk_key',
 ])]
 class HelpChunk extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (self $chunk): void {
+            $chunk->chunk_key ??= sha1($chunk->source.$chunk->heading_path.$chunk->position);
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'position' => 'integer',
             'tokens' => 'integer',
             'embedding' => Vector::class,
+            'tags' => 'array',
+            'source_modified_at' => 'datetime',
         ];
     }
 
@@ -39,8 +54,8 @@ class HelpChunk extends Model
                 'content',
                 'tokens',
             ])
-            ->selectRaw('1 - (embedding <=> ?::vector) as similarity', [$literal])
-            ->orderByRaw('embedding <=> ?::vector', [$literal])
+            ->selectRaw('1 - (embedding::halfvec(768) <=> ?::halfvec(768)) as similarity', [$literal])
+            ->orderByRaw('embedding::halfvec(768) <=> ?::halfvec(768)', [$literal])
             ->limit($limit);
     }
 }

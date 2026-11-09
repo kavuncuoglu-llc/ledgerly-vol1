@@ -35,6 +35,8 @@ class SupportAskTest extends TestCase
 
         $response->assertOk()->assertExactJson([
             'answer' => 'A late fee is an extra charge.',
+            'sources' => [],
+            'citations_ok' => true,
             'conversation_id' => Conversation::query()->sole()->id,
             'truncated' => false,
             'rounds' => 1,

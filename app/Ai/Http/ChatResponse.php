@@ -31,6 +31,20 @@ final readonly class ChatResponse
         );
     }
 
+    public function withContent(string $content): self
+    {
+        return new self(
+            id: $this->id,
+            model: $this->model,
+            content: $content,
+            toolCalls: [],
+            finishReason: $this->finishReason,
+            usage: $this->usage,
+            raw: $this->raw,
+            modelCallId: $this->modelCallId,
+        );
+    }
+
     public static function fromArray(array $body): self
     {
         $message = $body['choices'][0]['message'] ?? [];

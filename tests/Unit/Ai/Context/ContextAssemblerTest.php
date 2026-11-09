@@ -4,6 +4,7 @@ namespace Tests\Unit\Ai\Context;
 
 use App\Ai\Context\ContextAssembler;
 use App\Ai\Context\ProviderCapabilities;
+use App\Ai\Retrieval\RetrievedChunk;
 use App\Ai\Tokens\RatioCounter;
 use Tests\TestCase;
 
@@ -20,7 +21,7 @@ class ContextAssemblerTest extends TestCase
         $this->assertSame('SYSTEM', $prompt->messages[0]['content']);
         $this->assertSame('SUMMARY', $prompt->messages[1]['content']);
         $this->assertSame('older question', $prompt->messages[2]['content']);
-        $this->assertStringStartsWith('Context:', $prompt->messages[4]['content']);
+        $this->assertStringStartsWith('The following passages are from Ledgerly', $prompt->messages[4]['content']);
         $this->assertSame('the question', $prompt->messages[5]['content']);
     }
 
@@ -134,9 +135,9 @@ class ContextAssemblerTest extends TestCase
 
         $context = $prompt->messages[1]['content'];
 
-        $this->assertStringContainsString('[a]', $context);
-        $this->assertStringNotContainsString('[b]', $context);
-        $this->assertStringNotContainsString('[c]', $context);
+        $this->assertStringContainsString('[a › Overview]', $context);
+        $this->assertStringNotContainsString('[b › Overview]', $context);
+        $this->assertStringNotContainsString('[c › Overview]', $context);
     }
 
     public function test_build_names_the_slots_that_are_over_their_budget(): void
@@ -208,11 +209,15 @@ class ContextAssemblerTest extends TestCase
         );
     }
 
-    private function chunk(string $source, string $content): array
+    private function chunk(string $source, string $content): RetrievedChunk
     {
-        return [
-            'source' => $source,
-            'content' => $content,
-        ];
+        return new RetrievedChunk(
+            id: crc32($source),
+            source: "help/billing/{$source}.md",
+            title: $source,
+            headingPath: "Billing › {$source} › Overview",
+            content: $content,
+            helpVersion: 'abc123',
+        );
     }
 }

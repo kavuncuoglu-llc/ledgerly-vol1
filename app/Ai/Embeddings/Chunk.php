@@ -8,5 +8,6 @@ final class Chunk
         public readonly string $heading,
         public readonly string $content,
         public readonly int $tokens,
+        public readonly string $section = '',
     ) {}
 }

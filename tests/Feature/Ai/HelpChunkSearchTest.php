@@ -62,11 +62,12 @@ class HelpChunkSearchTest extends TestCase
         $this->chunk(position: 1, vector: $this->unitVector(1));
     }
 
-    public function test_help_chunks_has_an_hnsw_cosine_index_on_the_embedding_column(): void
+    public function test_help_chunks_has_an_hnsw_halfvec_cosine_index_on_the_embedding_column(): void
     {
-        $definition = DB::scalar("select indexdef from pg_indexes where indexname = 'help_chunks_embedding_idx'");
+        $definition = DB::scalar("select indexdef from pg_indexes where indexname = 'help_chunks_embedding_hnsw'");
 
-        $this->assertStringContainsString('USING hnsw (embedding vector_cosine_ops)', $definition);
+        $this->assertStringContainsString('USING hnsw', $definition);
+        $this->assertStringContainsString('halfvec_cosine_ops', $definition);
     }
 
     private function chunk(int $position, array $vector): HelpChunk

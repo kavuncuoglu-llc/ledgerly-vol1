@@ -2,6 +2,7 @@
 
 namespace App\Ai\Context;
 
+use App\Ai\Retrieval\LabelMap;
 use App\Ai\Tokens\TokenCounter;
 
 final class ContextAssembler
@@ -81,6 +82,7 @@ final class ContextAssembler
             messages: $messages,
             breakdown: $breakdown,
             overBudget: $this->overBudget($breakdown),
+            labelMap: LabelMap::for($this->contextChunks),
         );
     }
 

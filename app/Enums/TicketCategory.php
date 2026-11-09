@@ -9,4 +9,12 @@ enum TicketCategory: string
     case Bug = 'bug';
     case Account = 'account';
     case Other = 'other';
+
+    public function areaIfConfident(): string
+    {
+        return match ($this) {
+            self::Account => 'account',
+            default => '',
+        };
+    }
 }

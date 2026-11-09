@@ -12,6 +12,8 @@ class ToolRunResource extends JsonResource
     {
         return [
             'answer' => $this->answer(),
+            'sources' => $this->sources,
+            'citations_ok' => $this->citationsOk,
             'conversation_id' => $this->conversationId,
             'truncated' => $this->response->finishReason === 'length',
             'rounds' => $this->rounds,

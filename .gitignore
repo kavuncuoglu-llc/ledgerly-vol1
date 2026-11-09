@@ -32,3 +32,5 @@ Thumbs.db
 /boost.json
 /CLAUDE.md
 /storage/benchmarks/20??-??-??-*.json
+/storage/golden/misses-*.json
+/storage/golden/results-*.json

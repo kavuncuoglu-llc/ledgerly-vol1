@@ -103,6 +103,24 @@ class AiStatsCommandTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_it_reports_the_citation_flag_rate_over_checked_replies_only(): void
+    {
+        $this->record(['citation_errors' => 0]);
+        $this->record(['citation_errors' => 2]);
+        $this->record(['citation_errors' => 0]);
+        $this->record(['citation_errors' => 0]);
+        $this->record([]);
+
+        $this->assertMatchesRegularExpression('/citation flag rate\s+25%.*1 of 4 checked replies/', $this->stats());
+    }
+
+    public function test_it_reports_no_citation_rate_before_any_reply_was_checked(): void
+    {
+        $this->record([]);
+
+        $this->assertMatchesRegularExpression('/citation flag rate\s+n\/a/', $this->stats());
+    }
+
     private function stats(): string
     {
         Artisan::call('ai:stats', ['--feature' => 'support.reply', '--since' => '24h']);

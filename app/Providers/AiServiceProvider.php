@@ -6,6 +6,7 @@ use App\Ai\Cache\HelpVersion;
 use App\Ai\Context\ProviderCapabilities;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\EloquentConversationStore;
+use App\Ai\Embeddings\BoilerplateStripper;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
 use App\Ai\Encoding\DataEncoder;
@@ -21,6 +22,9 @@ use App\Ai\Http\AiHttpClient;
 use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
+use App\Ai\Retrieval\PgRetriever;
+use App\Ai\Retrieval\RetrievalSettings;
+use App\Ai\Retrieval\Retriever;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
@@ -65,6 +69,13 @@ class AiServiceProvider extends ServiceProvider
             client: $this->app->make(AiHttpClient::class),
             model: config('ai.embed_model'),
             dimensions: config('ai.embed_dimensions'),
+        ));
+
+        $this->app->singleton(BoilerplateStripper::class, fn () => new BoilerplateStripper(config('ai.ingestion.boilerplate_patterns')));
+
+        $this->app->bind(Retriever::class, fn () => new PgRetriever(
+            embedder: $this->app->make(Embedder::class),
+            settings: RetrievalSettings::fromConfig(),
         ));
 
         $this->app->singleton(DataEncoder::class, fn () => new DataEncoder([

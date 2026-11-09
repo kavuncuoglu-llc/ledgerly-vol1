@@ -14,13 +14,20 @@ use App\Ai\Http\ChatResponse;
 use App\Ai\Http\Usage;
 use App\Ai\Memory\MemoryStore;
 use App\Ai\Prompts\SupportPrompt;
+use App\Ai\Retrieval\CitationChecker;
+use App\Ai\Retrieval\CitationReport;
+use App\Ai\Retrieval\RetrievalScope;
+use App\Ai\Retrieval\Retriever;
+use App\Ai\Structured\RepairPrompt;
 use App\Ai\Tools\ToolContext;
 use App\Ai\Tools\ToolRunner;
 use App\Ai\Tools\ToolRunResult;
 use App\Models\CachedAnswer;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\ModelCall;
 use App\Models\User;
+use Closure;
 
 final class SupportAssistant
 {
@@ -34,6 +41,8 @@ final class SupportAssistant
         private readonly HistoryBudget $budget,
         private readonly MemoryStore $memories,
         private readonly SupportCacheGate $cache,
+        private readonly Retriever $retriever,
+        private readonly CitationChecker $citations,
     ) {}
 
     public function answer(User $user, string $question, ?Conversation $conversation = null): ToolRunResult
@@ -50,10 +59,12 @@ final class SupportAssistant
 
         $allowance = $this->budget->historyAllowance(SupportPrompt::system($user));
 
-        $assembled = $this->assemble($user, $question, $conversation, $allowance);
+        $chunks = $this->retriever->retrieve($question, $this->scopeFor($user, $lookup), k: config('ai.retrieval.k'));
 
-        $result = $this->runner->run(
-            messages: $assembled->messages,
+        $assembled = $this->assemble($user, $question, $conversation, $allowance, $chunks);
+
+        $run = fn (array $messages): ToolRunResult => $this->runner->run(
+            messages: $messages,
             ctx: new ToolContext(user: $user, conversationId: $conversation->id),
             options: [
                 'profile' => 'assistant',
@@ -67,9 +78,13 @@ final class SupportAssistant
             ),
         );
 
-        $this->cache->store($user, $question, $lookup, $result, grounded: false);
+        $result = $this->enforceCitations($run($assembled->messages), $assembled, $run);
+
+        $this->cache->store($user, $question, $lookup, $result, grounded: $assembled->labelMap !== [] && $result->citationsOk);
 
         $this->remember($conversation, $question, $result);
+
+        $this->recordSources($conversation, $result, $assembled);
 
         $this->memories->markUsed($user);
 
@@ -78,14 +93,118 @@ final class SupportAssistant
         return $result->forConversation($conversation->id);
     }
 
-    private function assemble(User $user, string $question, Conversation $conversation, int $allowance): AssembledPrompt
+    private function scopeFor(User $user, CacheLookup $lookup): RetrievalScope
+    {
+        return new RetrievalScope(
+            tenantId: $user->customer_id,
+            plan: (string) $user->customer?->plan,
+            area: $lookup->attempted
+                ? $lookup->category->areaIfConfident()
+                : '',
+        );
+    }
+
+    private function enforceCitations(ToolRunResult $result, AssembledPrompt $assembled, Closure $run): ToolRunResult
+    {
+        if ($result->hasPending()) {
+            return $result;
+        }
+
+        if ($result->hitCap) {
+            return $result;
+        }
+
+        $report = $this->audit($result, $assembled);
+
+        if (! $report->hasErrors()) {
+            return $this->citedResult($result, $report);
+        }
+
+        $repaired = $run([
+            ...$assembled->messages,
+            ...$this->withoutCallIds($result->newMessages()),
+            RepairPrompt::citations($report),
+        ]);
+
+        $secondReport = $this->audit($repaired, $assembled);
+
+        if (! $secondReport->hasErrors()) {
+            return $this->citedResult($repaired, $secondReport);
+        }
+
+        return $repaired
+            ->withContent(SupportPrompt::escapeHatch())
+            ->withCitations([], false);
+    }
+
+    private function audit(ToolRunResult $result, AssembledPrompt $assembled): CitationReport
+    {
+        $report = $this->citations->check(
+            answer: $result->answer(),
+            labelToChunk: $assembled->labelMap,
+            requireCitations: $assembled->labelMap !== [] && ! $result->usedTools(),
+        );
+
+        $this->recordCitationErrors($result, $report);
+
+        return $report;
+    }
+
+    private function citedResult(ToolRunResult $result, CitationReport $report): ToolRunResult
+    {
+        $sources = [];
+
+        foreach ($report->cited as $label => $chunk) {
+            $sources[] = [
+                'label' => $label,
+                'url' => $chunk->url(),
+            ];
+        }
+
+        return $result->withCitations($sources, true);
+    }
+
+    private function recordCitationErrors(ToolRunResult $result, CitationReport $report): void
+    {
+        $callId = $result->modelCallIds[array_key_last($result->modelCallIds)] ?? 0;
+
+        if (! $callId) {
+            return;
+        }
+
+        ModelCall::query()
+            ->whereKey($callId)
+            ->update(['citation_errors' => $report->errorCount()]);
+    }
+
+    private function withoutCallIds(array $messages): array
+    {
+        return array_map(function (array $message): array {
+            unset($message['model_call_id']);
+
+            return $message;
+        }, $messages);
+    }
+
+    private function recordSources(Conversation $conversation, ToolRunResult $result, AssembledPrompt $assembled): void
+    {
+        if ($result->sources === []) {
+            return;
+        }
+
+        $cited = array_intersect_key($assembled->labelMap, array_flip(array_column($result->sources, 'label')));
+
+        $this->store->recordSources($this->store->lastReply($conversation), $cited);
+    }
+
+    private function assemble(User $user, string $question, Conversation $conversation, int $allowance, array $chunks): AssembledPrompt
     {
         return SupportPrompt::assemble(
             question: $question,
             user: $user,
             summary: $conversation->summary,
             history: $this->store->history($conversation, $allowance),
-            contextChunks: [],
+            contextChunks: $chunks,
         );
     }
 

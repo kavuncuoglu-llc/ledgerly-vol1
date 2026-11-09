@@ -6,6 +6,7 @@ use App\Models\Scopes\ConversationTenantScope;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'conversation_id',
@@ -46,6 +47,11 @@ class Message extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    public function sources(): HasMany
+    {
+        return $this->hasMany(MessageSource::class);
     }
 
     public function toApiMessage(): array

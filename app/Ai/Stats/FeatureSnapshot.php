@@ -15,5 +15,8 @@ final readonly class FeatureSnapshot
         public array $slots,
         public ?int $averageTtftMs,
         public ?int $averageLatencyMs,
+        public ?float $citationFlagRate = null,
+        public int $citationFlagged = 0,
+        public int $citationChecked = 0,
     ) {}
 }

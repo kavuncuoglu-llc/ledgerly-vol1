@@ -15,6 +15,8 @@ final readonly class ToolRunResult
         public int $inputCount = 0,
         public array $modelCallIds = [],
         public ?int $conversationId = null,
+        public array $sources = [],
+        public bool $citationsOk = true,
     ) {}
 
     public function answer(): string
@@ -29,16 +31,38 @@ final readonly class ToolRunResult
 
     public function forConversation(int $conversationId): self
     {
-        return new self(
-            response: $this->response,
-            messages: $this->messages,
-            rounds: $this->rounds,
-            hitCap: $this->hitCap,
-            pending: $this->pending,
-            inputCount: $this->inputCount,
-            modelCallIds: $this->modelCallIds,
-            conversationId: $conversationId,
-        );
+        return $this->copy(['conversationId' => $conversationId]);
+    }
+
+    public function withContent(string $content): self
+    {
+        return $this->copy([
+            'response' => $this->response->withContent($content),
+        ]);
+    }
+
+    public function withCitations(array $sources, bool $ok): self
+    {
+        return $this->copy([
+            'sources' => $sources,
+            'citationsOk' => $ok,
+        ]);
+    }
+
+    public function usedTools(): bool
+    {
+        foreach (array_slice($this->messages, $this->inputCount) as $message) {
+            if (($message['role'] ?? '') === 'tool') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function copy(array $changes): self
+    {
+        return new self(...[...get_object_vars($this), ...$changes]);
     }
 
     public function newMessages(): array

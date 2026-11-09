@@ -39,7 +39,20 @@ class SupportAsk extends Command
 
         $this->line($result->answer());
 
+        $this->printSources($result->sources, $result->citationsOk);
+
         return Command::SUCCESS;
+    }
+
+    private function printSources(array $sources, bool $citationsOk): void
+    {
+        foreach ($sources as $source) {
+            $this->line("source: [{$source['label']}] {$source['url']}");
+        }
+
+        if (! $citationsOk) {
+            $this->warn('The citation check failed twice, so the assistant fell back to the escape hatch.');
+        }
     }
 
     private function printCacheLine(array $hit): void

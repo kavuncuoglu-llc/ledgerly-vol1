@@ -8,6 +8,7 @@ use App\Ai\Tokens\TokenCounter;
 use App\Ai\Tools\ToolRunResult;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\MessageSource;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,38 @@ final class EloquentConversationStore implements ConversationStore
 
         foreach ($run->newMessages() as $message) {
             $this->append($c, $message);
+        }
+    }
+
+    public function lastReply(Conversation $c): Message
+    {
+        return Message::query()
+            ->withoutGlobalScopes()
+            ->where('conversation_id', $c->id)
+            ->where('role', Message::ROLE_ASSISTANT)
+            ->orderByDesc('seq')
+            ->firstOrNew();
+    }
+
+    public function recordSources(Message $reply, array $cited): void
+    {
+        if (! $reply->exists) {
+            return;
+        }
+
+        foreach ($cited as $label => $chunk) {
+            MessageSource::query()->updateOrCreate(
+                [
+                    'message_id' => $reply->id,
+                    'label' => $label,
+                ],
+                [
+                    'help_chunk_id' => $chunk->id,
+                    'source' => $chunk->source,
+                    'heading_path' => $chunk->headingPath,
+                    'help_version' => $chunk->helpVersion,
+                ],
+            );
         }
     }
 

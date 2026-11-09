@@ -25,6 +25,9 @@ final class FeatureStats
             slots: $this->averageSlots($modelCalls),
             averageTtftMs: $this->average($modelCalls->pluck('ttft_ms')),
             averageLatencyMs: $this->average($modelCalls->pluck('latency_ms')),
+            citationFlagRate: $this->citationFlagRate($modelCalls),
+            citationFlagged: $modelCalls->where('citation_errors', '>', 0)->count(),
+            citationChecked: $modelCalls->whereNotNull('citation_errors')->count(),
         );
     }
 
@@ -59,6 +62,17 @@ final class FeatureStats
         }
 
         return $lookups->where('semantic_cache_hit', true)->count() / $lookups->count();
+    }
+
+    private function citationFlagRate(Collection $calls): ?float
+    {
+        $checked = $calls->whereNotNull('citation_errors');
+
+        if ($checked->isEmpty()) {
+            return null;
+        }
+
+        return $checked->where('citation_errors', '>', 0)->count() / $checked->count();
     }
 
     private function tokensPerAnswer(Collection $calls): ?int

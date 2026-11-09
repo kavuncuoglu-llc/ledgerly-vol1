@@ -18,6 +18,10 @@ interface ConversationStore
 
     public function appendRun(Conversation $c, ToolRunResult $run): void;
 
+    public function lastReply(Conversation $c): Message;
+
+    public function recordSources(Message $reply, array $cited): void;
+
     public function history(Conversation $c, int $budgetTokens): array;
 
     public function window(Conversation $c, int $allowance, bool $pinFirst = true): array;

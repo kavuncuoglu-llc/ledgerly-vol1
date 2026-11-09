@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
     'ttft_ms',
     'context_breakdown',
     'semantic_cache_hit',
+    'citation_errors',
 ])]
 class ModelCall extends Model
 {
@@ -39,6 +40,7 @@ class ModelCall extends Model
             'ttft_ms' => 'integer',
             'context_breakdown' => 'array',
             'semantic_cache_hit' => 'boolean',
+            'citation_errors' => 'integer',
         ];
     }
 }

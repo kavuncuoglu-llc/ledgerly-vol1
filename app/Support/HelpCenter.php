@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -9,6 +10,16 @@ use SplFileInfo;
 
 class HelpCenter
 {
+    private const LIST_TAGS = [
+        'plans',
+        'audience',
+    ];
+
+    private const NON_TAG_KEYS = [
+        'title',
+        'category',
+    ];
+
     public function __construct(
         private readonly string $directory,
     ) {}
@@ -51,7 +62,29 @@ class HelpCenter
             slug: $slug,
             title: $frontMatter['title'] ?? Str::headline($slug),
             markdown: $markdown,
+            tags: $this->tagsFrom($frontMatter, $category),
+            modifiedAt: CarbonImmutable::createFromTimestamp($file->getMTime()),
         );
+    }
+
+    private function tagsFrom(array $frontMatter, string $category): array
+    {
+        $tags = [
+            'area' => $category,
+        ];
+
+        foreach (array_diff_key($frontMatter, array_flip(self::NON_TAG_KEYS)) as $key => $value) {
+            $tags[$key] = in_array($key, self::LIST_TAGS, true)
+                ? $this->listOf($value)
+                : $value;
+        }
+
+        return $tags;
+    }
+
+    private function listOf(string $value): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $value))));
     }
 
     private function splitFrontMatter(string $contents): array

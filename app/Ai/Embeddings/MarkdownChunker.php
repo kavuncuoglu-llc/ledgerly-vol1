@@ -156,6 +156,7 @@ final class MarkdownChunker
             heading: $unit['label'],
             content: $content,
             tokens: $this->tokens->count($content),
+            section: $unit['section'],
         );
     }
 

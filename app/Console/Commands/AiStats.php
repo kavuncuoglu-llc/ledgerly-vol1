@@ -12,9 +12,11 @@ class AiStats extends Command
 {
     private const ALERT_RISE = 0.25;
 
+    private const CITATION_ALERT_RISE = 0.10;
+
     protected $signature = 'ai:stats {--feature=support.reply : The feature name recorded in model_calls} {--since=24h : The window to report, such as 90m, 24h or 7d}';
 
-    protected $description = 'Print the four context-engineering numbers for a feature: prompt cache hit rate, semantic cache hit rate, tokens per answer and time to first token';
+    protected $description = 'Print the context-engineering numbers for a feature: prompt cache hit rate, semantic cache hit rate, tokens per answer, citation flag rate and time to first token';
 
     public function handle(FeatureStats $stats): int
     {
@@ -46,9 +48,29 @@ class AiStats extends Command
         $this->row('semantic cache hits', $this->percent($window->semanticHitRate), $this->percent($week->semanticHitRate), "{$window->semanticHits} of {$window->semanticLookups} cacheable (howto) questions");
         $this->row('tokens / answer', $this->number($window->tokensPerAnswer), $this->number($week->tokensPerAnswer), 'input tokens per reply, cache hits excluded');
         $this->line('by slot: '.$this->slots($window->slots));
+        $this->row('citation flag rate', $this->percent($window->citationFlagRate), $this->percent($week->citationFlagRate), "{$window->citationFlagged} of {$window->citationChecked} checked replies");
         $this->row('time to first token', $this->milliseconds($window->averageTtftMs), $this->milliseconds($week->averageTtftMs), $this->ttftNote($window));
 
         $this->alertOnGrowth($window, $week);
+
+        $this->alertOnCitationFailures($window, $week);
+    }
+
+    private function alertOnCitationFailures(FeatureSnapshot $window, FeatureSnapshot $week): void
+    {
+        if ($window->citationFlagRate === null) {
+            return;
+        }
+
+        if ($week->citationFlagRate === null) {
+            return;
+        }
+
+        if ($window->citationFlagRate <= $week->citationFlagRate + self::CITATION_ALERT_RISE) {
+            return;
+        }
+
+        $this->warn('ALERT: the citation flag rate is '.$this->percent($window->citationFlagRate).' against '.$this->percent($week->citationFlagRate).' over 7 days; check retrieval and the prompt.');
     }
 
     private function row(string $label, string $window, string $week, string $note): void
