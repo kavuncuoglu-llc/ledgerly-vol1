@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\ModelCall;
 use App\Models\PendingToolCall;
+use App\Models\RecordedRequest;
 use App\Models\ToolCall;
 use App\Models\User;
 use App\Models\UserMemory;
@@ -52,6 +53,7 @@ class UserForget extends Command
             ->pluck('id');
 
         return [
+            'recorded_requests' => RecordedRequest::query()->whereIn('conversation_id', $conversationIds->all())->delete(),
             'anonymized_model_calls' => $this->anonymizeModelCalls($conversationIds->all()),
             'messages' => $this->deleteMessages($conversationIds->all()),
             'conversations' => Conversation::query()->withoutGlobalScopes()->whereKey($conversationIds)->delete(),
@@ -78,6 +80,6 @@ class UserForget extends Command
 
     private function report(array $counts): void
     {
-        $this->line("Deleted: {$counts['conversations']} conversations, {$counts['messages']} messages, {$counts['memories']} memories, {$counts['tool_calls']} tool_call rows with content, {$counts['pending_approvals']} pending approvals. Anonymized: {$counts['anonymized_model_calls']} model_calls rows (kept counts). Logged.");
+        $this->line("Deleted: {$counts['conversations']} conversations, {$counts['messages']} messages, {$counts['memories']} memories, {$counts['tool_calls']} tool_call rows with content, {$counts['pending_approvals']} pending approvals, {$counts['recorded_requests']} recorded requests. Anonymized: {$counts['anonymized_model_calls']} model_calls rows (kept counts). Logged.");
     }
 }

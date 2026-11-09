@@ -4,6 +4,7 @@ namespace App\Ai\Listeners;
 
 use App\Ai\Events\ModelCalled;
 use App\Models\ModelCall;
+use App\Models\RecordedRequest;
 use Illuminate\Support\Facades\Log;
 
 final class RecordModelCall
@@ -31,7 +32,24 @@ final class RecordModelCall
 
         $event->modelCallId = $row->id;
 
+        $this->recordRequest($event, $row);
+
         $this->warnWhenTruncated($event);
+    }
+
+    private function recordRequest(ModelCalled $event, ModelCall $row): void
+    {
+        if ($event->request === null) {
+            return;
+        }
+
+        RecordedRequest::create([
+            'model_call_id' => $row->id,
+            'feature' => $event->feature,
+            'provider' => $event->provider,
+            'conversation_id' => $event->conversationId,
+            'request' => $event->request,
+        ]);
     }
 
     private function costMicros(ModelCalled $event): int

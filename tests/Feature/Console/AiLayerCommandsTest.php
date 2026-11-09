@@ -25,6 +25,19 @@ class AiLayerCommandsTest extends TestCase
         $this->assertStringContainsString('default provider: local', $output);
     }
 
+    public function test_ai_providers_shows_each_models_license_and_whether_it_was_reviewed(): void
+    {
+        Artisan::call('ai:providers');
+
+        $this->assertStringContainsString('Llama 3.1 Community License (unreviewed)', Artisan::output());
+
+        config()->set('ai.providers.local.license_reviewed', '2026-11-02');
+
+        Artisan::call('ai:providers');
+
+        $this->assertStringContainsString('Llama 3.1 Community License (reviewed 2026-11-02)', Artisan::output());
+    }
+
     public function test_ai_providers_check_asks_the_provider_which_models_it_serves(): void
     {
         Http::fake([

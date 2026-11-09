@@ -34,3 +34,4 @@ Thumbs.db
 /storage/benchmarks/20??-??-??-*.json
 /storage/golden/misses-*.json
 /storage/golden/results-*.json
+/storage/benchmarks/compare-*.json

@@ -14,7 +14,7 @@ final class FakeHttp
 
         Http::fake([
             '*' => Http::response(
-                $response['body'],
+                self::bodyOf($response),
                 $response['status'],
                 self::headersOf($response['headers'] ?? []),
             ),
@@ -45,6 +45,15 @@ final class FakeHttp
         sort($names);
 
         return $names;
+    }
+
+    private static function bodyOf(array $response): string
+    {
+        if (isset($response['body_base64'])) {
+            return (string) base64_decode($response['body_base64'], true);
+        }
+
+        return $response['body'];
     }
 
     private static function headersOf(array $headers): array

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Ai\Memory\MemoryStore;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\RecordedRequest;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -23,7 +24,16 @@ class ConversationsRetain extends Command
 
         $this->info("Archived {$archived['conversations']} conversations ({$archived['messages']} messages deleted); expired {$expired} unused memories.");
 
+        $this->info('Deleted '.$this->deleteExpiredRecordedRequests().' recorded requests past '.config('ai.debug.record_requests_days').' days.');
+
         return Command::SUCCESS;
+    }
+
+    private function deleteExpiredRecordedRequests(): int
+    {
+        return RecordedRequest::query()
+            ->where('created_at', '<', now()->subDays((int) config('ai.debug.record_requests_days')))
+            ->delete();
     }
 
     private function cutoff(): Carbon

@@ -21,6 +21,8 @@ use App\Ai\Retrieval\RetrievalScope;
 use App\Ai\Retrieval\Retriever;
 use App\Ai\Streaming\StreamTaps;
 use App\Ai\Structured\RepairPrompt;
+use App\Ai\Tiers\ModelTier;
+use App\Ai\Tiers\ModelTiers;
 use App\Ai\Tools\ToolContext;
 use App\Ai\Tools\ToolRunner;
 use App\Ai\Tools\ToolRunResult;
@@ -46,6 +48,7 @@ final class SupportAssistant
         private readonly Retriever $retriever,
         private readonly CitationChecker $citations,
         private readonly Router $router,
+        private readonly ModelTiers $tiers,
     ) {}
 
     public function answer(User $user, string $question, ?Conversation $conversation = null): ToolRunResult
@@ -127,9 +130,21 @@ final class SupportAssistant
             return $this->runner;
         }
 
-        return $this->runner
+        $runner = $this->runner
             ->restrictedTo($route->tools)
             ->escalatingAfter($route->escalateAfterRounds);
+
+        $tier = ModelTier::from($route->tier);
+
+        if ($tier === ModelTier::Small) {
+            return $runner;
+        }
+
+        if (! $this->tiers->isServed($tier)) {
+            return $runner;
+        }
+
+        return $runner->startingOn($this->tiers->providerNamed($tier));
     }
 
     private function scopeFor(User $user, CacheLookup $lookup, Route $route): RetrievalScope

@@ -28,6 +28,7 @@ final class ToolRunner
         private readonly ToolGate $gate,
         private readonly TokenCounter $counter,
         private readonly int $escalateAfterRounds = 0,
+        private readonly ?string $startProvider = null,
     ) {}
 
     public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null, ?CallDetails $details = null, ?StreamTaps $taps = null): ToolRunResult
@@ -73,6 +74,7 @@ final class ToolRunner
             gate: $this->gate,
             counter: $this->counter,
             escalateAfterRounds: $this->escalateAfterRounds,
+            startProvider: $this->startProvider,
         );
     }
 
@@ -84,6 +86,19 @@ final class ToolRunner
             gate: $this->gate,
             counter: $this->counter,
             escalateAfterRounds: $rounds,
+            startProvider: $this->startProvider,
+        );
+    }
+
+    public function startingOn(string $provider): self
+    {
+        return new self(
+            ai: $this->ai,
+            tools: $this->tools,
+            gate: $this->gate,
+            counter: $this->counter,
+            escalateAfterRounds: $this->escalateAfterRounds,
+            startProvider: $provider,
         );
     }
 
@@ -197,18 +212,27 @@ final class ToolRunner
     private function modelFor(string $feature, int $round): ChatModel
     {
         if ($this->escalateAfterRounds === 0) {
-            return $this->ai->for($feature);
+            return $this->firstModel($feature);
         }
 
         if ($round <= $this->escalateAfterRounds) {
-            return $this->ai->for($feature);
+            return $this->firstModel($feature);
         }
 
         if (! $this->ai->hasEscalation($feature)) {
-            return $this->ai->for($feature);
+            return $this->firstModel($feature);
         }
 
         return $this->ai->escalation($feature);
+    }
+
+    private function firstModel(string $feature): ChatModel
+    {
+        if ($this->startProvider === null) {
+            return $this->ai->for($feature);
+        }
+
+        return $this->ai->chat($this->startProvider);
     }
 
     private function complete(ChatModel $model, array $messages, array $requestOptions, string $feature, ?string $promptVersion, ToolContext $ctx, ?CallDetails $details, ?StreamTaps $taps): ChatResponse

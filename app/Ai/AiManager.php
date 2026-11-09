@@ -10,6 +10,7 @@ use App\Ai\Decorators\RetryingEmbeddingModel;
 use App\Ai\Decorators\RetryingModel;
 use App\Ai\Decorators\UsageLoggingModel;
 use App\Ai\Drivers\AnthropicDriver;
+use App\Ai\Drivers\BedrockDriver;
 use App\Ai\Drivers\FakeDriver;
 use App\Ai\Drivers\FakeEmbeddings;
 use App\Ai\Drivers\GeminiDriver;
@@ -147,6 +148,10 @@ class AiManager
             return true;
         }
 
+        if (($config['driver'] ?? '') === 'bedrock') {
+            return filled($config['region'] ?? null) && filled($config['model'] ?? null);
+        }
+
         return filled($config['api_key'] ?? null) && filled($config['model'] ?? null);
     }
 
@@ -180,6 +185,7 @@ class AiManager
             'openai-compatible' => new OpenAiCompatibleDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'anthropic' => new AnthropicDriver($config, $this->app->make(DebugLog::class)),
             'gemini' => new GeminiDriver($config, $this->app->make(DebugLog::class)),
+            'bedrock' => new BedrockDriver($config, $this->app->make(DebugLog::class)),
             'fake' => new FakeDriver($config),
             'sidecar', 'lexical' => throw UnknownProvider::notChat($name, $driver),
             default => throw UnknownProvider::driver($name, $driver),

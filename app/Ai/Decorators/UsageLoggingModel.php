@@ -84,7 +84,17 @@ final class UsageLoggingModel extends ChatModelDecorator
             contextBreakdown: $request->details?->contextBreakdown,
             semanticCacheHit: $request->details?->semanticCacheHit,
             cachedTokensEstimated: $cached['estimated'],
+            request: $this->recordedRequest($request),
         );
+    }
+
+    private function recordedRequest(ChatRequest $request): ?array
+    {
+        if (! config('ai.debug.record_requests')) {
+            return null;
+        }
+
+        return $request->toRecorded();
     }
 
     private function cachedTokens(ChatRequest $request, ChatResponse $response): array

@@ -26,7 +26,7 @@ class AiProviders extends Command
             $ai->providerNames(),
         );
 
-        $headers = ['name', 'driver', 'model', 'base_url', 'capabilities'];
+        $headers = ['name', 'driver', 'model', 'base_url', 'capabilities', 'license'];
 
         if ($this->option('check')) {
             $headers[] = 'check';
@@ -58,11 +58,30 @@ class AiProviders extends Command
             default => $this->chatRow($ai, $name, $driver, $config),
         };
 
+        $row = [...$row, $this->licenseOf($config)];
+
         if (! $this->option('check')) {
             return $row;
         }
 
         return [...$row, $this->checkFor($ai, $served, $name, $driver, $config)];
+    }
+
+    private function licenseOf(array $config): string
+    {
+        $license = (string) ($config['license'] ?? '');
+
+        if ($license === '') {
+            return self::EMPTY;
+        }
+
+        $reviewed = (string) ($config['license_reviewed'] ?? '');
+
+        if ($reviewed === '') {
+            return "{$license} (unreviewed)";
+        }
+
+        return "{$license} (reviewed {$reviewed})";
     }
 
     private function chatRow(AiManager $ai, string $name, string $driver, array $config): array
@@ -103,7 +122,7 @@ class AiProviders extends Command
 
     private function checkFor(AiManager $ai, ServedModels $served, string $name, string $driver, array $config): string
     {
-        if (in_array($driver, ['fake', 'lexical', 'sidecar'], true)) {
+        if (in_array($driver, ['fake', 'lexical', 'sidecar', 'bedrock'], true)) {
             return self::EMPTY;
         }
 

@@ -1,0 +1,13 @@
+{
+    "provider": "bedrock",
+    "driver": "bedrock",
+    "source": "Hand-written from the provider's published API shape. Not recorded: no AWS credentials were available.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/vnd.amazon.eventstream",
+            "x-amzn-RequestId": "7f3a1c2e-0000-4000-8000-000000000003"
+        },
+        "body_base64": "AAAAdgAAAFKW1freCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicm9sZSI6ImFzc2lzdGFudCJ9b6jFmQAAAMYAAABX9ngGRQs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja1N0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsInN0YXJ0Ijp7InRvb2xVc2UiOnsidG9vbFVzZUlkIjoidG9vbHVzZV8wMUEiLCJuYW1lIjoibG9va3VwX2ludm9pY2UifX19B5CehwAAALMAAABXx0pp+gs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7InRvb2xVc2UiOnsiaW5wdXQiOiJ7XCJpbnZvaWNlX251bWJlclwiOiJ9fX12R9rcAAAAqQAAAFftGubZCzpldmVudC10eXBlBwARY29udGVudEJsb2NrRGVsdGENOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwiZGVsdGEiOnsidG9vbFVzZSI6eyJpbnB1dCI6IiBcIjQ0NzFcIn0ifX19LvXapwAAAH0AAABW5mgP1gs6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MH2zLk00AAAAegAAAFHKLEZlCzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJzdG9wUmVhc29uIjoidG9vbF91c2UifZ3LKYEAAAC7AAAATpNRivsLOmV2ZW50LXR5cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7InVzYWdlIjp7ImlucHV0VG9rZW5zIjoxODgsIm91dHB1dFRva2VucyI6MTksInRvdGFsVG9rZW5zIjoyMDd9LCJtZXRyaWNzIjp7ImxhdGVuY3lNcyI6MzUwfX0saW7j"
+    }
+}

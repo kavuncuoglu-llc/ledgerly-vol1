@@ -10,6 +10,11 @@ return [
             'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_MODEL', 'llama3.1:8b'),
+            'license' => env('AI_LICENSE', 'Llama 3.1 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('AI_GPU_HOUR_COST'))
+                ? (float) env('AI_GPU_HOUR_COST')
+                : null,
             'cache_breakpoints' => env('AI_CACHE_BREAKPOINTS') === null
                 ? null
                 : filter_var(env('AI_CACHE_BREAKPOINTS'), FILTER_VALIDATE_BOOLEAN),
@@ -19,6 +24,8 @@ return [
             'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
+            'license' => env('AI_EMBED_LICENSE', 'Apache 2.0'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'dimensions' => (int) env('AI_EMBED_DIMENSIONS', 768),
             'prefixes' => [
                 'query' => 'search_query: ',
@@ -30,7 +37,21 @@ return [
             'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_VISION_MODEL', 'llama3.2-vision:11b'),
+            'license' => env('AI_VISION_LICENSE', 'Llama 3.2 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'vision' => true,
+        ],
+        'mid' => [
+            'driver' => env('MID_DRIVER', 'openai-compatible'),
+            'base_url' => env('MID_URL') ?: null,
+            'api_key' => env('MID_KEY') ?: null,
+            'model' => env('MID_MODEL') ?: null,
+            'timeout' => (int) env('MID_TIMEOUT', 120),
+            'license' => env('MID_LICENSE') ?: null,
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('MID_GPU_HOUR_COST'))
+                ? (float) env('MID_GPU_HOUR_COST')
+                : null,
         ],
         'frontier' => [
             'driver' => env('FRONTIER_DRIVER', 'anthropic'),
@@ -44,6 +65,17 @@ return [
                 ? null
                 : filter_var(env('FRONTIER_CACHE_BREAKPOINTS'), FILTER_VALIDATE_BOOLEAN),
         ],
+        'bedrock' => [
+            'driver' => 'bedrock',
+            'region' => env('AWS_DEFAULT_REGION') ?: null,
+            'model' => env('BEDROCK_MODEL') ?: null,
+            'access_key' => env('AWS_ACCESS_KEY_ID') ?: null,
+            'secret_key' => env('AWS_SECRET_ACCESS_KEY') ?: null,
+            'session_token' => env('AWS_SESSION_TOKEN') ?: null,
+            'timeout' => (int) env('BEDROCK_TIMEOUT', 60),
+            'max_tokens' => (int) env('BEDROCK_MAX_TOKENS', 1024),
+            'vision' => true,
+        ],
         'rerank' => [
             'driver' => 'sidecar',
             'model' => 'bge-reranker-base',
@@ -54,6 +86,12 @@ return [
         'fake' => [
             'driver' => 'fake',
         ],
+    ],
+
+    'tiers' => [
+        'small' => 'local',
+        'mid' => env('AI_MID_PROVIDER', 'mid'),
+        'frontier' => 'frontier',
     ],
 
     'features' => [
@@ -90,6 +128,8 @@ return [
     ],
 
     'debug' => [
+        'record_requests' => (bool) env('AI_RECORD_REQUESTS', false),
+        'record_requests_days' => (int) env('AI_RECORD_REQUESTS_DAYS', 7),
         'features' => array_filter(explode(',', (string) env('AI_DEBUG_FEATURES', ''))),
         'conversations' => array_map('intval', array_filter(explode(',', (string) env('AI_DEBUG_CONVERSATIONS', '')))),
     ],
@@ -217,6 +257,8 @@ return [
         'enabled' => (bool) env('AI_ROUTING', true),
         'samples' => (int) env('AI_ROUTING_SAMPLES', 3),
         'agreement_threshold' => (float) env('AI_ROUTING_AGREEMENT', 0.67),
+        'mid_below_agreement' => (float) env('AI_ROUTING_MID_BELOW_AGREEMENT', 0.67),
+        'frontier_after_rounds' => (int) env('AI_ROUTING_FRONTIER_AFTER_ROUNDS', 2),
     ],
 
     'agents' => [
@@ -288,6 +330,40 @@ return [
                 'out' => 0,
             ],
         ],
+        'mid' => env('MID_MODEL')
+            ? [
+                env('MID_MODEL') => [
+                    'in' => (float) env('MID_RATE_IN', 0),
+                    'out' => (float) env('MID_RATE_OUT', 0),
+                ],
+            ]
+            : [],
+        'frontier' => env('FRONTIER_MODEL')
+            ? [
+                env('FRONTIER_MODEL') => [
+                    'in' => (float) env('FRONTIER_RATE_IN', 0),
+                    'out' => (float) env('FRONTIER_RATE_OUT', 0),
+                ],
+            ]
+            : [],
+        'bedrock' => env('BEDROCK_MODEL')
+            ? [
+                env('BEDROCK_MODEL') => [
+                    'in' => (float) env('BEDROCK_RATE_IN', 0),
+                    'out' => (float) env('BEDROCK_RATE_OUT', 0),
+                ],
+            ]
+            : [],
+    ],
+
+    'compare' => [
+        'defaults' => [
+            'support.reply' => 'storage/golden/retrieval.jsonl',
+            'ticket.classify' => 'storage/samples/tickets.json',
+        ],
+        'output' => 'storage/benchmarks',
+        'replay_limit' => 50,
+        'judge_max_tokens' => 200,
     ],
 
 ];

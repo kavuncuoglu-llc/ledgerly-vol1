@@ -1,0 +1,14 @@
+{
+    "provider": "bedrock",
+    "driver": "bedrock",
+    "source": "Hand-written from the provider's published API shape. Not recorded: no AWS credentials were available.",
+    "response": {
+        "status": 400,
+        "headers": {
+            "Content-Type": "application/json",
+            "x-amzn-RequestId": "7f3a1c2e-0000-4000-8000-000000000002",
+            "x-amzn-ErrorType": "ValidationException:http://internal.amazon.com/coral/com.amazon.bedrock/"
+        },
+        "body": "{\"message\": \"Input is too long for requested model.\"}"
+    }
+}

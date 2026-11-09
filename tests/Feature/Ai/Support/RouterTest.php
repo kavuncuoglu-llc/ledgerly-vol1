@@ -45,7 +45,7 @@ class RouterTest extends TestCase
         $this->assertSame(TicketCategory::Billing, $route->category);
         $this->assertSame(1.0, $route->agreement);
         $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket'], $route->tools);
-        $this->assertSame(Router::TIER_LOCAL, $route->tier);
+        $this->assertSame('small', $route->tier);
         $this->assertFalse($route->cache);
         $this->assertSame(['billing', 'billing', 'billing'], $route->votes);
     }

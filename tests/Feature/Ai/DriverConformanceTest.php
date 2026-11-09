@@ -51,6 +51,15 @@ class DriverConformanceTest extends TestCase
             'api_key' => 'test-key',
             'model' => 'conformance-model',
         ]);
+        config()->set('ai.providers.conformance-bedrock', [
+            'driver' => 'bedrock',
+            'base_url' => 'http://bedrock.test',
+            'region' => 'us-east-1',
+            'access_key' => 'AKIDTEST',
+            'secret_key' => 'secret-test',
+            'model' => 'conformance-model',
+            'max_tokens' => 100,
+        ]);
     }
 
     #[DataProvider('drivers')]
@@ -208,6 +217,7 @@ class DriverConformanceTest extends TestCase
             'openai-compatible' => ['openai-compatible'],
             'anthropic' => ['anthropic'],
             'gemini' => ['gemini'],
+            'bedrock' => ['bedrock'],
         ];
     }
 
@@ -215,7 +225,7 @@ class DriverConformanceTest extends TestCase
     {
         $cases = [];
 
-        foreach (['openai-compatible', 'anthropic', 'gemini'] as $driver) {
+        foreach (['openai-compatible', 'anthropic', 'gemini', 'bedrock'] as $driver) {
             $cases["{$driver} rate limit"] = [$driver, 'rate-limited', RateLimited::class, 3];
             $cases["{$driver} overloaded"] = [$driver, 'overloaded', ProviderUnavailable::class, 3];
             $cases["{$driver} context overflow"] = [$driver, 'context-overflow', ContextTooLong::class, 1];

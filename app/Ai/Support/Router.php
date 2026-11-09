@@ -2,12 +2,12 @@
 
 namespace App\Ai\Support;
 
+use App\Ai\Tiers\ModelTier;
+use App\Ai\Tiers\RouteSignals;
 use App\Enums\TicketCategory;
 
 final class Router
 {
-    public const TIER_LOCAL = 'local-8b';
-
     public function __construct(
         private readonly VoteClassifier $classifier,
         private readonly int $samples,
@@ -32,16 +32,43 @@ final class Router
             );
         }
 
+        $tier = $this->tierFor(RouteSignals::for($question, $category, $agreement));
+
         return match ($category) {
-            TicketCategory::Howto => $this->automate($category, $agreement, $votes, tools: [], area: '', cache: true),
-            TicketCategory::Billing => $this->automate($category, $agreement, $votes, tools: ['lookup_invoice', 'list_invoices', 'open_ticket'], area: '', cache: false),
-            TicketCategory::Bug => $this->automate($category, $agreement, $votes, tools: ['open_ticket'], area: 'troubleshooting', cache: false, escalateAfterRounds: 2),
-            TicketCategory::Account => $this->automate($category, $agreement, $votes, tools: ['account_status', 'open_ticket'], area: 'account', cache: false),
+            TicketCategory::Howto => $this->automate($category, $agreement, $votes, tools: [], area: '', cache: true, tier: $tier),
+            TicketCategory::Billing => $this->automate($category, $agreement, $votes, tools: ['lookup_invoice', 'list_invoices', 'open_ticket'], area: '', cache: false, tier: $tier),
+            TicketCategory::Bug => $this->automate($category, $agreement, $votes, tools: ['open_ticket'], area: 'troubleshooting', cache: false, tier: $tier, escalateAfterRounds: 2),
+            TicketCategory::Account => $this->automate($category, $agreement, $votes, tools: ['account_status', 'open_ticket'], area: 'account', cache: false, tier: $tier),
             TicketCategory::Other => Route::decline($category, $agreement, $votes->values()),
         };
     }
 
-    private function automate(TicketCategory $category, float $agreement, CategoryVotes $votes, array $tools, string $area, bool $cache, int $escalateAfterRounds = 0): Route
+    public function tierFor(RouteSignals $signals): ModelTier
+    {
+        if ($signals->humanFlagged) {
+            return ModelTier::Frontier;
+        }
+
+        if ($signals->unresolvedRounds >= (int) config('ai.routing.frontier_after_rounds')) {
+            return ModelTier::Frontier;
+        }
+
+        if ($signals->agreement < (float) config('ai.routing.mid_below_agreement')) {
+            return ModelTier::Mid;
+        }
+
+        if ($signals->multiAsk) {
+            return ModelTier::Mid;
+        }
+
+        if ($signals->isDispute) {
+            return ModelTier::Mid;
+        }
+
+        return ModelTier::Small;
+    }
+
+    private function automate(TicketCategory $category, float $agreement, CategoryVotes $votes, array $tools, string $area, bool $cache, ModelTier $tier, int $escalateAfterRounds = 0): Route
     {
         return Route::make(
             category: $category,
@@ -49,7 +76,7 @@ final class Router
             votes: $votes->values(),
             tools: $tools,
             area: $area,
-            tier: self::TIER_LOCAL,
+            tier: $tier->value,
             cache: $cache,
             escalateAfterRounds: $escalateAfterRounds,
         );

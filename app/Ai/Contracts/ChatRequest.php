@@ -50,6 +50,60 @@ final readonly class ChatRequest
         );
     }
 
+    public static function fromRecorded(array $recorded): self
+    {
+        return new self(
+            messages: $recorded['messages'],
+            feature: (string) $recorded['feature'],
+            options: $recorded['options'] ?? [],
+            tools: $recorded['tools'] ?? [],
+            responseFormat: $recorded['response_format'] ?? null,
+            cacheBreakpointsAfter: $recorded['cache_breakpoints_after'] ?? [],
+            profile: $recorded['profile'] ?? null,
+            toolChoice: $recorded['tool_choice'] ?? null,
+            promptVersion: $recorded['prompt_version'] ?? null,
+        );
+    }
+
+    public function toRecorded(): array
+    {
+        return [
+            'feature' => $this->feature,
+            'messages' => $this->messages,
+            'options' => $this->options,
+            'tools' => $this->tools,
+            'response_format' => $this->responseFormat,
+            'cache_breakpoints_after' => $this->cacheBreakpointsAfter,
+            'profile' => $this->profile,
+            'tool_choice' => $this->toolChoice,
+            'prompt_version' => $this->promptVersion,
+        ];
+    }
+
+    public function withProfile(string $profile): self
+    {
+        return $this->copy(profile: $profile);
+    }
+
+    public function withFeature(string $feature): self
+    {
+        return new self(
+            messages: $this->messages,
+            feature: $feature,
+            model: $this->model,
+            options: $this->options,
+            tools: $this->tools,
+            responseFormat: $this->responseFormat,
+            cacheBreakpointsAfter: $this->cacheBreakpointsAfter,
+            profile: $this->profile,
+            toolChoice: $this->toolChoice,
+            promptVersion: $this->promptVersion,
+            repaired: $this->repaired,
+            conversationId: $this->conversationId,
+            details: $this->details,
+        );
+    }
+
     public function withMessages(array $messages): self
     {
         return $this->copy(messages: $messages);

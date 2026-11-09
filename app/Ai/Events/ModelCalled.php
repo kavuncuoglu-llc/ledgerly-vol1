@@ -25,5 +25,6 @@ final class ModelCalled
         public readonly ?array $contextBreakdown = null,
         public readonly ?bool $semanticCacheHit = null,
         public readonly bool $cachedTokensEstimated = false,
+        public readonly ?array $request = null,
     ) {}
 }

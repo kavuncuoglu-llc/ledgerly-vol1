@@ -1,0 +1,13 @@
+{
+    "provider": "bedrock",
+    "driver": "bedrock",
+    "source": "Hand-written from the provider's published API shape. Not recorded: no AWS credentials were available.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "x-amzn-RequestId": "7f3a1c2e-0000-4000-8000-000000000001"
+        },
+        "body": "{\"output\":{\"message\":{\"role\":\"assistant\",\"content\":[{\"text\":\"duplicate\"}]}},\"stopReason\":\"end_turn\",\"usage\":{\"inputTokens\":35,\"outputTokens\":2,\"totalTokens\":37},\"metrics\":{\"latencyMs\":420}}"
+    }
+}
