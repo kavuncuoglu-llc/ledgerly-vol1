@@ -1,0 +1,11 @@
+[
+    {
+        "prompt": "In two sentences, what is a late fee on an invoice?"
+    },
+    {
+        "prompt": "Explain how a freelancer should decide between charging a flat fee and an hourly rate for a three-month website project, and list the risks of each approach for both the freelancer and the client."
+    },
+    {
+        "prompt": "Here is our invoicing policy. Policy: Invoices are issued on the first business day of each month for work completed in the previous month. Payment is due thirty days after the invoice date. If an invoice is not paid within thirty days, a late fee of one and a half percent of the outstanding balance is added on the first day it is overdue and again on each thirtieth day after that, until the balance is paid in full. Late fees are never charged on other late fees. Customers who dispute a charge must tell us in writing within fourteen days of the invoice date, naming the line items in question; the disputed amount is then excluded from late-fee calculations until the dispute is resolved, while the undisputed remainder stays due on the original date. Partial payments are applied first to the oldest invoice, and within an invoice first to accrued late fees, then to the line items in the order they appear. Refunds are issued to the original payment method within ten business days of approval, and a refunded invoice is marked void rather than deleted, so that the audit trail stays intact. Recurring subscriptions are billed in advance on the same calendar day each month; if that day does not exist in a month, the last day of that month is used instead. A customer who cancels mid-cycle keeps access until the end of the paid period, and no prorated refund is given unless the cancellation follows a billing error on our side. Taxes are calculated from the customer's billing address at the time the invoice is issued, and changing the address afterwards does not change invoices that already exist. Now, using only that policy, answer this: a customer was invoiced 2,000 euros on 1 March, disputes one 500 euro line item in writing on 10 March, and pays nothing until 15 May. Walk through what is owed on 15 May and why, step by step, and name any assumption you had to make."
+    }
+]

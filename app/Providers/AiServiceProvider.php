@@ -23,11 +23,17 @@ use App\Ai\Encoding\Formats\YamlFormat;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Events\ToolCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
+use App\Ai\Hardware\HostInspector;
+use App\Ai\Hardware\SystemHostInspector;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
 use App\Ai\Listeners\TriageTicket;
 use App\Ai\Parsing\DocumentParser;
 use App\Ai\Parsing\SidecarPdfParser;
+use App\Ai\Profile\BackgroundSampler;
+use App\Ai\Profile\MemoryProbeFactory;
+use App\Ai\Profile\OllamaMemoryProbeFactory;
+use App\Ai\Profile\ProcessBackgroundSampler;
 use App\Ai\Retrieval\ContextualizeChunks;
 use App\Ai\Retrieval\Retriever;
 use App\Ai\Retrieval\RetrieverFactory;
@@ -99,6 +105,12 @@ class AiServiceProvider extends ServiceProvider
             'json-pretty' => new JsonFormat(pretty: true),
             'yaml' => new YamlFormat,
         ]));
+
+        $this->app->bind(HostInspector::class, SystemHostInspector::class);
+
+        $this->app->bind(BackgroundSampler::class, ProcessBackgroundSampler::class);
+
+        $this->app->bind(MemoryProbeFactory::class, OllamaMemoryProbeFactory::class);
 
         $this->app->singleton(McpClientFactory::class);
 

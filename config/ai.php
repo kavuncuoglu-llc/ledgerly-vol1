@@ -53,6 +53,18 @@ return [
                 ? (float) env('MID_GPU_HOUR_COST')
                 : null,
         ],
+        'local-70b' => [
+            'driver' => 'openai-compatible',
+            'base_url' => env('LOCAL_70B_URL', env('AI_BASE_URL', 'http://localhost:11434/v1')),
+            'api_key' => env('AI_API_KEY', 'ollama'),
+            'model' => env('LOCAL_70B_MODEL', 'ledgerly-support-70b'),
+            'timeout' => (int) env('LOCAL_70B_TIMEOUT', 300),
+            'license' => env('LOCAL_70B_LICENSE', 'Llama 3.1 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('LOCAL_70B_GPU_HOUR_COST'))
+                ? (float) env('LOCAL_70B_GPU_HOUR_COST')
+                : null,
+        ],
         'frontier' => [
             'driver' => env('FRONTIER_DRIVER', 'anthropic'),
             'base_url' => env('FRONTIER_URL') ?: null,
@@ -354,6 +366,75 @@ return [
                 ],
             ]
             : [],
+    ],
+
+    'hardware' => [
+        'reachable_gib' => is_numeric(env('AI_REACHABLE_MEMORY_GIB'))
+            ? (float) env('AI_REACHABLE_MEMORY_GIB')
+            : null,
+        'bandwidth_gbps' => is_numeric(env('AI_MEMORY_BANDWIDTH_GBPS'))
+            ? (float) env('AI_MEMORY_BANDWIDTH_GBPS')
+            : null,
+        'macos_gpu_share' => (float) env('AI_MACOS_GPU_SHARE', 0.75),
+        'headroom_pct' => (float) env('AI_HEADROOM_PCT', 0.12),
+        'default_quantization' => 'q4_k_m',
+        'quantizations' => [
+            'f16' => 2.0,
+            'q8_0' => 1.06,
+            'q6_k' => 0.83,
+            'q5_k_m' => 0.71,
+            'q4_k_m' => 0.6,
+            'q3_k_m' => 0.49,
+        ],
+        'cache_types' => [
+            'f16' => 2.0,
+            'q8_0' => 1.0625,
+            'q4_0' => 0.5625,
+        ],
+        'apple_bandwidth_gbps' => [
+            'M1 Pro' => 200,
+            'M1 Max' => 400,
+            'M1 Ultra' => 800,
+            'M2 Pro' => 200,
+            'M2 Ultra' => 800,
+            'M3 Pro' => 150,
+            'M4 Pro' => 273,
+        ],
+        'architectures' => [
+            'llama3.1' => [
+                '8b' => [
+                    'parameters_billions' => 8.03,
+                    'layers' => 32,
+                    'kv_heads' => 8,
+                    'head_dim' => 128,
+                ],
+                '70b' => [
+                    'parameters_billions' => 70.6,
+                    'layers' => 80,
+                    'kv_heads' => 8,
+                    'head_dim' => 128,
+                ],
+                '405b' => [
+                    'parameters_billions' => 405.9,
+                    'layers' => 126,
+                    'kv_heads' => 8,
+                    'head_dim' => 128,
+                ],
+            ],
+            'llama3.3' => [
+                '70b' => [
+                    'parameters_billions' => 70.6,
+                    'layers' => 80,
+                    'kv_heads' => 8,
+                    'head_dim' => 128,
+                ],
+            ],
+        ],
+        'profile' => [
+            'prompts' => 'storage/samples/profile-set.json',
+            'interval' => 1.0,
+            'max_tokens' => 256,
+        ],
     ],
 
     'compare' => [
