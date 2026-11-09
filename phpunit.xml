@@ -20,6 +20,7 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="AI_SEMANTIC_CACHE" value="false"/>
+        <env name="AI_ROUTING" value="false"/>
         <env name="AI_RERANKER" value="none"/>
         <env name="AI_RETRIEVAL_REWRITE" value="off"/>
         <env name="AI_CHUNK_STRATEGY" value="heading"/>

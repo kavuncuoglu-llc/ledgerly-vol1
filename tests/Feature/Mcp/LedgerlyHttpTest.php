@@ -56,7 +56,7 @@ class LedgerlyHttpTest extends TestCase
 
         $response->assertOk();
         $names = array_column($response->json('result.tools'), 'name');
-        $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket'], $names);
+        $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket', 'account_status'], $names);
     }
 
     public function test_a_tool_call_over_http_is_scoped_and_audited_with_the_token_name(): void

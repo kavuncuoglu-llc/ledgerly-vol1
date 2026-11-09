@@ -43,6 +43,7 @@ final class SupportAssistant
         private readonly SupportCacheGate $cache,
         private readonly Retriever $retriever,
         private readonly CitationChecker $citations,
+        private readonly Router $router,
     ) {}
 
     public function answer(User $user, string $question, ?Conversation $conversation = null): ToolRunResult
@@ -57,13 +58,17 @@ final class SupportAssistant
             return $this->answerFromCache($conversation, $question, $lookup, $started);
         }
 
+        $route = $this->routeFor($question);
+
         $allowance = $this->budget->historyAllowance(SupportPrompt::system($user));
 
-        $chunks = $this->retriever->retrieve($question, $this->scopeFor($user, $lookup), k: config('ai.retrieval.k'));
+        $chunks = $this->retriever->retrieve($question, $this->scopeFor($user, $lookup, $route), k: config('ai.retrieval.k'));
 
         $assembled = $this->assemble($user, $question, $conversation, $allowance, $chunks);
 
-        $run = fn (array $messages): ToolRunResult => $this->runner->run(
+        $runner = $this->runnerFor($route);
+
+        $run = fn (array $messages): ToolRunResult => $runner->run(
             messages: $messages,
             ctx: new ToolContext(user: $user, conversationId: $conversation->id),
             options: [
@@ -93,15 +98,44 @@ final class SupportAssistant
         return $result->forConversation($conversation->id);
     }
 
-    private function scopeFor(User $user, CacheLookup $lookup): RetrievalScope
+    private function routeFor(string $question): Route
+    {
+        if (! config('ai.routing.enabled')) {
+            return Route::unrouted();
+        }
+
+        return $this->router->route($question);
+    }
+
+    private function runnerFor(Route $route): ToolRunner
+    {
+        if (! $route->isAutomated()) {
+            return $this->runner;
+        }
+
+        return $this->runner->restrictedTo($route->tools);
+    }
+
+    private function scopeFor(User $user, CacheLookup $lookup, Route $route): RetrievalScope
     {
         return new RetrievalScope(
             tenantId: $user->customer_id,
             plan: (string) $user->customer?->plan,
-            area: $lookup->attempted
-                ? $lookup->category->areaIfConfident()
-                : '',
+            area: $this->areaFor($lookup, $route),
         );
+    }
+
+    private function areaFor(CacheLookup $lookup, Route $route): string
+    {
+        if ($route->isAutomated()) {
+            return $route->area;
+        }
+
+        if (! $lookup->attempted) {
+            return '';
+        }
+
+        return $lookup->category->areaIfConfident();
     }
 
     private function enforceCitations(ToolRunResult $result, AssembledPrompt $assembled, Closure $run): ToolRunResult

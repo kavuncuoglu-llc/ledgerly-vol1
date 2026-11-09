@@ -36,6 +36,19 @@ final class ToolRegistry
         return $this;
     }
 
+    public function only(array $names): self
+    {
+        $subset = new self;
+
+        foreach ($this->all() as $tool) {
+            if (in_array($tool->name(), $names, true)) {
+                $subset->add($tool);
+            }
+        }
+
+        return $subset;
+    }
+
     public function native(): Collection
     {
         return collect($this->nativeTools)->values();

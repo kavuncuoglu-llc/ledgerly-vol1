@@ -57,6 +57,16 @@ final class ToolRunner
         );
     }
 
+    public function restrictedTo(array $toolNames): self
+    {
+        return new self(
+            client: $this->client,
+            tools: $this->tools->only($toolNames),
+            gate: $this->gate,
+            counter: $this->counter,
+        );
+    }
+
     public function executeOne(Tool $tool, array $args, ToolContext $ctx): ToolResult
     {
         try {
@@ -239,11 +249,13 @@ final class ToolRunner
         ];
     }
 
-    private function executeCall(array $call, ToolContext $ctx): ToolResult
+    public function executeCall(array $call, ToolContext $ctx, ?ToolRegistry $registry = null): ToolResult
     {
+        $registry ??= $this->tools;
+
         $name = (string) ($call['function']['name'] ?? '');
 
-        if (! $this->tools->has($name)) {
+        if (! $registry->has($name)) {
             $result = ToolResult::error('unknown tool');
 
             return $this->record($name, [], $result, $ctx, ToolCall::DECISION_DENIED);
@@ -257,7 +269,7 @@ final class ToolRunner
             return $this->record($name, [], $result, $ctx, ToolCall::DECISION_INVALID);
         }
 
-        return $this->executeOne($this->tools->get($name), $args, $ctx);
+        return $this->executeOne($registry->get($name), $args, $ctx);
     }
 
     private function decodeArguments(mixed $raw): array|false
@@ -267,7 +279,7 @@ final class ToolRunner
         }
 
         if (is_array($raw)) {
-            return $raw;
+            return $this->withoutNullStrings($raw);
         }
 
         $decoded = json_decode((string) $raw, true);
@@ -276,7 +288,17 @@ final class ToolRunner
             return false;
         }
 
-        return $decoded;
+        return $this->withoutNullStrings($decoded);
+    }
+
+    private function withoutNullStrings(array $arguments): array
+    {
+        return array_map(
+            fn (mixed $value): mixed => $value === 'null'
+                ? null
+                : $value,
+            $arguments,
+        );
     }
 
     private function perform(Tool $tool, array $validated, ToolContext $ctx, string $decision): ToolResult

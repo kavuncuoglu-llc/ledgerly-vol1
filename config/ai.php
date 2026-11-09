@@ -135,6 +135,39 @@ return [
         ],
     ],
 
+    'routing' => [
+        'enabled' => (bool) env('AI_ROUTING', true),
+        'samples' => (int) env('AI_ROUTING_SAMPLES', 3),
+        'agreement_threshold' => (float) env('AI_ROUTING_AGREEMENT', 0.67),
+    ],
+
+    'agents' => [
+        'support' => [
+            'max_rounds' => 5,
+            'max_tokens' => 20_000,
+            'max_seconds' => 60,
+            'max_writes' => 1,
+        ],
+        'triage' => [
+            'max_rounds' => 8,
+            'max_tokens' => 30_000,
+            'max_seconds' => 120,
+            'max_writes' => 2,
+        ],
+        'reminder' => [
+            'max_rounds' => 15,
+            'max_tokens' => 80_000,
+            'max_seconds' => 300,
+            'max_writes' => 10,
+        ],
+    ],
+
+    'triage' => [
+        'urgent_amount' => (float) env('AI_TRIAGE_URGENT_AMOUNT', 1000),
+        'draft_max_tokens' => 300,
+        'retrieval_k' => 3,
+    ],
+
     'mcp_servers' => [],
 
     'tool_allow_lists' => [],

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Ai;
 
+use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Enums\TicketCategory;
 use App\Events\TicketReceived;
 use App\Models\Ticket;
@@ -29,7 +30,7 @@ class ClassifyReceivedTicketTest extends TestCase
         Http::fake(['*' => Http::response($this->completion($this->ticketJson('account')))]);
         $ticket = Ticket::factory()->create(['category' => TicketCategory::Other]);
 
-        TicketReceived::dispatch($ticket);
+        $this->classifyListener()->handle(new TicketReceived($ticket));
 
         $this->assertSame(TicketCategory::Account, $ticket->fresh()->category);
     }
@@ -39,7 +40,7 @@ class ClassifyReceivedTicketTest extends TestCase
         Http::fake(['*' => Http::response($this->completion($this->ticketJson('billing')))]);
         $ticket = Ticket::factory()->create(['body' => 'My card was charged twice']);
 
-        TicketReceived::dispatch($ticket);
+        $this->classifyListener()->handle(new TicketReceived($ticket));
 
         Http::assertSent(function ($request): bool {
             $messages = $request['messages'];
@@ -54,9 +55,14 @@ class ClassifyReceivedTicketTest extends TestCase
         Log::spy();
         $ticket = Ticket::factory()->create(['category' => TicketCategory::Billing]);
 
-        TicketReceived::dispatch($ticket);
+        $this->classifyListener()->handle(new TicketReceived($ticket));
 
         $this->assertSame(TicketCategory::Other, $ticket->fresh()->category);
         Log::shouldHaveReceived('warning')->once();
+    }
+
+    private function classifyListener(): ClassifyReceivedTicket
+    {
+        return $this->app->make(ClassifyReceivedTicket::class);
     }
 }

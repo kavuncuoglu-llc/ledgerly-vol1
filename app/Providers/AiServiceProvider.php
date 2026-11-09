@@ -20,18 +20,21 @@ use App\Ai\Events\ModelCalled;
 use App\Ai\Events\ToolCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
 use App\Ai\Http\AiHttpClient;
-use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
+use App\Ai\Listeners\TriageTicket;
 use App\Ai\Parsing\DocumentParser;
 use App\Ai\Parsing\SidecarPdfParser;
 use App\Ai\Retrieval\ContextualizeChunks;
 use App\Ai\Retrieval\Retriever;
 use App\Ai\Retrieval\RetrieverFactory;
 use App\Ai\Sidecar\SidecarClient;
+use App\Ai\Support\Router;
+use App\Ai\Support\VoteClassifier;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
+use App\Ai\Tools\AccountStatus\AccountStatus;
 use App\Ai\Tools\ListInvoices\ListInvoices;
 use App\Ai\Tools\LookupInvoice\LookupInvoice;
 use App\Ai\Tools\Mcp\McpClientFactory;
@@ -108,7 +111,14 @@ class AiServiceProvider extends ServiceProvider
             ->add(new LookupInvoice)
             ->add(new ListInvoices($this->app->make(DataEncoder::class)))
             ->add(new OpenTicket)
+            ->add(new AccountStatus)
             ->addSource($this->app->make(McpToolSource::class)));
+
+        $this->app->singleton(Router::class, fn () => new Router(
+            classifier: $this->app->make(VoteClassifier::class),
+            samples: (int) config('ai.routing.samples'),
+            agreementThreshold: (float) config('ai.routing.agreement_threshold'),
+        ));
 
         $this->app->singleton(ParentChildChunker::class, fn () => new ParentChildChunker(
             tokens: $this->app->make(TokenCounter::class),
@@ -136,7 +146,7 @@ class AiServiceProvider extends ServiceProvider
 
         Gate::define('use-tool', fn (User $user, string $tool, ?string $tokenName = null): bool => $this->mayUseTool($user, $tool, $tokenName));
 
-        Event::listen(TicketReceived::class, ClassifyReceivedTicket::class);
+        Event::listen(TicketReceived::class, TriageTicket::class);
 
         RateLimiter::for('ai', fn (Request $request): Limit => Limit::perMinute((int) config('ai.rate_limit'))->by($request->user()?->id ?: $request->ip()));
     }

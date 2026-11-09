@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'body',
     'category',
     'status',
+    'assignee',
+    'urgent',
     'received_at',
     'resolved_at',
     'idempotency_key',
@@ -31,6 +33,7 @@ class Ticket extends Model
         return [
             'category' => TicketCategory::class,
             'status' => TicketStatus::class,
+            'urgent' => 'boolean',
             'received_at' => 'datetime',
             'resolved_at' => 'datetime',
         ];

@@ -24,7 +24,7 @@ class LedgerlyServerTest extends TestCase
 
     public function test_it_serves_the_registrys_native_tools_with_the_same_schemas(): void
     {
-        $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket'], app(ToolRegistry::class)->native()->map->name()->all());
+        $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket', 'account_status'], app(ToolRegistry::class)->native()->map->name()->all());
         $lookup = $this->adapter('lookup_invoice')->toArray();
         $this->assertSame(app(ToolRegistry::class)->get('lookup_invoice')->parameters(), $lookup['inputSchema']);
         $this->assertTrue($lookup['annotations']['readOnlyHint']);

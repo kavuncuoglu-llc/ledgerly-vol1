@@ -11,11 +11,12 @@ final class ClassifyTicket
 {
     public function __construct(private readonly StructuredClient $structured) {}
 
-    public function __invoke(string $message): TicketCategory
+    public function __invoke(string $message, array $options = []): TicketCategory
     {
         return $this->structured->extract(
             class: TicketData::class,
             messages: TicketClassifyPrompt::messages($message),
+            options: $options,
             feature: 'ticket.classify',
             promptVersion: TicketClassifyPrompt::VERSION,
         )->category;

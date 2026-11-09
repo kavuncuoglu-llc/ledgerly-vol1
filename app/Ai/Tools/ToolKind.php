@@ -12,4 +12,9 @@ enum ToolKind: string
     {
         return $this === self::Read;
     }
+
+    public function isWrite(): bool
+    {
+        return ! $this->isRead();
+    }
 }

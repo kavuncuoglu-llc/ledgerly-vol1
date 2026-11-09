@@ -24,6 +24,7 @@ final class ToolContext
         public readonly ?string $toolCallId = null,
         public readonly ?int $modelCallId = null,
         ?ArrayObject $callCounts = null,
+        public readonly ?int $triageRunId = null,
     ) {
         $this->callCounts = $callCounts ?? new ArrayObject;
     }
@@ -43,6 +44,7 @@ final class ToolContext
             toolCallId: $toolCallId,
             modelCallId: $modelCallId,
             callCounts: $this->callCounts,
+            triageRunId: $this->triageRunId,
         );
     }
 

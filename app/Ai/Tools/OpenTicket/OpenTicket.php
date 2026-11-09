@@ -59,7 +59,7 @@ final class OpenTicket implements Tool
 
         $ticket = Ticket::firstOrCreate(
             [
-                'idempotency_key' => $this->idempotencyKey($ctx),
+                'idempotency_key' => $this->idempotencyKey($ctx, $args),
             ],
             [
                 'number' => Ticket::nextNumber(),
@@ -69,7 +69,9 @@ final class OpenTicket implements Tool
                 'body' => $args->summary,
                 'status' => TicketStatus::Open,
                 'received_at' => now(),
-                'source' => 'assistant',
+                'source' => $ctx->triageRunId === null
+                    ? 'assistant'
+                    : 'triage',
             ],
         );
 
@@ -91,12 +93,23 @@ final class OpenTicket implements Tool
             ->first() ?? new Invoice;
     }
 
-    private function idempotencyKey(ToolContext $ctx): string
+    private function idempotencyKey(ToolContext $ctx, OpenTicketArgs $args): string
     {
+        if ($ctx->triageRunId !== null) {
+            return $this->triageKey($ctx->triageRunId, $args);
+        }
+
         $conversation = $ctx->conversationId ?? 'none';
 
         $call = $ctx->toolCallId ?? (string) Str::uuid();
 
         return "{$ctx->user->id}:{$conversation}:{$call}";
+    }
+
+    private function triageKey(int $triageRunId, OpenTicketArgs $args): string
+    {
+        $fingerprint = mb_strtolower($args->summary).'|'.($args->invoice_number ?? '');
+
+        return "triage:{$triageRunId}:".sha1($fingerprint);
     }
 }

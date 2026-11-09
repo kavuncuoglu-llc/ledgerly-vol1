@@ -130,7 +130,7 @@ class SupportToolsTest extends TestCase
         $this->actingAs($this->customerUser())->postJson('support/ask', ['question' => 'Hi']);
 
         $request = Http::recorded()[0][0];
-        $this->assertSame(['list_invoices', 'lookup_invoice', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
+        $this->assertSame(['account_status', 'list_invoices', 'lookup_invoice', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
         $this->assertStringContainsString('Tools: use lookup_invoice', $request['messages'][0]['content']);
         $this->assertSame(SupportPrompt::VERSION, ModelCall::query()->sole()->prompt_version);
     }
