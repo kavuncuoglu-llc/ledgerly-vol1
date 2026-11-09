@@ -37,7 +37,20 @@ class LocalRoleConfigTest extends TestCase
     public function test_any_other_value_keeps_ollama(): void
     {
         $this->assertSame('local', $this->configWith('ollama')['tiers']['small']);
-        $this->assertSame('local', $this->configWith('vllm')['tiers']['small']);
+        $this->assertSame('local', $this->configWith('lm-studio')['tiers']['small']);
+    }
+
+    public function test_the_vllm_setting_points_every_local_feature_and_the_small_tier_at_vllm(): void
+    {
+        $config = $this->configWith('vllm');
+
+        foreach (['ticket.classify', 'ticket.extract', 'support.reply', 'conversation.summarize'] as $feature) {
+            $this->assertSame('vllm', $config['features'][$feature]['provider'], $feature);
+        }
+
+        $this->assertSame('vllm', $config['tiers']['small']);
+        $this->assertSame('vision', $config['features']['invoice.extract']['provider']);
+        $this->assertSame('frontier', $config['features']['support.reply']['escalate_to']);
     }
 
     public function test_the_llama_server_provider_is_a_separate_provider_so_both_can_be_compared(): void

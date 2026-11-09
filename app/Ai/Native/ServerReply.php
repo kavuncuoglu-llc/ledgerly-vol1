@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Ai\Llama;
+namespace App\Ai\Native;
 
-final readonly class LlamaReply
+final readonly class ServerReply
 {
     public function __construct(
         public int $status,
@@ -39,7 +39,15 @@ final readonly class LlamaReply
             return $this->error;
         }
 
-        $message = $this->body['error']['message'] ?? null;
+        $error = $this->body['error'] ?? null;
+
+        if (is_string($error)) {
+            return "HTTP {$this->status}: {$error}";
+        }
+
+        $message = is_array($error)
+            ? ($error['message'] ?? null)
+            : null;
 
         if (is_string($message)) {
             return "HTTP {$this->status}: {$message}";

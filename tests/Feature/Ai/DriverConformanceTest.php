@@ -50,6 +50,12 @@ class DriverConformanceTest extends TestCase
             'api_key' => 'llama-key',
             'model' => 'conformance-model',
         ]);
+        config()->set('ai.providers.conformance-vllm', [
+            'driver' => 'vllm',
+            'base_url' => 'http://vllm.test:8000/v1',
+            'api_key' => 'vllm-key',
+            'model' => 'conformance-model',
+        ]);
         config()->set('ai.providers.conformance-anthropic', [
             'driver' => 'anthropic',
             'base_url' => 'http://anthropic.test',
@@ -229,6 +235,7 @@ class DriverConformanceTest extends TestCase
             'openai-compatible' => ['openai-compatible'],
             'ollama' => ['ollama'],
             'llama-server' => ['llama-server'],
+            'vllm' => ['vllm'],
             'anthropic' => ['anthropic'],
             'gemini' => ['gemini'],
             'bedrock' => ['bedrock'],
@@ -237,7 +244,7 @@ class DriverConformanceTest extends TestCase
 
     public static function driversWithContentFilter(): array
     {
-        return array_diff_key(self::drivers(), ['ollama' => true, 'llama-server' => true]);
+        return array_diff_key(self::drivers(), ['ollama' => true, 'llama-server' => true, 'vllm' => true]);
     }
 
     public static function errors(): array
@@ -252,6 +259,9 @@ class DriverConformanceTest extends TestCase
 
         $cases['llama-server loading'] = ['llama-server', 'overloaded', ProviderUnavailable::class, 3];
         $cases['llama-server context overflow'] = ['llama-server', 'context-overflow', ContextTooLong::class, 1];
+
+        $cases['vllm unavailable'] = ['vllm', 'overloaded', ProviderUnavailable::class, 3];
+        $cases['vllm context overflow'] = ['vllm', 'context-overflow', ContextTooLong::class, 1];
 
         $cases['ollama rate limit'] = ['ollama', 'rate-limited', RateLimited::class, 3];
         $cases['ollama busy'] = ['ollama', 'overloaded', ProviderUnavailable::class, 3];

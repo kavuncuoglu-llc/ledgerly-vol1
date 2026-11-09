@@ -4,18 +4,18 @@ namespace App\Ai\Doctor\Llama;
 
 use App\Ai\Doctor\AiQueueWorkers;
 use App\Ai\Llama\LlamaMetrics;
-use App\Ai\Llama\LlamaReply;
 use App\Ai\Llama\LlamaServerClient;
+use App\Ai\Native\ServerReply;
 
 final class LlamaDoctorContext
 {
     private const ROUND_TRIP_PROMPT = 'Reply with the single word: ok';
 
-    private ?LlamaReply $props = null;
+    private ?ServerReply $props = null;
 
-    private ?LlamaReply $metrics = null;
+    private ?ServerReply $metrics = null;
 
-    private ?LlamaReply $roundTrip = null;
+    private ?ServerReply $roundTrip = null;
 
     public function __construct(
         public readonly LlamaServerClient $client,
@@ -31,7 +31,7 @@ final class LlamaDoctorContext
         return (string) ($this->providerConfig['model'] ?? '');
     }
 
-    public function props(): LlamaReply
+    public function props(): ServerReply
     {
         return $this->props ??= $this->client->props();
     }
@@ -46,7 +46,7 @@ final class LlamaDoctorContext
         return (int) ($this->props()->body['default_generation_settings']['n_ctx'] ?? 0);
     }
 
-    public function metricsReply(): LlamaReply
+    public function metricsReply(): ServerReply
     {
         return $this->metrics ??= $this->client->metrics();
     }
@@ -56,7 +56,7 @@ final class LlamaDoctorContext
         return LlamaMetrics::parse($this->metricsReply()->text);
     }
 
-    public function roundTrip(): LlamaReply
+    public function roundTrip(): ServerReply
     {
         return $this->roundTrip ??= $this->client->chatCompletion([
             'model' => $this->model(),

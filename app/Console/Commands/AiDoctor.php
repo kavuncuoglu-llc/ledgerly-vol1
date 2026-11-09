@@ -9,6 +9,8 @@ use App\Ai\Doctor\Doctor;
 use App\Ai\Doctor\DoctorContextFactory;
 use App\Ai\Doctor\Llama\LlamaDoctor;
 use App\Ai\Doctor\Llama\LlamaDoctorContextFactory;
+use App\Ai\Doctor\Vllm\VllmDoctor;
+use App\Ai\Doctor\Vllm\VllmDoctorContextFactory;
 use App\Ai\Exceptions\UnknownModelArchitecture;
 use App\Ai\Exceptions\UnknownProvider;
 use App\Ai\Hardware\ByteSize;
@@ -25,7 +27,7 @@ class AiDoctor extends Command
     protected $signature = 'ai:doctor
         {--size : Check that a model, its KV cache and headroom fit the memory this machine can give a GPU}
         {--model= : Model name, e.g. llama3.1:70b-instruct-q4_K_M (default: the provider\'s model)}
-        {--provider= : Provider whose Ollama or llama-server is checked, or asked about the model with --size (default: ai.default)}
+        {--provider= : Provider whose Ollama, llama-server or vLLM is checked, or asked about the model with --size (default: ai.default)}
         {--ctx= : Context window in tokens the checks and the sizing compare against (default: ai.budget.window)}
         {--slots=1 : Parallel sequences the server keeps a cache for}
         {--cache=f16 : KV cache type: f16, q8_0 or q4_0}
@@ -37,12 +39,12 @@ class AiDoctor extends Command
         {--head-dim= : Head dimension}
         {--quantization= : Weight quantization, e.g. q4_k_m}';
 
-    protected $description = 'Check an Ollama or llama-server setup for the silent failures (context window, placement, slots, exposure), or with --size, memory sizing';
+    protected $description = 'Check an Ollama, llama-server or vLLM setup for the silent failures (context window, placement, slots, exposure), or with --size, memory sizing';
 
-    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor): int
+    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor): int
     {
         if (! $this->option('size')) {
-            return $this->runChecks($ai, $contexts, $doctor, $llamaContexts, $llamaDoctor);
+            return $this->runChecks($ai, $contexts, $doctor, $llamaContexts, $llamaDoctor, $vllmContexts, $vllmDoctor);
         }
 
         try {
@@ -66,7 +68,7 @@ class AiDoctor extends Command
             : Command::FAILURE;
     }
 
-    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor): int
+    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor): int
     {
         $provider = (string) ($this->option('provider') ?: config('ai.default'));
 
@@ -84,8 +86,12 @@ class AiDoctor extends Command
             return $this->runLlamaChecks($llamaContexts, $llamaDoctor, $provider, $window);
         }
 
+        if ($vllmContexts->isVllm($provider)) {
+            return $this->runVllmChecks($vllmContexts, $vllmDoctor, $provider, $window);
+        }
+
         if (! $contexts->isOllama($provider)) {
-            $this->error("Provider {$provider} does not point at an Ollama server or a llama-server. Pass --provider=<an Ollama or llama-server provider>, or set AI_OLLAMA=true or AI_LLAMA=true on the provider.");
+            $this->error("Provider {$provider} does not point at an Ollama server, a llama-server or a vLLM server. Pass --provider=<an Ollama, llama-server or vLLM provider>, or set AI_OLLAMA=true, AI_LLAMA=true or AI_VLLM=true on the provider.");
 
             return Command::FAILURE;
         }
@@ -104,6 +110,21 @@ class AiDoctor extends Command
         $context = $contexts->make($provider, $window);
 
         $this->line("llama-server at {$context->client->baseUrl()}");
+
+        $results = $doctor->run($context);
+
+        foreach ($results as $result) {
+            $this->line($result->line());
+        }
+
+        return $this->summarize($results);
+    }
+
+    private function runVllmChecks(VllmDoctorContextFactory $contexts, VllmDoctor $doctor, string $provider, int $window): int
+    {
+        $context = $contexts->make($provider, $window);
+
+        $this->line("vLLM at {$context->client->baseUrl()}");
 
         $results = $doctor->run($context);
 

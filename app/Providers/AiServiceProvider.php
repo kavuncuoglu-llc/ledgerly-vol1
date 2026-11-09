@@ -13,6 +13,7 @@ use App\Ai\Doctor\BindProbe;
 use App\Ai\Doctor\Doctor;
 use App\Ai\Doctor\Llama\LlamaDoctor;
 use App\Ai\Doctor\SocketBindProbe;
+use App\Ai\Doctor\Vllm\VllmDoctor;
 use App\Ai\Drivers\Support\DebugLog;
 use App\Ai\Embeddings\BoilerplateStripper;
 use App\Ai\Embeddings\Embedder;
@@ -32,6 +33,8 @@ use App\Ai\Hardware\SystemHostInspector;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
 use App\Ai\Listeners\TriageTicket;
+use App\Ai\Load\BenchProcess;
+use App\Ai\Load\SymfonyBenchProcess;
 use App\Ai\Parsing\DocumentParser;
 use App\Ai\Parsing\SidecarPdfParser;
 use App\Ai\Profile\BackgroundSampler;
@@ -120,6 +123,10 @@ class AiServiceProvider extends ServiceProvider
         $this->app->bind(Doctor::class, fn () => Doctor::standard());
 
         $this->app->bind(LlamaDoctor::class, fn () => LlamaDoctor::standard());
+
+        $this->app->bind(VllmDoctor::class, fn () => VllmDoctor::standard());
+
+        $this->app->bind(BenchProcess::class, SymfonyBenchProcess::class);
 
         $this->app->bind(MemoryProbeFactory::class, OllamaMemoryProbeFactory::class);
 

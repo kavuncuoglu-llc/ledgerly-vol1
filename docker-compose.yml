@@ -172,6 +172,62 @@ services:
       - --api-key
       - ${LLAMA_API_KEY:-llama}
 
+  vllm:
+    image: vllm/vllm-openai:${VLLM_TAG:-v0.32.0}
+    container_name: ledgerly-vllm
+    profiles: ["vllm"]
+    networks:
+      - internal
+    ports:
+      - "127.0.0.1:${VLLM_PORT:-8001}:8000"
+    ipc: host
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      VLLM_ALLOW_RUNTIME_LORA_UPDATING: ${VLLM_ALLOW_RUNTIME_LORA_UPDATING:-False}
+    volumes:
+      - vllm-hf-cache:/root/.cache/huggingface
+      - ./adapters:/adapters:ro
+    command:
+      - --model
+      - ${VLLM_MODEL:-neuralmagic/Meta-Llama-3.1-8B-Instruct-FP8}
+      - --revision
+      - ${VLLM_REVISION:-main}
+      - --served-model-name
+      - ${VLLM_MODEL_ALIAS:-ledgerly-support}
+      - --max-model-len
+      - "${VLLM_MAX_MODEL_LEN:-8192}"
+      - --gpu-memory-utilization
+      - "${VLLM_GPU_MEMORY_UTILIZATION:-0.92}"
+      - --max-num-seqs
+      - "${VLLM_MAX_NUM_SEQS:-32}"
+      - --tensor-parallel-size
+      - "${VLLM_TENSOR_PARALLEL:-1}"
+      - --enable-prefix-caching
+      - --enable-prompt-tokens-details
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - ${VLLM_TOOL_PARSER:-llama3_json}
+      - ${VLLM_LORA_FLAG:---no-enable-lora}
+      - --max-loras
+      - "${VLLM_MAX_LORAS:-4}"
+      - --max-lora-rank
+      - "${VLLM_MAX_LORA_RANK:-64}"
+      - --api-key
+      - ${VLLM_API_KEY:-vllm}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
 networks:
   internal:
 
@@ -179,3 +235,4 @@ volumes:
   ledgerly-postgres:
   ledgerly-redis:
   ollama-models:
+  vllm-hf-cache:

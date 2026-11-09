@@ -35,5 +35,11 @@ Thumbs.db
 /storage/golden/misses-*.json
 /storage/golden/results-*.json
 /storage/benchmarks/compare-*.json
+/storage/benchmarks/load-*.json
+/storage/benchmarks/traffic-shape.jsonl
+/storage/benchmarks/vllm-bench/
 
 /models/*.gguf
+
+/adapters/*
+!/adapters/.gitkeep

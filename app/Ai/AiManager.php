@@ -19,6 +19,7 @@ use App\Ai\Drivers\OllamaDriver;
 use App\Ai\Drivers\OpenAiCompatibleDriver;
 use App\Ai\Drivers\OpenAiCompatibleEmbeddings;
 use App\Ai\Drivers\Support\DebugLog;
+use App\Ai\Drivers\VllmDriver;
 use App\Ai\Exceptions\UnknownProvider;
 use App\Ai\Retrieval\LexicalReranker;
 use App\Ai\Retrieval\SidecarReranker;
@@ -187,6 +188,7 @@ class AiManager
             'openai-compatible' => new OpenAiCompatibleDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'ollama' => new OllamaDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'llama-server' => new LlamaServerDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
+            'vllm' => new VllmDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'anthropic' => new AnthropicDriver($config, $this->app->make(DebugLog::class)),
             'gemini' => new GeminiDriver($config, $this->app->make(DebugLog::class)),
             'bedrock' => new BedrockDriver($config, $this->app->make(DebugLog::class)),

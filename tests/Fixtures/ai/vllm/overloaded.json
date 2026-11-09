@@ -1,0 +1,12 @@
+{
+    "provider": "vllm",
+    "driver": "vllm",
+    "source": "Hand-written from vLLM's documented OpenAI-compatible API shape (vllm/entrypoints/openai/chat_completion/protocol.py, vllm/entrypoints/serve/engine/protocol.py and vllm/entrypoints/serve/exception_handling/error_response.py at vllm-project/vllm tag v0.32.0). Not recorded: no vLLM server was available on the machine that wrote it, and none was started.",
+    "response": {
+        "status": 503,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"error\":{\"message\":\"Request could not be served right now; retry.\",\"type\":\"ServiceUnavailableError\",\"param\":null,\"code\":503}}"
+    }
+}

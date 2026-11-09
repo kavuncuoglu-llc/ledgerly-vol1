@@ -219,6 +219,7 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
     {
         return (new OptionMapper(
             provider: $this->name(),
+            renames: (array) ($this->config['option_renames'] ?? []),
             dropped: $this->unsupportedOptions(),
         ))->map($options);
     }

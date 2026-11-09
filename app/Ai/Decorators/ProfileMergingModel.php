@@ -29,6 +29,30 @@ final class ProfileMergingModel extends ChatModelDecorator
 
     private function merged(ChatRequest $request): ChatRequest
     {
+        return $this->routed($this->profiled($request));
+    }
+
+    private function routed(ChatRequest $request): ChatRequest
+    {
+        if ($request->model !== null) {
+            return $request;
+        }
+
+        $feature = config('ai.features', [])[$request->feature] ?? [];
+
+        if (($feature['provider'] ?? null) !== $this->inner->name()) {
+            return $request;
+        }
+
+        if (blank($feature['model'] ?? null)) {
+            return $request;
+        }
+
+        return $request->withModel((string) $feature['model']);
+    }
+
+    private function profiled(ChatRequest $request): ChatRequest
+    {
         $name = $request->profile ?? $this->featureProfile($request->feature) ?? self::DEFAULT_PROFILE;
 
         if ($name === ChatRequest::NO_PROFILE) {

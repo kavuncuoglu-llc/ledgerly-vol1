@@ -1,0 +1,12 @@
+{
+    "provider": "vllm",
+    "driver": "vllm",
+    "source": "Hand-written from vLLM's documented OpenAI-compatible API shape (vllm/entrypoints/openai/chat_completion/protocol.py, vllm/entrypoints/serve/engine/protocol.py and vllm/entrypoints/serve/exception_handling/error_response.py at vllm-project/vllm tag v0.32.0). Not recorded: no vLLM server was available on the machine that wrote it, and none was started.",
+    "response": {
+        "status": 400,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"error\":{\"message\":\"This model's maximum context length is 8192 tokens. However, your prompt contains at least 9001 input tokens, which exceeds this limit even without any output tokens. Please reduce the length of the input prompt. (parameter=input_tokens, value=9001)\",\"type\":\"BadRequestError\",\"param\":\"input_tokens\",\"code\":400}}"
+    }
+}

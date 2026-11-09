@@ -1,8 +1,14 @@
 <?php
 
-$localRole = env('AI_LOCAL_PROVIDER', 'ollama') === 'llama'
-    ? 'local-llama'
-    : 'local';
+$localRole = match (env('AI_LOCAL_PROVIDER', 'ollama')) {
+    'llama' => 'local-llama',
+    'vllm' => 'vllm',
+    default => 'local',
+};
+
+$adapterFor = fn (string $variable): ?string => $localRole === 'vllm'
+    ? (env($variable) ?: null)
+    : null;
 
 return [
 
@@ -20,6 +26,9 @@ return [
             'llama' => env('AI_LLAMA') === null
                 ? null
                 : filter_var(env('AI_LLAMA'), FILTER_VALIDATE_BOOLEAN),
+            'vllm' => env('AI_VLLM') === null
+                ? null
+                : filter_var(env('AI_VLLM'), FILTER_VALIDATE_BOOLEAN),
             'license' => env('AI_LICENSE', 'Llama 3.1 Community License'),
             'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'gpu_hour_cost' => is_numeric(env('AI_GPU_HOUR_COST'))
@@ -87,6 +96,21 @@ return [
                 ? (float) env('LLAMA_GPU_HOUR_COST')
                 : null,
         ],
+        'vllm' => [
+            'driver' => 'vllm',
+            'base_url' => env('VLLM_URL', 'http://127.0.0.1:8001/v1'),
+            'api_key' => env('VLLM_API_KEY', 'vllm'),
+            'model' => env('VLLM_MODEL_ALIAS', 'ledgerly-support'),
+            'timeout' => (int) env('VLLM_TIMEOUT', 60),
+            'license' => env('VLLM_LICENSE', 'Llama 3.1 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('VLLM_GPU_HOUR_COST'))
+                ? (float) env('VLLM_GPU_HOUR_COST')
+                : null,
+            'option_renames' => [
+                'repeat_penalty' => 'repetition_penalty',
+            ],
+        ],
         'frontier' => [
             'driver' => env('FRONTIER_DRIVER', 'anthropic'),
             'base_url' => env('FRONTIER_URL') ?: null,
@@ -141,6 +165,27 @@ return [
         'probe_timeout' => (int) env('AI_LLAMA_PROBE_TIMEOUT', 60),
     ],
 
+    'vllm' => [
+        'provider' => env('AI_VLLM_PROVIDER', 'vllm'),
+        'repository' => env('VLLM_MODEL') ?: null,
+        'revision' => env('VLLM_REVISION') ?: null,
+        'quantization' => env('VLLM_QUANTIZATION') ?: null,
+        'tool_parser' => env('VLLM_TOOL_PARSER') ?: null,
+        'max_num_seqs' => is_numeric(env('VLLM_MAX_NUM_SEQS'))
+            ? (int) env('VLLM_MAX_NUM_SEQS')
+            : null,
+        'probe_timeout' => (int) env('AI_VLLM_PROBE_TIMEOUT', 60),
+    ],
+
+    'load' => [
+        'directory' => env('AI_LOAD_DIRECTORY') ?: storage_path('benchmarks'),
+        'shape_file' => env('AI_LOAD_SHAPE_FILE', 'storage/benchmarks/traffic-shape.jsonl'),
+        'concurrency' => env('AI_LOAD_CONCURRENCY', '1,4,8,16,32,64'),
+        'ttft_p99_ms' => (int) env('AI_LOAD_TTFT_P99_MS', 1000),
+        'vllm_binary' => env('AI_LOAD_VLLM_BIN', 'vllm'),
+        'timeout' => (int) env('AI_LOAD_TIMEOUT', 900),
+    ],
+
     'tiers' => [
         'small' => $localRole,
         'mid' => env('AI_MID_PROVIDER', 'mid'),
@@ -150,6 +195,7 @@ return [
     'features' => [
         'ticket.classify' => [
             'provider' => $localRole,
+            'model' => $adapterFor('VLLM_CLASSIFY_ADAPTER'),
             'profile' => 'deterministic',
         ],
         'ticket.extract' => [
@@ -158,6 +204,7 @@ return [
         ],
         'support.reply' => [
             'provider' => $localRole,
+            'model' => $adapterFor('VLLM_SUPPORT_ADAPTER'),
             'profile' => 'assistant',
             'escalate_to' => 'frontier',
         ],

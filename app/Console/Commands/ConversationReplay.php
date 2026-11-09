@@ -6,6 +6,8 @@ use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\ReplayScript;
 use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\UnreadableReplayScript;
+use App\Ai\Load\QueuedReplay;
+use App\Ai\Load\ReplayLoadResult;
 use App\Ai\Memory\MemoryStore;
 use App\Ai\Support\SupportAssistant;
 use App\Models\Conversation;
@@ -17,11 +19,11 @@ class ConversationReplay extends Command
 {
     private const DEFAULT_USER_EMAIL = 'acme@example.com';
 
-    protected $signature = 'conversation:replay {script : Path to a replay script such as storage/samples/long-conversation.json} {--user= : User id or email (default: acme@example.com)} {--close : Close the conversation afterwards and extract memories}';
+    protected $signature = 'conversation:replay {script : Path to a replay script such as storage/samples/long-conversation.json} {--user= : User id or email (default: acme@example.com)} {--close : Close the conversation afterwards and extract memories} {--users= : Replay the script as this many simultaneous users through the ai queue and report time to first token and throughput} {--timeout=600 : Seconds to wait for the simulated users with --users}';
 
-    protected $description = 'Replay a scripted customer conversation through the support assistant and print the prompt size and summary state per turn';
+    protected $description = 'Replay a scripted customer conversation through the support assistant and print the prompt size and summary state per turn, or with --users drive N simulated users through the ai queue';
 
-    public function handle(SupportAssistant $assistant, ConversationStore $store, MemoryStore $memories, CurrentTenant $tenant): int
+    public function handle(SupportAssistant $assistant, ConversationStore $store, MemoryStore $memories, CurrentTenant $tenant, QueuedReplay $queued): int
     {
         $user = $this->resolveUser();
 
@@ -29,6 +31,10 @@ class ConversationReplay extends Command
             $this->error('No such user.');
 
             return Command::FAILURE;
+        }
+
+        if ($this->option('users') !== null) {
+            return $this->replayAsUsers($queued, $user);
         }
 
         try {
@@ -44,6 +50,54 @@ class ConversationReplay extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function replayAsUsers(QueuedReplay $queued, User $user): int
+    {
+        $users = (int) $this->option('users');
+
+        if ($users < 1) {
+            $this->error('--users must be a whole number of at least 1.');
+
+            return Command::FAILURE;
+        }
+
+        try {
+            $script = ReplayScript::fromFile((string) $this->argument('script'));
+        } catch (UnreadableReplayScript $exception) {
+            $this->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        $this->announceQueue($users);
+
+        $result = $queued->run($user, $script, $users, (int) $this->option('timeout'));
+
+        $this->line($result->line());
+
+        $this->line($result->detail());
+
+        if ($result->firstError() !== '') {
+            $this->error('First error: '.$result->firstError());
+        }
+
+        return $result->count(ReplayLoadResult::FINISHED) === $users
+            ? Command::SUCCESS
+            : Command::FAILURE;
+    }
+
+    private function announceQueue(int $users): void
+    {
+        $connection = (string) config('queue.default');
+
+        $this->line("{$users} simulated users through the ai queue on the {$connection} connection");
+
+        if ($connection !== 'sync') {
+            return;
+        }
+
+        $this->warn('The queue connection is sync, so each reply runs inside this process one after another. Use a real queue connection with Horizon running (AI_CONCURRENCY workers) to see the server batch.');
     }
 
     private function replay(SupportAssistant $assistant, ConversationStore $store, MemoryStore $memories, User $user, ReplayScript $script): void

@@ -354,7 +354,7 @@ class AiDoctorLlamaChecksTest extends TestCase
         FakeLlamaServer::healthy();
 
         $this->artisan('ai:doctor', ['--provider' => 'rerank-lexical'])
-            ->expectsOutputToContain('does not point at an Ollama server or a llama-server')
+            ->expectsOutputToContain('does not point at an Ollama server, a llama-server or a vLLM server')
             ->assertFailed();
     }
 
