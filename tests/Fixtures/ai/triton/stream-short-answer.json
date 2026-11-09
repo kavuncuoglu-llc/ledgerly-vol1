@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the streaming code in engine/triton_engine.py at triton-inference-server/server tag v2.74.0 (chunks are model_dump_json(exclude_unset=True); a final usage chunk with empty choices when stream_options.include_usage is set; then data: [DONE]). Not recorded.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "text/event-stream; charset=utf-8"
+        },
+        "body": "data: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"dup\"},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"licate\"},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"\"},\"finish_reason\":\"stop\",\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\",\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":35,\"total_tokens\":37}}\n\ndata: [DONE]\n\n"
+    }
+}

@@ -3,6 +3,7 @@
 namespace App\Ai\Cache;
 
 use App\Ai\Contracts\FinishReason;
+use App\Ai\Exceptions\ProviderUnavailable;
 use App\Ai\Exceptions\StructuredOutputFailed;
 use App\Ai\Exceptions\StructuredRefusal;
 use App\Ai\Prompts\SupportPrompt;
@@ -29,7 +30,15 @@ final class SupportCacheGate
             return CacheLookup::skipped();
         }
 
-        $nearest = $this->cache->lookupAnyCacheable($question, $user->customer_id);
+        try {
+            $nearest = $this->cache->lookupAnyCacheable($question, $user->customer_id);
+        } catch (ProviderUnavailable $exception) {
+            Log::warning('Semantic cache skipped: the embedding model is unavailable', [
+                'reason' => $exception->getMessage(),
+            ]);
+
+            return CacheLookup::skipped();
+        }
 
         if ($nearest->exists) {
             return new CacheLookup(
@@ -102,6 +111,12 @@ final class SupportCacheGate
             return ($this->classify)($question);
         } catch (StructuredOutputFailed|StructuredRefusal $exception) {
             Log::warning('Semantic cache skipped: the question could not be classified', [
+                'reason' => $exception->getMessage(),
+            ]);
+
+            return TicketCategory::Other;
+        } catch (ProviderUnavailable $exception) {
+            Log::warning('Semantic cache skipped: the classifier is unavailable', [
                 'reason' => $exception->getMessage(),
             ]);
 

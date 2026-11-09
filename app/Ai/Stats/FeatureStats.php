@@ -28,6 +28,8 @@ final class FeatureStats
             citationFlagRate: $this->citationFlagRate($modelCalls),
             citationFlagged: $modelCalls->where('citation_errors', '>', 0)->count(),
             citationChecked: $modelCalls->whereNotNull('citation_errors')->count(),
+            routed: $this->routed($calls),
+            failedJobs: $calls->where('finish_reason', 'job_failed')->count(),
         );
     }
 
@@ -38,6 +40,19 @@ final class FeatureStats
             ->where('created_at', '>=', $since)
             ->when($until, fn ($query) => $query->where('created_at', '<', $until))
             ->get();
+    }
+
+    private function routed(Collection $calls): array
+    {
+        $routed = $calls
+            ->where('finish_reason', '!=', 'job_failed')
+            ->groupBy('provider')
+            ->map(fn (Collection $group): int => $group->count())
+            ->all();
+
+        arsort($routed);
+
+        return $routed;
     }
 
     private function promptCacheHitRate(Collection $calls): ?float

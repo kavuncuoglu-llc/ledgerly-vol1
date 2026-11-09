@@ -3,6 +3,7 @@
 $localRole = match (env('AI_LOCAL_PROVIDER', 'ollama')) {
     'llama' => 'local-llama',
     'vllm' => 'vllm',
+    'triton' => 'triton',
     default => 'local',
 };
 
@@ -29,6 +30,9 @@ return [
             'vllm' => env('AI_VLLM') === null
                 ? null
                 : filter_var(env('AI_VLLM'), FILTER_VALIDATE_BOOLEAN),
+            'triton' => env('AI_TRITON') === null
+                ? null
+                : filter_var(env('AI_TRITON'), FILTER_VALIDATE_BOOLEAN),
             'license' => env('AI_LICENSE', 'Llama 3.1 Community License'),
             'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'gpu_hour_cost' => is_numeric(env('AI_GPU_HOUR_COST'))
@@ -111,6 +115,31 @@ return [
                 'repeat_penalty' => 'repetition_penalty',
             ],
         ],
+        'triton' => [
+            'driver' => 'triton',
+            'base_url' => env('TRITON_URL', 'http://127.0.0.1:9000/v1'),
+            'kserve_url' => env('TRITON_KSERVE_URL') ?: null,
+            'api_key' => env('TRITON_API_KEY', 'triton'),
+            'auth_header' => env('TRITON_AUTH_HEADER', 'x-api-key'),
+            'model' => env('TRITON_MODEL_ALIAS', 'chat'),
+            'timeout' => (int) env('TRITON_TIMEOUT', 60),
+            'default_max_tokens' => (int) env('TRITON_DEFAULT_MAX_TOKENS', 512),
+            'capabilities' => [
+                'tools',
+                'seed',
+            ],
+            'unsupported_options' => [
+                'min_p',
+                'top_k',
+                'repeat_penalty',
+                'num_ctx',
+            ],
+            'license' => env('TRITON_LICENSE', 'Llama 3.1 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('TRITON_GPU_HOUR_COST'))
+                ? (float) env('TRITON_GPU_HOUR_COST')
+                : null,
+        ],
         'frontier' => [
             'driver' => env('FRONTIER_DRIVER', 'anthropic'),
             'base_url' => env('FRONTIER_URL') ?: null,
@@ -175,6 +204,74 @@ return [
             ? (int) env('VLLM_MAX_NUM_SEQS')
             : null,
         'probe_timeout' => (int) env('AI_VLLM_PROBE_TIMEOUT', 60),
+    ],
+
+    'triton' => [
+        'provider' => env('AI_TRITON_PROVIDER', 'triton'),
+        'image_tag' => env('TRITON_TAG') ?: null,
+        'backend' => env('TRITON_BACKEND') ?: null,
+        'tokenizer' => env('TRITON_TOKENIZER') ?: null,
+        'tool_parser' => env('TRITON_TOOL_PARSER') ?: null,
+        'repository' => env('TRITON_MODEL_REPOSITORY') ?: null,
+        'models' => array_filter(explode(',', (string) env('TRITON_MODELS', 'chat'))),
+        'probe_timeout' => (int) env('AI_TRITON_PROBE_TIMEOUT', 60),
+    ],
+
+    'failover' => array_filter([
+        $localRole => env('AI_FALLBACK_LOCAL') ?: null,
+    ]),
+
+    'breaker' => [
+        'enabled' => (bool) env('AI_BREAKER', true),
+        'threshold' => (int) env('AI_BREAKER_THRESHOLD', 3),
+        'open_seconds' => (int) env('AI_BREAKER_OPEN_SECONDS', 60),
+        'memory_seconds' => (int) env('AI_BREAKER_MEMORY_SECONDS', 600),
+        'store' => env('AI_BREAKER_STORE') ?: null,
+    ],
+
+    'health' => [
+        'warm_ms' => (int) env('AI_HEALTH_WARM_MS', 2000),
+        'probe_timeout' => (int) env('AI_HEALTH_PROBE_TIMEOUT', 120),
+    ],
+
+    'compose' => [
+        'file' => env('AI_COMPOSE_FILE') ?: base_path('docker-compose.yml'),
+        'aliases' => [
+            'ollama' => 'linux-gpu',
+            'llama' => 'llama-gpu',
+        ],
+        'profiles' => [
+            'linux-gpu' => [
+                'provider' => 'local',
+                'nvidia' => false,
+                'port' => (int) env('OLLAMA_PORT', 11434),
+            ],
+            'llama-gpu' => [
+                'provider' => 'local-llama',
+                'nvidia' => true,
+                'port' => (int) env('LLAMA_PORT', 8080),
+            ],
+            'llama-cpu' => [
+                'provider' => 'local-llama',
+                'nvidia' => false,
+                'port' => (int) env('LLAMA_PORT', 8080),
+            ],
+            'vllm' => [
+                'provider' => 'vllm',
+                'nvidia' => true,
+                'port' => (int) env('VLLM_PORT', 8001),
+            ],
+            'triton' => [
+                'provider' => 'triton',
+                'nvidia' => true,
+                'port' => (int) env('TRITON_PORT', 9000),
+            ],
+            'monitoring' => [
+                'provider' => null,
+                'nvidia' => false,
+                'port' => (int) env('GRAFANA_PORT', 3000),
+            ],
+        ],
     ],
 
     'load' => [

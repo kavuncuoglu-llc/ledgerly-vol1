@@ -15,6 +15,7 @@ use App\Ai\Load\LoadRunner;
 use App\Ai\Load\ShapeSummary;
 use App\Ai\Load\TrafficShapeExporter;
 use App\Ai\Load\TrafficShapeFile;
+use App\Ai\Native\TritonEndpoint;
 use App\Ai\Native\VllmEndpoint;
 use App\Ai\Stats\StatsWindow;
 use Illuminate\Console\Command;
@@ -23,7 +24,7 @@ use Illuminate\Support\Carbon;
 class AiLoad extends Command
 {
     protected $signature = 'ai:load
-        {--provider=vllm : The vLLM provider to load}
+        {--provider=vllm : The vLLM or Triton provider to load}
         {--requests= : Traffic-shape file, one JSON object per line (default: ai.load.shape_file)}
         {--export-shape : Write the traffic-shape file from model_calls first}
         {--feature=support.reply : The model_calls feature the shape is drawn from}
@@ -32,12 +33,12 @@ class AiLoad extends Command
         {--concurrency= : Simultaneous streams to test, comma-separated (default: ai.load.concurrency)}
         {--prompts-per-level=0 : Requests sent at each level (default: 8 per stream, at least 32)}
         {--ttft-p99-ms= : The time-to-first-token p99 the knee is judged against (default: ai.load.ttft_p99_ms)}
-        {--model= : Hugging Face repository or local path vllm bench loads the tokenizer from (default: VLLM_MODEL)}
+        {--model= : Hugging Face repository or local path vllm bench loads the tokenizer from (default: VLLM_MODEL, or TRITON_TOKENIZER for a Triton provider)}
         {--vllm-bin= : The vllm command (default: ai.load.vllm_binary)}
         {--timeout= : Seconds each level may take (default: ai.load.timeout)}
         {--dry-run : Print the vllm bench serve commands without running them}';
 
-    protected $description = 'Load-test a vLLM provider with vllm bench serve on the app\'s own traffic shape, print TTFT and inter-token latency by concurrency, and estimate the knee';
+    protected $description = 'Load-test a vLLM or Triton provider with vllm bench serve on the app\'s own traffic shape, print TTFT and inter-token latency by concurrency, and estimate the knee';
 
     public function handle(AiManager $ai, TrafficShapeExporter $exporter, LoadRunner $runner, KneeEstimator $estimator): int
     {
@@ -70,7 +71,7 @@ class AiLoad extends Command
 
         $config = $ai->providerConfig($name);
 
-        if (! VllmEndpoint::isVllm($config)) {
+        if (! VllmEndpoint::isVllm($config) && ! TritonEndpoint::isTriton($config)) {
             throw UnusableLoadTest::notVllm($name);
         }
 
@@ -139,7 +140,9 @@ class AiLoad extends Command
 
     private function benchCommand(array $provider, ShapeSummary $shape): BenchServeCommand
     {
-        $tokenizer = (string) ($this->option('model') ?: config('ai.vllm.repository'));
+        $isTriton = TritonEndpoint::isTriton($provider);
+
+        $tokenizer = (string) ($this->option('model') ?: config($isTriton ? 'ai.triton.tokenizer' : 'ai.vllm.repository'));
 
         if ($tokenizer === '') {
             throw UnusableLoadTest::tokenizerUnknown();
@@ -151,7 +154,12 @@ class AiLoad extends Command
             servedModel: (string) $provider['model'],
             tokenizerSource: $tokenizer,
             shape: $shape,
-            apiKey: (string) ($provider['api_key'] ?? ''),
+            apiKey: $isTriton
+                ? ''
+                : (string) ($provider['api_key'] ?? ''),
+            headers: TritonEndpoint::isTriton($provider)
+                ? TritonEndpoint::authHeaders($provider)
+                : [],
         );
     }
 

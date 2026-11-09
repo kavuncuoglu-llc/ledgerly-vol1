@@ -129,6 +129,25 @@ final readonly class ChatRequest
         return $this->copy(model: $model);
     }
 
+    public function withoutModel(): self
+    {
+        return new self(
+            messages: $this->messages,
+            feature: $this->feature,
+            model: null,
+            options: $this->options,
+            tools: $this->tools,
+            responseFormat: $this->responseFormat,
+            cacheBreakpointsAfter: $this->cacheBreakpointsAfter,
+            profile: $this->profile,
+            toolChoice: $this->toolChoice,
+            promptVersion: $this->promptVersion,
+            repaired: $this->repaired,
+            conversationId: $this->conversationId,
+            details: $this->details,
+        );
+    }
+
     public function withCacheBreakpoints(array $indices): self
     {
         return $this->copy(cacheBreakpointsAfter: $indices);

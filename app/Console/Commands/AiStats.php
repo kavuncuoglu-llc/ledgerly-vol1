@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Ai\AiManager;
 use App\Ai\Exceptions\InvalidStatsWindow;
+use App\Ai\Resilience\CircuitBreaker;
 use App\Ai\Stats\FeatureSnapshot;
 use App\Ai\Stats\FeatureStats;
 use App\Ai\Stats\StatsWindow;
@@ -18,7 +20,7 @@ class AiStats extends Command
 
     protected $description = 'Print the context-engineering numbers for a feature: prompt cache hit rate, semantic cache hit rate, tokens per answer, citation flag rate and time to first token';
 
-    public function handle(FeatureStats $stats): int
+    public function handle(FeatureStats $stats, AiManager $ai, CircuitBreaker $breaker): int
     {
         try {
             $since = StatsWindow::since((string) $this->option('since'));
@@ -35,6 +37,8 @@ class AiStats extends Command
         $week = $stats->between($feature, StatsWindow::since('7d'));
 
         $this->printReport($feature, (string) $this->option('since'), $window, $week);
+
+        $this->printResilience($feature, $window, $ai, $breaker);
 
         return Command::SUCCESS;
     }
@@ -54,6 +58,48 @@ class AiStats extends Command
         $this->alertOnGrowth($window, $week);
 
         $this->alertOnCitationFailures($window, $week);
+    }
+
+    private function printResilience(string $feature, FeatureSnapshot $window, AiManager $ai, CircuitBreaker $breaker): void
+    {
+        $this->line('breaker: '.$this->breakerLine($feature, $ai, $breaker));
+        $this->line('routed: '.$this->routedLine($window));
+    }
+
+    private function breakerLine(string $feature, AiManager $ai, CircuitBreaker $breaker): string
+    {
+        if (! $breaker->isEnabled()) {
+            return 'disabled (AI_BREAKER=false)';
+        }
+
+        $provider = $ai->providerNameFor($feature);
+
+        $parts = [$provider.' '.$breaker->state($provider)->describe($breaker->threshold())];
+
+        $fallback = $ai->failoverTarget($provider);
+
+        if ($fallback !== '') {
+            $parts[] = $fallback.' '.$breaker->state($fallback)->describe($breaker->threshold());
+        }
+
+        return implode(' · ', $parts);
+    }
+
+    private function routedLine(FeatureSnapshot $window): string
+    {
+        $parts = [];
+
+        foreach ($window->routed as $provider => $count) {
+            $parts[] = "{$provider} {$count}";
+        }
+
+        if ($parts === []) {
+            $parts[] = 'no calls in the window';
+        }
+
+        $parts[] = "failed jobs {$window->failedJobs}";
+
+        return implode(' · ', $parts);
     }
 
     private function alertOnCitationFailures(FeatureSnapshot $window, FeatureSnapshot $week): void

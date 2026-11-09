@@ -5,6 +5,7 @@ namespace App\Ai;
 use App\Ai\Contracts\ChatModel;
 use App\Ai\Contracts\EmbeddingModel;
 use App\Ai\Contracts\Reranker;
+use App\Ai\Decorators\FailoverModel;
 use App\Ai\Decorators\ProfileMergingModel;
 use App\Ai\Decorators\RetryingEmbeddingModel;
 use App\Ai\Decorators\RetryingModel;
@@ -19,8 +20,10 @@ use App\Ai\Drivers\OllamaDriver;
 use App\Ai\Drivers\OpenAiCompatibleDriver;
 use App\Ai\Drivers\OpenAiCompatibleEmbeddings;
 use App\Ai\Drivers\Support\DebugLog;
+use App\Ai\Drivers\TritonDriver;
 use App\Ai\Drivers\VllmDriver;
 use App\Ai\Exceptions\UnknownProvider;
+use App\Ai\Resilience\CircuitBreaker;
 use App\Ai\Retrieval\LexicalReranker;
 use App\Ai\Retrieval\SidecarReranker;
 use App\Ai\Sidecar\SidecarClient;
@@ -37,6 +40,8 @@ class AiManager
 
     private array $chatModels = [];
 
+    private array $plainChatModels = [];
+
     private array $embeddingModels = [];
 
     private array $rerankers = [];
@@ -49,7 +54,35 @@ class AiManager
     {
         $name ??= (string) config('ai.default');
 
-        return $this->chatModels[$name] ??= $this->decorate($this->makeChatDriver($name));
+        return $this->chatModels[$name] ??= $this->withFailover($name, $this->chatWithoutFailover($name));
+    }
+
+    public function chatWithoutFailover(string $name): ChatModel
+    {
+        return $this->plainChatModels[$name] ??= $this->decorate($this->makeChatDriver($name));
+    }
+
+    public function failoverTarget(string $name): string
+    {
+        $target = (string) (config('ai.failover', [])[$name] ?? '');
+
+        if ($target === '') {
+            return '';
+        }
+
+        if ($target === $name) {
+            return '';
+        }
+
+        if (! in_array($target, $this->providerNames(), true)) {
+            return '';
+        }
+
+        if (! $this->isConfigured($target)) {
+            return '';
+        }
+
+        return $target;
     }
 
     public function for(string $feature): ChatModel
@@ -115,6 +148,7 @@ class AiManager
     public function forget(): void
     {
         $this->chatModels = [];
+        $this->plainChatModels = [];
         $this->embeddingModels = [];
         $this->rerankers = [];
     }
@@ -171,7 +205,21 @@ class AiManager
 
     protected function decorate(ChatModel $driver): ChatModel
     {
-        return new UsageLoggingModel(new RetryingModel(new ProfileMergingModel($driver)));
+        return new UsageLoggingModel(new RetryingModel(
+            new ProfileMergingModel($driver),
+            breaker: $this->app->make(CircuitBreaker::class),
+        ));
+    }
+
+    protected function withFailover(string $name, ChatModel $model): ChatModel
+    {
+        $target = $this->failoverTarget($name);
+
+        if ($target === '') {
+            return $model;
+        }
+
+        return new FailoverModel($model, fn (): ChatModel => $this->chatWithoutFailover($target), $target);
     }
 
     protected function makeChatDriver(string $name): ChatModel
@@ -189,6 +237,7 @@ class AiManager
             'ollama' => new OllamaDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'llama-server' => new LlamaServerDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'vllm' => new VllmDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
+            'triton' => new TritonDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'anthropic' => new AnthropicDriver($config, $this->app->make(DebugLog::class)),
             'gemini' => new GeminiDriver($config, $this->app->make(DebugLog::class)),
             'bedrock' => new BedrockDriver($config, $this->app->make(DebugLog::class)),

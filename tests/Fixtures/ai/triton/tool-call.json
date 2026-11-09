@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the Triton OpenAI-compatible frontend's code (python/openai/openai_frontend/engine/triton_engine.py and schemas/openai.py at triton-inference-server/server tag v2.74.0), with --tool-call-parser llama3. Not recorded: no Triton server was available on the machine that wrote it, and none was started.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"id\":\"cmpl-5c1e0f6e-8f2d-4a38-9a77-0b6f1d9a5d11\",\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"content\":null,\"tool_calls\":[{\"id\":\"cmpl-tool-a1b2c3d4e5f60718293a4b5c6d7e8f90\",\"type\":\"function\",\"function\":{\"name\":\"lookup_invoice\",\"arguments\":\"{\\\"invoice_number\\\": \\\"4471\\\"}\"}}],\"role\":\"assistant\",\"function_call\":null,\"refusal\":null},\"logprobs\":null}],\"created\":1794250511,\"model\":\"chat\",\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":19,\"prompt_tokens\":188,\"total_tokens\":207}}"
+    }
+}

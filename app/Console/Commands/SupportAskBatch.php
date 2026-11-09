@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\ModelRequestFailed;
+use App\Ai\Exceptions\ProviderUnavailable;
 use App\Ai\Exceptions\UnreadableQuestionBatch;
 use App\Ai\Support\QuestionBatch;
 use App\Ai\Support\SupportAssistant;
@@ -52,6 +53,10 @@ class SupportAskBatch extends Command
             $started = hrtime(true);
 
             $result = $assistant->answer($user, $question);
+
+            if ($result->wasDegraded()) {
+                throw new ProviderUnavailable($result->degradedReason());
+            }
 
             $outcomes[] = [
                 'hit' => isset($result->response->raw['semantic_cache']),

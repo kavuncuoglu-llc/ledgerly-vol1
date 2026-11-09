@@ -11,6 +11,7 @@ final readonly class BenchServeCommand
         public string $tokenizerSource,
         public ShapeSummary $shape,
         public string $apiKey = '',
+        public array $headers = [],
     ) {}
 
     public function forLevel(int $concurrency, int $prompts, string $resultDirectory, string $resultFile): array
@@ -25,6 +26,7 @@ final readonly class BenchServeCommand
             $this->baseUrl,
             '--endpoint',
             '/v1/chat/completions',
+            ...$this->headerArguments(),
             '--model',
             $this->tokenizerSource,
             '--served-model-name',
@@ -53,5 +55,20 @@ final readonly class BenchServeCommand
             '--result-filename',
             $resultFile,
         ];
+    }
+
+    private function headerArguments(): array
+    {
+        if ($this->headers === []) {
+            return [];
+        }
+
+        $pairs = [];
+
+        foreach ($this->headers as $name => $value) {
+            $pairs[] = "{$name}={$value}";
+        }
+
+        return ['--header', ...$pairs];
     }
 }

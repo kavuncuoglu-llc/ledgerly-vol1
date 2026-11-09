@@ -8,7 +8,7 @@ final class UnusableLoadTest extends RuntimeException
 {
     public static function notVllm(string $provider): self
     {
-        return new self("Provider [{$provider}] is not a vLLM server: ai:load wraps vllm bench serve, which targets vLLM's OpenAI-compatible endpoint. Pass --provider=vllm.");
+        return new self("Provider [{$provider}] is not a vLLM server or a Triton OpenAI frontend: ai:load wraps vllm bench serve, which targets an OpenAI-compatible endpoint. Pass --provider=vllm or --provider=triton.");
     }
 
     public static function shapeFileMissing(string $path): self
@@ -43,7 +43,7 @@ final class UnusableLoadTest extends RuntimeException
 
     public static function tokenizerUnknown(): self
     {
-        return new self('vllm bench serve builds its random prompts with the model\'s tokenizer. Set VLLM_MODEL to the Hugging Face repository (or local path) the server loads, or pass --model=.');
+        return new self('vllm bench serve builds its random prompts with the model\'s tokenizer. Set VLLM_MODEL (or TRITON_TOKENIZER for a Triton provider) to the Hugging Face repository (or local path) the server loads, or pass --model=.');
     }
 
     public static function badConcurrency(string $given): self

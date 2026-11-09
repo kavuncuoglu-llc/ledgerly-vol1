@@ -43,3 +43,8 @@ Thumbs.db
 
 /adapters/*
 !/adapters/.gitkeep
+
+/ops/triton/models/*/*/*.onnx
+/ops/triton/models/*/*/*.plan
+/engines/
+/hf/

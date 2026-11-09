@@ -157,7 +157,7 @@ class AiLoadCommandTest extends TestCase
         TrafficShapeFile::write($this->shapeFile, [new TrafficShape('support.reply', 2100, 180, 450)]);
 
         $this->artisan('ai:load', ['--provider' => 'local'])
-            ->expectsOutputToContain('Provider [local] is not a vLLM server')
+            ->expectsOutputToContain('Provider [local] is not a vLLM server or a Triton OpenAI frontend')
             ->assertFailed();
     }
 

@@ -35,6 +35,12 @@ class SupportAsk extends Command
             return Command::FAILURE;
         }
 
+        if ($result->wasDegraded()) {
+            $this->error($result->degradedReason());
+
+            return Command::FAILURE;
+        }
+
         $this->printCacheLine($result->response->raw['semantic_cache'] ?? []);
 
         $this->line($result->answer());

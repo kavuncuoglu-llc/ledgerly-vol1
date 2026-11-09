@@ -13,6 +13,7 @@ use App\Ai\Doctor\BindProbe;
 use App\Ai\Doctor\Doctor;
 use App\Ai\Doctor\Llama\LlamaDoctor;
 use App\Ai\Doctor\SocketBindProbe;
+use App\Ai\Doctor\Triton\TritonDoctor;
 use App\Ai\Doctor\Vllm\VllmDoctor;
 use App\Ai\Drivers\Support\DebugLog;
 use App\Ai\Embeddings\BoilerplateStripper;
@@ -125,6 +126,8 @@ class AiServiceProvider extends ServiceProvider
         $this->app->bind(LlamaDoctor::class, fn () => LlamaDoctor::standard());
 
         $this->app->bind(VllmDoctor::class, fn () => VllmDoctor::standard());
+
+        $this->app->bind(TritonDoctor::class, fn () => TritonDoctor::standard());
 
         $this->app->bind(BenchProcess::class, SymfonyBenchProcess::class);
 

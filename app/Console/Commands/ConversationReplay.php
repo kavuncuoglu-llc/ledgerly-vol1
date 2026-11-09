@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\ReplayScript;
 use App\Ai\Exceptions\ModelRequestFailed;
+use App\Ai\Exceptions\ProviderUnavailable;
 use App\Ai\Exceptions\UnreadableReplayScript;
 use App\Ai\Load\QueuedReplay;
 use App\Ai\Load\ReplayLoadResult;
@@ -122,6 +123,10 @@ class ConversationReplay extends Command
                 ? $conversation
                 : null,
         );
+
+        if ($result->wasDegraded()) {
+            throw new ProviderUnavailable($result->degradedReason());
+        }
 
         $current = $store->find($result->conversationId);
 

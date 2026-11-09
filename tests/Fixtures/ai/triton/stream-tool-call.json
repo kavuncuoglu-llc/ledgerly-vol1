@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the streaming code in engine/triton_engine.py at triton-inference-server/server tag v2.74.0 with --tool-call-parser llama3 (tool-call deltas follow the OpenAI chunk shape; the finish reason is tool_calls when the parser produced a call). Not recorded.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "text/event-stream; charset=utf-8"
+        },
+        "body": "data: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"cmpl-tool-a1b2c3d4\",\"type\":\"function\",\"function\":{\"name\":\"lookup_invoice\",\"arguments\":\"\"}}]},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"invoice_number\\\": \"}}]},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"4471\\\"}\"}}]},\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[{\"delta\":{\"content\":\"\"},\"finish_reason\":\"tool_calls\",\"index\":0}],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\"}\n\ndata: {\"id\":\"cmpl-5c1e0f6e\",\"choices\":[],\"created\":1794250511,\"model\":\"chat\",\"object\":\"chat.completion.chunk\",\"usage\":{\"completion_tokens\":19,\"prompt_tokens\":188,\"total_tokens\":207}}\n\ndata: [DONE]\n\n"
+    }
+}

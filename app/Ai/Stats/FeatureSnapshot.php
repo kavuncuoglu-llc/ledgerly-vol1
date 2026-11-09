@@ -18,5 +18,7 @@ final readonly class FeatureSnapshot
         public ?float $citationFlagRate = null,
         public int $citationFlagged = 0,
         public int $citationChecked = 0,
+        public array $routed = [],
+        public int $failedJobs = 0,
     ) {}
 }

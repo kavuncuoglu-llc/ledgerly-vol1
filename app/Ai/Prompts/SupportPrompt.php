@@ -43,6 +43,11 @@ final class SupportPrompt
         return 'I could not find that in the help center. Would you like me to open a support ticket?';
     }
 
+    public static function unavailableMessage(): string
+    {
+        return 'Our assistant is briefly unavailable. You can search the help center in the meantime, or open a support ticket and we will reply as soon as it is back.';
+    }
+
     private static function baseSystem(): string
     {
         return <<<'PROMPT'

@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the Triton OpenAI-compatible frontend's code (engine/triton_engine.py _validate_chat_request and frontend/fastapi/routers/chat.py at triton-inference-server/server tag v2.74.0): a ClientError becomes HTTPException(status_code=400, detail=...). Not recorded.",
+    "response": {
+        "status": 400,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"detail\":\"Unknown model: ledgerly-support\"}"
+    }
+}

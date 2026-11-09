@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the Triton OpenAI-compatible frontend's code (python/openai/openai_frontend/engine/triton_engine.py and schemas/openai.py at triton-inference-server/server tag v2.74.0). Not recorded: no Triton server was available on the machine that wrote it, and none was started.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"id\":\"cmpl-5c1e0f6e-8f2d-4a38-9a77-0b6f1d9a5d11\",\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"content\":\"duplicate\",\"tool_calls\":null,\"role\":\"assistant\",\"function_call\":null,\"refusal\":null},\"logprobs\":null}],\"created\":1794250511,\"model\":\"chat\",\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":35,\"total_tokens\":37}}"
+    }
+}

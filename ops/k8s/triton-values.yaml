@@ -1,0 +1,80 @@
+replicas: 1
+
+image:
+  repository: nvcr.io/nvidia/tritonserver
+  tag: 26.10-vllm-python-py3
+
+workingDir: /opt/tritonserver/python/openai
+
+command:
+  - python3
+  - openai_frontend/main.py
+
+args:
+  - --model-repository
+  - /models
+  - --backend
+  - vllm
+  - --tokenizer
+  - meta-llama/Llama-3.1-8B-Instruct
+  - --tool-call-parser
+  - llama3
+  - --model-control-mode
+  - explicit
+  - --load-model
+  - chat
+  - --openai-restricted-api
+  - inference,model-repository
+  - x-api-key
+  - $(TRITON_API_KEY)
+
+env:
+  - name: TRITON_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: ledgerly-inference
+        key: triton-api-key
+  - name: HF_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: ledgerly-inference
+        key: hf-token
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+  requests:
+    cpu: "4"
+    memory: 24Gi
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 9000
+  initialDelaySeconds: 120
+  periodSeconds: 10
+
+livenessProbe:
+  tcpSocket:
+    port: 9000
+  initialDelaySeconds: 600
+  periodSeconds: 30
+
+volumes:
+  - name: models
+    persistentVolumeClaim:
+      claimName: triton-model-repository
+  - name: hf-cache
+    persistentVolumeClaim:
+      claimName: hf-cache
+
+volumeMounts:
+  - name: models
+    mountPath: /models
+    readOnly: true
+  - name: hf-cache
+    mountPath: /root/.cache/huggingface
+
+service:
+  port: 9000
+  metricsPath: /metrics

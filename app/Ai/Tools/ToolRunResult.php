@@ -24,6 +24,16 @@ final readonly class ToolRunResult
         return $this->response->content ?? '';
     }
 
+    public function wasDegraded(): bool
+    {
+        return ($this->response->raw['degraded'] ?? false) === true;
+    }
+
+    public function degradedReason(): string
+    {
+        return (string) ($this->response->raw['reason'] ?? '');
+    }
+
     public function hasPending(): bool
     {
         return $this->pending !== [];

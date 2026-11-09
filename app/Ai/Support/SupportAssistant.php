@@ -12,6 +12,7 @@ use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\HistoryBudget;
 use App\Ai\Conversations\SummarizeConversation;
 use App\Ai\Events\ModelCalled;
+use App\Ai\Exceptions\ProviderUnavailable;
 use App\Ai\Http\CallDetails;
 use App\Ai\Memory\MemoryStore;
 use App\Ai\Prompts\SupportPrompt;
@@ -32,12 +33,17 @@ use App\Models\Message;
 use App\Models\ModelCall;
 use App\Models\User;
 use Closure;
+use Illuminate\Support\Facades\Log;
 
 final class SupportAssistant
 {
     public const CACHE_PROVIDER = 'semantic-cache';
 
     public const CACHE_MODEL = 'cached_answers';
+
+    public const DEGRADED_PROVIDER = 'degraded';
+
+    public const DEGRADED_MODEL = 'unavailable-message';
 
     public function __construct(
         private readonly ToolRunner $runner,
@@ -73,6 +79,15 @@ final class SupportAssistant
             return $this->answerFromCache($conversation, $question, $lookup, $started);
         }
 
+        try {
+            return $this->generate($user, $question, $conversation, $taps, $lookup);
+        } catch (ProviderUnavailable $exception) {
+            return $this->answerDegraded($conversation, $question, $started, $exception);
+        }
+    }
+
+    private function generate(User $user, string $question, Conversation $conversation, ?StreamTaps $taps, CacheLookup $lookup): ToolRunResult
+    {
         $route = $this->routeFor($question);
 
         $allowance = $this->budget->historyAllowance(SupportPrompt::system($user));
@@ -298,6 +313,53 @@ final class SupportAssistant
 
         $result = new ToolRunResult(
             response: $this->cachedResponse($hit, $event),
+            messages: [],
+            rounds: 0,
+            modelCallIds: [$event->modelCallId],
+        );
+
+        $this->remember($conversation, $question, $result);
+
+        return $result->forConversation($conversation->id);
+    }
+
+    private function answerDegraded(Conversation $conversation, string $question, int|float $started, ProviderUnavailable $exception): ToolRunResult
+    {
+        Log::warning('The assistant could not reach a model; sending the unavailable message', [
+            'conversation' => $conversation->id,
+            'reason' => $exception->getMessage(),
+        ]);
+
+        $event = new ModelCalled(
+            feature: 'support.reply',
+            provider: self::DEGRADED_PROVIDER,
+            model: self::DEGRADED_MODEL,
+            usage: [
+                'prompt_tokens' => 0,
+                'completion_tokens' => 0,
+            ],
+            finishReason: 'degraded',
+            latencyMs: (int) ((hrtime(true) - $started) / 1_000_000),
+            conversationId: $conversation->id,
+            promptVersion: SupportPrompt::VERSION,
+        );
+
+        event($event);
+
+        $result = new ToolRunResult(
+            response: new ChatResponse(
+                id: 'degraded',
+                model: self::DEGRADED_MODEL,
+                content: SupportPrompt::unavailableMessage(),
+                toolCalls: [],
+                finishReason: FinishReason::Stop,
+                usage: new Usage(promptTokens: 0, completionTokens: 0),
+                raw: [
+                    'degraded' => true,
+                    'reason' => $exception->getMessage(),
+                ],
+                modelCallId: $event->modelCallId,
+            ),
             messages: [],
             rounds: 0,
             modelCallIds: [$event->modelCallId],

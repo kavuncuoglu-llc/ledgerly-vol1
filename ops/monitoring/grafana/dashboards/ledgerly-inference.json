@@ -1,0 +1,210 @@
+{
+  "uid": "ledgerly-inference",
+  "title": "Ledgerly inference",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "tags": [
+    "ledgerly",
+    "inference"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "vLLM time to first token (seconds)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "p50",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[1m])))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "p99",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[1m])))"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "vLLM generation tokens per second",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "generated",
+          "expr": "sum(rate(vllm:generation_tokens_total[1m]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "prompt",
+          "expr": "sum(rate(vllm:prompt_tokens_total[1m]))"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "vLLM running and waiting sequences",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "running",
+          "expr": "sum(vllm:num_requests_running)"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "waiting",
+          "expr": "sum(vllm:num_requests_waiting)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "vLLM KV cache use and prefix cache hit rate",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "KV cache used",
+          "expr": "max(vllm:kv_cache_usage_perc)"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "prefix cache hits",
+          "expr": "sum(rate(vllm:prefix_cache_hits_total[5m])) / sum(rate(vllm:prefix_cache_queries_total[5m]))"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "llama-server tokens per second",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "decode",
+          "expr": "llamacpp:predicted_tokens_seconds"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "prompt",
+          "expr": "llamacpp:prompt_tokens_seconds"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "llama-server requests processing and deferred",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "processing",
+          "expr": "llamacpp:requests_processing"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "deferred",
+          "expr": "llamacpp:requests_deferred"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Triton requests per second by model",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{model}} ok",
+          "expr": "sum by (model) (rate(nv_inference_request_success[1m]))"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{model}} failed",
+          "expr": "sum by (model) (rate(nv_inference_request_failure[1m]))"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Triton average queue time (ms) and batch size by model",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{model}} queue ms",
+          "expr": "sum by (model) (rate(nv_inference_queue_duration_us[1m])) / sum by (model) (rate(nv_inference_request_success[1m])) / 1000"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "{{model}} batch size",
+          "expr": "sum by (model) (rate(nv_inference_count[1m])) / sum by (model) (rate(nv_inference_exec_count[1m]))"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Triton GPU utilization and memory",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "utilization",
+          "expr": "avg(nv_gpu_utilization)"
+        },
+        {
+          "refId": "B",
+          "legendFormat": "memory used",
+          "expr": "sum(nv_gpu_memory_used_bytes) / sum(nv_gpu_memory_total_bytes)"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Scrape targets up",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "prometheus", "uid": "ledgerly-prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{job}}",
+          "expr": "up"
+        }
+      ]
+    }
+  ]
+}

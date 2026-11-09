@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the Triton OpenAI-compatible frontend's code (python/openai/openai_frontend/frontend/fastapi/routers/chat.py at triton-inference-server/server tag v2.74.0): a ServerError or any other exception becomes HTTPException(status_code=500, detail=...), which FastAPI renders as {\"detail\": ...}. Not recorded.",
+    "response": {
+        "status": 500,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"detail\":\"Failed to process the request: backend model instance is not ready\"}"
+    }
+}

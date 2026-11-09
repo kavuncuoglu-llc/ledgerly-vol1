@@ -56,6 +56,14 @@ class DriverConformanceTest extends TestCase
             'api_key' => 'vllm-key',
             'model' => 'conformance-model',
         ]);
+        config()->set('ai.providers.conformance-triton', [
+            'driver' => 'triton',
+            'base_url' => 'http://triton.test:9000/v1',
+            'api_key' => 'triton-key',
+            'auth_header' => 'x-api-key',
+            'model' => 'conformance-model',
+            'capabilities' => ['tools', 'seed'],
+        ]);
         config()->set('ai.providers.conformance-anthropic', [
             'driver' => 'anthropic',
             'base_url' => 'http://anthropic.test',
@@ -123,7 +131,7 @@ class DriverConformanceTest extends TestCase
         $this->assertSame(['invoice_number' => '4471'], json_decode($call['function']['arguments'], true));
     }
 
-    #[DataProvider('drivers')]
+    #[DataProvider('driversWithNativeStructuredOutput')]
     public function test_structured_output_comes_back_as_json_content(string $driver): void
     {
         FakeHttp::replay($driver, 'structured');
@@ -135,7 +143,7 @@ class DriverConformanceTest extends TestCase
         $this->assertSame([], $response->toolCalls);
     }
 
-    #[DataProvider('drivers')]
+    #[DataProvider('driversReportingCachedTokens')]
     public function test_cached_tokens_land_in_one_usage_field(string $driver): void
     {
         FakeHttp::replay($driver, 'cached');
@@ -236,6 +244,7 @@ class DriverConformanceTest extends TestCase
             'ollama' => ['ollama'],
             'llama-server' => ['llama-server'],
             'vllm' => ['vllm'],
+            'triton' => ['triton'],
             'anthropic' => ['anthropic'],
             'gemini' => ['gemini'],
             'bedrock' => ['bedrock'],
@@ -244,7 +253,17 @@ class DriverConformanceTest extends TestCase
 
     public static function driversWithContentFilter(): array
     {
-        return array_diff_key(self::drivers(), ['ollama' => true, 'llama-server' => true, 'vllm' => true]);
+        return array_diff_key(self::drivers(), ['ollama' => true, 'llama-server' => true, 'vllm' => true, 'triton' => true]);
+    }
+
+    public static function driversWithNativeStructuredOutput(): array
+    {
+        return array_diff_key(self::drivers(), ['triton' => true]);
+    }
+
+    public static function driversReportingCachedTokens(): array
+    {
+        return array_diff_key(self::drivers(), ['triton' => true]);
     }
 
     public static function errors(): array
@@ -262,6 +281,8 @@ class DriverConformanceTest extends TestCase
 
         $cases['vllm unavailable'] = ['vllm', 'overloaded', ProviderUnavailable::class, 3];
         $cases['vllm context overflow'] = ['vllm', 'context-overflow', ContextTooLong::class, 1];
+
+        $cases['triton unavailable'] = ['triton', 'overloaded', ProviderUnavailable::class, 3];
 
         $cases['ollama rate limit'] = ['ollama', 'rate-limited', RateLimited::class, 3];
         $cases['ollama busy'] = ['ollama', 'overloaded', ProviderUnavailable::class, 3];

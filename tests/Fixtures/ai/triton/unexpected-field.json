@@ -1,0 +1,12 @@
+{
+    "provider": "triton",
+    "driver": "triton",
+    "source": "Hand-written from the request model in schemas/openai.py at triton-inference-server/server tag v2.74.0 (CreateChatCompletionRequest has model_config extra=forbid) and FastAPI's standard 422 body. Not recorded.",
+    "response": {
+        "status": 422,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"detail\":[{\"type\":\"extra_forbidden\",\"loc\":[\"body\",\"top_k\"],\"msg\":\"Extra inputs are not permitted\",\"input\":40}]}"
+    }
+}

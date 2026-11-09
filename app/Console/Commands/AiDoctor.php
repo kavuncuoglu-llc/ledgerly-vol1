@@ -9,6 +9,8 @@ use App\Ai\Doctor\Doctor;
 use App\Ai\Doctor\DoctorContextFactory;
 use App\Ai\Doctor\Llama\LlamaDoctor;
 use App\Ai\Doctor\Llama\LlamaDoctorContextFactory;
+use App\Ai\Doctor\Triton\TritonDoctor;
+use App\Ai\Doctor\Triton\TritonDoctorContextFactory;
 use App\Ai\Doctor\Vllm\VllmDoctor;
 use App\Ai\Doctor\Vllm\VllmDoctorContextFactory;
 use App\Ai\Exceptions\UnknownModelArchitecture;
@@ -19,12 +21,17 @@ use App\Ai\Hardware\ModelSpecs;
 use App\Ai\Hardware\OllamaClient;
 use App\Ai\Hardware\SizingCalculator;
 use App\Ai\Hardware\SizingResult;
+use App\Ai\Health\ComposeProfileDoctor;
+use App\Ai\Health\HealthProbe;
+use App\Ai\Health\HealthReport;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
 class AiDoctor extends Command
 {
     protected $signature = 'ai:doctor
+        {--health : Report the three health states of the provider (reachable, loaded, warm) and its circuit breaker}
+        {--profile= : Check the Compose profile (for example vllm, triton, linux-gpu) against this machine before you bring it up}
         {--size : Check that a model, its KV cache and headroom fit the memory this machine can give a GPU}
         {--model= : Model name, e.g. llama3.1:70b-instruct-q4_K_M (default: the provider\'s model)}
         {--provider= : Provider whose Ollama, llama-server or vLLM is checked, or asked about the model with --size (default: ai.default)}
@@ -39,12 +46,20 @@ class AiDoctor extends Command
         {--head-dim= : Head dimension}
         {--quantization= : Weight quantization, e.g. q4_k_m}';
 
-    protected $description = 'Check an Ollama, llama-server or vLLM setup for the silent failures (context window, placement, slots, exposure), or with --size, memory sizing';
+    protected $description = 'Check an Ollama, llama-server, vLLM or Triton setup for the silent failures (context window, placement, slots, exposure), or with --size, memory sizing, with --health, the three health states, with --profile, a Compose profile against this machine';
 
-    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor): int
+    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor, TritonDoctorContextFactory $tritonContexts, TritonDoctor $tritonDoctor): int
     {
+        if ($this->option('profile') !== null) {
+            return $this->runProfile(app(ComposeProfileDoctor::class));
+        }
+
+        if ($this->option('health')) {
+            return $this->runHealth($ai, app(HealthProbe::class));
+        }
+
         if (! $this->option('size')) {
-            return $this->runChecks($ai, $contexts, $doctor, $llamaContexts, $llamaDoctor, $vllmContexts, $vllmDoctor);
+            return $this->runChecks($ai, $contexts, $doctor, $llamaContexts, $llamaDoctor, $vllmContexts, $vllmDoctor, $tritonContexts, $tritonDoctor);
         }
 
         try {
@@ -68,7 +83,7 @@ class AiDoctor extends Command
             : Command::FAILURE;
     }
 
-    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor): int
+    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor, VllmDoctorContextFactory $vllmContexts, VllmDoctor $vllmDoctor, TritonDoctorContextFactory $tritonContexts, TritonDoctor $tritonDoctor): int
     {
         $provider = (string) ($this->option('provider') ?: config('ai.default'));
 
@@ -90,8 +105,12 @@ class AiDoctor extends Command
             return $this->runVllmChecks($vllmContexts, $vllmDoctor, $provider, $window);
         }
 
+        if ($tritonContexts->isTriton($provider)) {
+            return $this->runTritonChecks($tritonContexts, $tritonDoctor, $provider, $window);
+        }
+
         if (! $contexts->isOllama($provider)) {
-            $this->error("Provider {$provider} does not point at an Ollama server, a llama-server or a vLLM server. Pass --provider=<an Ollama, llama-server or vLLM provider>, or set AI_OLLAMA=true, AI_LLAMA=true or AI_VLLM=true on the provider.");
+            $this->error("Provider {$provider} does not point at an Ollama server, a llama-server, a vLLM server or a Triton server. Pass --provider=<an Ollama, llama-server, vLLM or Triton provider>, or set AI_OLLAMA=true, AI_LLAMA=true, AI_VLLM=true or AI_TRITON=true on the provider.");
 
             return Command::FAILURE;
         }
@@ -133,6 +152,106 @@ class AiDoctor extends Command
         }
 
         return $this->summarize($results);
+    }
+
+    private function runTritonChecks(TritonDoctorContextFactory $contexts, TritonDoctor $doctor, string $provider, int $window): int
+    {
+        $context = $contexts->make($provider, $window);
+
+        $this->line("Triton OpenAI frontend at {$context->client->baseUrl()}");
+
+        $results = $doctor->run($context);
+
+        foreach ($results as $result) {
+            $this->line($result->line());
+        }
+
+        return $this->summarize($results);
+    }
+
+    private function runProfile(ComposeProfileDoctor $doctor): int
+    {
+        $profile = $doctor->resolve((string) $this->option('profile'));
+
+        if (! $doctor->isKnown($profile)) {
+            $this->error("Unknown Compose profile [{$profile}]. Known profiles: ".implode(', ', $doctor->known()).'.');
+
+            return Command::FAILURE;
+        }
+
+        $results = $doctor->run($profile);
+
+        foreach ($results as $result) {
+            $this->line($result->line());
+        }
+
+        return $this->summarize($results);
+    }
+
+    private function runHealth(AiManager $ai, HealthProbe $probe): int
+    {
+        $provider = (string) ($this->option('provider') ?: $ai->providerNameFor('support.reply'));
+
+        try {
+            $ai->providerConfig($provider);
+        } catch (UnknownProvider $exception) {
+            $this->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        if (! $probe->supports($provider)) {
+            $this->error("Provider {$provider} is not a server this app can probe; --health works for OpenAI-compatible, Ollama, llama-server, vLLM and Triton providers.");
+
+            return Command::FAILURE;
+        }
+
+        $report = $probe->check($provider);
+
+        $this->line("provider {$provider}");
+        $this->line($this->healthLine($report));
+        $this->line('breaker: '.$report->breaker->describe((int) config('ai.breaker.threshold')));
+
+        return $report->isHealthy()
+            ? Command::SUCCESS
+            : Command::FAILURE;
+    }
+
+    private function healthLine(HealthReport $report): string
+    {
+        $reachable = $report->reachable
+            ? 'reachable: yes'
+            : "reachable: no ({$report->reachableDetail})";
+
+        $loaded = $report->loaded
+            ? "loaded: yes ({$report->loadedDetail})"
+            : "loaded: no ({$report->loadedDetail})";
+
+        return implode(' · ', [$reachable, $loaded, $this->warmPart($report)]);
+    }
+
+    private function warmPart(HealthReport $report): string
+    {
+        $ran = $this->warmUpNote($report);
+
+        if ($report->warm) {
+            return "warm: yes ({$report->warmDetail}{$ran})";
+        }
+
+        if (! $report->loaded) {
+            return 'warm: unknown';
+        }
+
+        return "warm: no ({$report->warmDetail}) → run ai:warm";
+    }
+
+    private function warmUpNote(HealthReport $report): string
+    {
+        if ($report->lastWarmUp === []) {
+            return '';
+        }
+
+        return '; ai:warm ran at '.date('H:i:s', (int) $report->lastWarmUp['at']);
     }
 
     private function summarize(array $results): int

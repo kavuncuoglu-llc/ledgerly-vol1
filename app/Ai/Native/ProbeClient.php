@@ -13,6 +13,7 @@ abstract class ProbeClient
     public function __construct(
         protected readonly string $baseUrl,
         protected readonly string $apiKey = '',
+        protected readonly array $headers = [],
     ) {}
 
     public function baseUrl(): string
@@ -53,6 +54,10 @@ abstract class ProbeClient
 
         if (! $authenticated) {
             return $pending;
+        }
+
+        if ($this->headers !== []) {
+            return $pending->withHeaders($this->headers);
         }
 
         if ($this->apiKey === '') {

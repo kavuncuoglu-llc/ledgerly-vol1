@@ -1,0 +1,31 @@
+name: "support_pipeline"
+platform: "ensemble"
+max_batch_size: 32
+input [
+  { name: "question_ids", data_type: TYPE_INT64, dims: [ -1 ] },
+  { name: "question_mask", data_type: TYPE_INT64, dims: [ -1 ] },
+  { name: "pair_ids", data_type: TYPE_INT64, dims: [ -1 ] },
+  { name: "pair_mask", data_type: TYPE_INT64, dims: [ -1 ] }
+]
+output [
+  { name: "question_vec", data_type: TYPE_FP32, dims: [ 768 ] },
+  { name: "rerank_scores", data_type: TYPE_FP32, dims: [ 1 ] }
+]
+ensemble_scheduling {
+  step [
+    {
+      model_name: "embedder"
+      model_version: -1
+      input_map { key: "input_ids" value: "question_ids" }
+      input_map { key: "attention_mask" value: "question_mask" }
+      output_map { key: "embedding" value: "question_vec" }
+    },
+    {
+      model_name: "reranker"
+      model_version: -1
+      input_map { key: "input_ids" value: "pair_ids" }
+      input_map { key: "attention_mask" value: "pair_mask" }
+      output_map { key: "logits" value: "rerank_scores" }
+    }
+  ]
+}

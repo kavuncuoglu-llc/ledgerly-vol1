@@ -1,0 +1,6 @@
+{
+  "model": "neuralmagic/Meta-Llama-3.1-8B-Instruct-FP8",
+  "max_model_len": 8192,
+  "gpu_memory_utilization": 0.9,
+  "enable_prefix_caching": true
+}

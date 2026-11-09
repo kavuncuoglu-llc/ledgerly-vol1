@@ -459,7 +459,7 @@ class AiDoctorVllmChecksTest extends TestCase
     public function test_a_provider_that_is_none_of_the_three_servers_is_told_so(): void
     {
         $this->artisan('ai:doctor', ['--provider' => 'rerank-lexical'])
-            ->expectsOutputToContain('does not point at an Ollama server, a llama-server or a vLLM server')
+            ->expectsOutputToContain('does not point at an Ollama server, a llama-server, a vLLM server or a Triton server')
             ->assertFailed();
     }
 
