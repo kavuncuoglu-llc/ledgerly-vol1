@@ -3,6 +3,7 @@
 namespace Tests\Feature\Ai;
 
 use App\Ai\Exceptions\UnsupportedTokenCounter;
+use App\Ai\Tokens\LlamaServerTokenCounter;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
@@ -24,6 +25,15 @@ class TokenCounterBindingTest extends TestCase
         $counter = app(TokenCounter::class);
 
         $this->assertInstanceOf(TiktokenCounter::class, $counter);
+    }
+
+    public function test_container_resolves_the_llama_server_counter_when_configured(): void
+    {
+        config()->set('ai.token_counter', 'llama-server');
+
+        $counter = app(TokenCounter::class);
+
+        $this->assertInstanceOf(LlamaServerTokenCounter::class, $counter);
     }
 
     public function test_container_rejects_a_counter_that_is_not_built_yet(): void

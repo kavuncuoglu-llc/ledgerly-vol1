@@ -1,0 +1,5 @@
+services:
+  llama:
+    environment:
+      LLAMA_ARG_SPEC_DRAFT_MODEL: ${LLAMA_DRAFT_MODEL_PATH:-/models/llama-3.2-1b-instruct-q8_0.gguf}
+      LLAMA_ARG_SPEC_DRAFT_N_MAX: "${LLAMA_DRAFT_N_MAX:-12}"

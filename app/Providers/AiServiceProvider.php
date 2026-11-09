@@ -11,6 +11,7 @@ use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\EloquentConversationStore;
 use App\Ai\Doctor\BindProbe;
 use App\Ai\Doctor\Doctor;
+use App\Ai\Doctor\Llama\LlamaDoctor;
 use App\Ai\Doctor\SocketBindProbe;
 use App\Ai\Drivers\Support\DebugLog;
 use App\Ai\Embeddings\BoilerplateStripper;
@@ -43,6 +44,7 @@ use App\Ai\Retrieval\RetrieverFactory;
 use App\Ai\Sidecar\SidecarClient;
 use App\Ai\Support\Router;
 use App\Ai\Support\VoteClassifier;
+use App\Ai\Tokens\LlamaServerTokenCounter;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
@@ -117,6 +119,8 @@ class AiServiceProvider extends ServiceProvider
 
         $this->app->bind(Doctor::class, fn () => Doctor::standard());
 
+        $this->app->bind(LlamaDoctor::class, fn () => LlamaDoctor::standard());
+
         $this->app->bind(MemoryProbeFactory::class, OllamaMemoryProbeFactory::class);
 
         $this->app->singleton(McpClientFactory::class);
@@ -176,6 +180,7 @@ class AiServiceProvider extends ServiceProvider
         return match ($driver) {
             'ratio' => new RatioCounter,
             'tiktoken' => new TiktokenCounter,
+            'llama-server' => LlamaServerTokenCounter::forProvider($this->app->make(AiManager::class)->providerConfig((string) config('ai.llama.provider'))),
             default => throw new UnsupportedTokenCounter($driver),
         };
     }

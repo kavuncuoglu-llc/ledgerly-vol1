@@ -1,0 +1,12 @@
+{
+    "provider": "local-llama",
+    "driver": "llama-server",
+    "source": "Hand-written from llama-server's documented API shape (tools/server/README.md and the error handling in server-http.cpp and server-common.cpp at ggml-org/llama.cpp tag b11988). Not recorded: no llama-server was installed on the machine that wrote it.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json; charset=utf-8"
+        },
+        "body": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"duplicate\"}}],\"created\":1794250511,\"model\":\"ledgerly-support\",\"system_fingerprint\":\"b11988-fixture\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":2,\"prompt_tokens\":35,\"total_tokens\":37,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-Tt4kQ3hXn0wYkQZ1uV2bC9sPfGdLrE7a\",\"timings\":{\"cache_n\":0,\"prompt_n\":35,\"prompt_ms\":66.5,\"prompt_per_token_ms\":1.9,\"prompt_per_second\":526.3157894736842,\"predicted_n\":2,\"predicted_ms\":37.8,\"predicted_per_token_ms\":18.9,\"predicted_per_second\":52.91005291005291}}"
+    }
+}

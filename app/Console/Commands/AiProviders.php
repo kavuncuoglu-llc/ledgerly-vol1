@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Ai\AiManager;
 use App\Ai\Contracts\Capabilities\SupportsContextWindowOverride;
+use App\Ai\Contracts\Capabilities\SupportsGrammar;
 use App\Ai\Contracts\Capabilities\SupportsNativeStructuredOutput;
 use App\Ai\Contracts\Capability;
 use App\Ai\Exceptions\ModelRequestFailed;
@@ -115,6 +116,10 @@ class AiProviders extends Command
 
         if (ModelCapabilities::has($model, SupportsNativeStructuredOutput::class)) {
             $labels[] = 'native-structured';
+        }
+
+        if (ModelCapabilities::has($model, SupportsGrammar::class)) {
+            $labels[] = 'grammar';
         }
 
         return $labels;

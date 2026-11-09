@@ -91,6 +91,87 @@ services:
       - -c
       - ollama pull nomic-embed-text && ollama pull llama3.1:8b-instruct-q4_K_M && ollama create ledgerly-support -f /modelfiles/Modelfile.ledgerly-support
 
+  llama:
+    image: ledgerly/llama-server:cuda-${LLAMA_TAG:-b11988}
+    build:
+      context: ./ops/llama
+      dockerfile: Dockerfile.cuda
+      args:
+        LLAMA_TAG: ${LLAMA_TAG:-b11988}
+    container_name: ledgerly-llama
+    profiles: ["llama-gpu"]
+    networks:
+      - internal
+    ports:
+      - "127.0.0.1:${LLAMA_PORT:-8080}:8080"
+    volumes:
+      - ./models:/models:ro
+    command:
+      - -m
+      - ${LLAMA_MODEL_PATH:-/models/llama-3.1-8b-instruct-q4_k_m.gguf}
+      - --alias
+      - ${LLAMA_MODEL_ALIAS:-ledgerly-support}
+      - -c
+      - "${LLAMA_CTX:-32768}"
+      - -np
+      - "${LLAMA_PARALLEL:-4}"
+      - -ngl
+      - "${LLAMA_NGL:-99}"
+      - -fa
+      - "on"
+      - -ctk
+      - ${LLAMA_CACHE_TYPE_K:-f16}
+      - -ctv
+      - ${LLAMA_CACHE_TYPE_V:-f16}
+      - -ub
+      - "${LLAMA_UBATCH:-512}"
+      - --cache-reuse
+      - "${LLAMA_CACHE_REUSE:-256}"
+      - --metrics
+      - --api-key
+      - ${LLAMA_API_KEY:-llama}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  llama-cpu:
+    image: ledgerly/llama-server:cpu-${LLAMA_TAG:-b11988}
+    build:
+      context: ./ops/llama
+      dockerfile: Dockerfile.cpu
+      args:
+        LLAMA_TAG: ${LLAMA_TAG:-b11988}
+    container_name: ledgerly-llama-cpu
+    profiles: ["llama-cpu"]
+    networks:
+      - internal
+    ports:
+      - "127.0.0.1:${LLAMA_PORT:-8080}:8080"
+    volumes:
+      - ./models:/models:ro
+    command:
+      - -m
+      - ${LLAMA_CPU_MODEL_PATH:-/models/gemma-3-4b-it-q6_k.gguf}
+      - --alias
+      - ${LLAMA_MODEL_ALIAS:-ledgerly-support}
+      - -c
+      - "${LLAMA_CPU_CTX:-16384}"
+      - -np
+      - "${LLAMA_CPU_PARALLEL:-2}"
+      - -ngl
+      - "0"
+      - -t
+      - "${LLAMA_THREADS:-8}"
+      - -tb
+      - "${LLAMA_THREADS_BATCH:-16}"
+      - --metrics
+      - --api-key
+      - ${LLAMA_API_KEY:-llama}
+
 networks:
   internal:
 

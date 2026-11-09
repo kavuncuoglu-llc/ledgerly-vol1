@@ -10,11 +10,16 @@ final class LicenseCheck implements DoctorCheck
 {
     public function run(DoctorContext $context): array
     {
+        return self::judge($context->providers);
+    }
+
+    public static function judge(array $providers): array
+    {
         $unrecorded = [];
 
         $unreviewed = [];
 
-        foreach ($context->providers as $name => $config) {
+        foreach ($providers as $name => $config) {
             if (blank($config['license'] ?? null)) {
                 $unrecorded[] = $name;
 

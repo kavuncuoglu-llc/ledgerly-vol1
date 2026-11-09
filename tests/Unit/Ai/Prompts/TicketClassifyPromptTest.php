@@ -4,6 +4,7 @@ namespace Tests\Unit\Ai\Prompts;
 
 use App\Ai\Prompts\TicketClassifyPrompt;
 use App\Ai\Tokens\TokenCounter;
+use App\Enums\TicketCategory;
 use Tests\TestCase;
 
 class TicketClassifyPromptTest extends TestCase
@@ -70,6 +71,30 @@ class TicketClassifyPromptTest extends TestCase
     {
         foreach (TicketClassifyPrompt::LABELS as $label) {
             $this->assertStringContainsString("{$label} - ", TicketClassifyPrompt::system());
+        }
+    }
+
+    public function test_the_grammar_allows_exactly_the_five_labels_and_nothing_else(): void
+    {
+        $this->assertSame('root ::= "billing" | "howto" | "bug" | "account" | "other"', TicketClassifyPrompt::grammar());
+    }
+
+    public function test_the_grammar_always_has_an_other_alternative_for_messages_that_fit_nothing(): void
+    {
+        $this->assertStringContainsString('"other"', TicketClassifyPrompt::grammar());
+    }
+
+    public function test_the_shipped_grammar_file_is_the_one_the_code_builds(): void
+    {
+        $file = file_get_contents(base_path('ops/llama/grammars/ticket-category.gbnf'));
+
+        $this->assertSame(TicketClassifyPrompt::grammar(), trim((string) $file));
+    }
+
+    public function test_every_grammar_label_is_a_ticket_category(): void
+    {
+        foreach (TicketClassifyPrompt::LABELS as $label) {
+            $this->assertNotNull(TicketCategory::tryFrom($label));
         }
     }
 }

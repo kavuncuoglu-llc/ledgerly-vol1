@@ -14,6 +14,18 @@ final class TicketClassifyPrompt
         'other',
     ];
 
+    public const GRAMMAR_MAX_TOKENS = 8;
+
+    public static function grammar(): string
+    {
+        $alternatives = array_map(
+            fn (string $label): string => '"'.$label.'"',
+            self::LABELS,
+        );
+
+        return 'root ::= '.implode(' | ', $alternatives);
+    }
+
     public static function system(): string
     {
         return <<<'PROMPT'

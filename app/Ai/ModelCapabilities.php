@@ -3,6 +3,7 @@
 namespace App\Ai;
 
 use App\Ai\Contracts\Capabilities\SupportsContextWindowOverride;
+use App\Ai\Contracts\Capabilities\SupportsGrammar;
 use App\Ai\Contracts\Capabilities\SupportsNativeStructuredOutput;
 use App\Ai\Contracts\ChatModel;
 use App\Ai\Contracts\DecoratesChatModel;
@@ -30,6 +31,15 @@ final class ModelCapabilities
             $model,
             SupportsNativeStructuredOutput::class,
             fn (SupportsNativeStructuredOutput $driver): ChatModel => $driver->withNativeStructuredOutput($enabled),
+        );
+    }
+
+    public static function withGrammar(ChatModel $model, string $grammar): ChatModel
+    {
+        return self::reconfigure(
+            $model,
+            SupportsGrammar::class,
+            fn (SupportsGrammar $driver): ChatModel => $driver->withGrammar($grammar),
         );
     }
 

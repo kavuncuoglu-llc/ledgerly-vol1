@@ -1,5 +1,9 @@
 <?php
 
+$localRole = env('AI_LOCAL_PROVIDER', 'ollama') === 'llama'
+    ? 'local-llama'
+    : 'local';
+
 return [
 
     'default' => env('AI_DEFAULT_PROVIDER', 'local'),
@@ -13,6 +17,9 @@ return [
             'ollama' => env('AI_OLLAMA') === null
                 ? null
                 : filter_var(env('AI_OLLAMA'), FILTER_VALIDATE_BOOLEAN),
+            'llama' => env('AI_LLAMA') === null
+                ? null
+                : filter_var(env('AI_LLAMA'), FILTER_VALIDATE_BOOLEAN),
             'license' => env('AI_LICENSE', 'Llama 3.1 Community License'),
             'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'gpu_hour_cost' => is_numeric(env('AI_GPU_HOUR_COST'))
@@ -68,6 +75,18 @@ return [
                 ? (float) env('LOCAL_70B_GPU_HOUR_COST')
                 : null,
         ],
+        'local-llama' => [
+            'driver' => 'llama-server',
+            'base_url' => env('LLAMA_URL', 'http://127.0.0.1:8080/v1'),
+            'api_key' => env('LLAMA_API_KEY', 'llama'),
+            'model' => env('LLAMA_MODEL_ALIAS', 'ledgerly-support'),
+            'timeout' => (int) env('LLAMA_TIMEOUT', 120),
+            'license' => env('LLAMA_LICENSE', 'Llama 3.1 Community License'),
+            'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
+            'gpu_hour_cost' => is_numeric(env('LLAMA_GPU_HOUR_COST'))
+                ? (float) env('LLAMA_GPU_HOUR_COST')
+                : null,
+        ],
         'frontier' => [
             'driver' => env('FRONTIER_DRIVER', 'anthropic'),
             'base_url' => env('FRONTIER_URL') ?: null,
@@ -112,23 +131,33 @@ return [
         'probe_timeout' => (int) env('AI_OLLAMA_PROBE_TIMEOUT', 120),
     ],
 
+    'llama' => [
+        'provider' => env('AI_LLAMA_PROVIDER', 'local-llama'),
+        'gpu_layers' => env('LLAMA_NGL') ?: null,
+        'model_layers' => is_numeric(env('LLAMA_MODEL_LAYERS'))
+            ? (int) env('LLAMA_MODEL_LAYERS')
+            : null,
+        'backend' => env('LLAMA_BACKEND', 'gpu'),
+        'probe_timeout' => (int) env('AI_LLAMA_PROBE_TIMEOUT', 60),
+    ],
+
     'tiers' => [
-        'small' => 'local',
+        'small' => $localRole,
         'mid' => env('AI_MID_PROVIDER', 'mid'),
         'frontier' => 'frontier',
     ],
 
     'features' => [
         'ticket.classify' => [
-            'provider' => 'local',
+            'provider' => $localRole,
             'profile' => 'deterministic',
         ],
         'ticket.extract' => [
-            'provider' => 'local',
+            'provider' => $localRole,
             'profile' => 'deterministic',
         ],
         'support.reply' => [
-            'provider' => 'local',
+            'provider' => $localRole,
             'profile' => 'assistant',
             'escalate_to' => 'frontier',
         ],
@@ -137,7 +166,7 @@ return [
             'profile' => 'deterministic',
         ],
         'conversation.summarize' => [
-            'provider' => 'local',
+            'provider' => $localRole,
             'profile' => 'deterministic',
         ],
     ],

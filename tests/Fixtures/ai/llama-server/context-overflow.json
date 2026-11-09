@@ -1,0 +1,12 @@
+{
+    "provider": "local-llama",
+    "driver": "llama-server",
+    "source": "Hand-written from llama-server's documented API shape (tools/server/README.md and the error handling in server-http.cpp and server-common.cpp at ggml-org/llama.cpp tag b11988). Not recorded: no llama-server was installed on the machine that wrote it.",
+    "response": {
+        "status": 400,
+        "headers": {
+            "Content-Type": "application/json; charset=utf-8"
+        },
+        "body": "{\"error\":{\"code\":400,\"message\":\"request (9000 tokens) exceeds the available context size (8192 tokens), try increasing it\",\"type\":\"exceed_context_size_error\",\"n_prompt_tokens\":9000,\"n_ctx\":8192}}"
+    }
+}

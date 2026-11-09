@@ -1,0 +1,12 @@
+{
+    "provider": "local-llama",
+    "driver": "llama-server",
+    "source": "Hand-written from llama-server's documented API shape (tools/server/README.md and the error handling in server-http.cpp and server-common.cpp at ggml-org/llama.cpp tag b11988). Not recorded: no llama-server was installed on the machine that wrote it.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json; charset=utf-8"
+        },
+        "body": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"lookup_invoice\",\"arguments\":\"{\\\"invoice_number\\\":\\\"4471\\\"}\"},\"id\":\"4Nn9fKq2vZ8xLw7sGhB1cJ3mTy5RpD0e\"}]}}],\"created\":1794250511,\"model\":\"ledgerly-support\",\"system_fingerprint\":\"b11988-fixture\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":19,\"prompt_tokens\":188,\"total_tokens\":207,\"prompt_tokens_details\":{\"cached_tokens\":2}},\"id\":\"chatcmpl-Tt4kQ3hXn0wYkQZ1uV2bC9sPfGdLrE7a\",\"timings\":{\"cache_n\":2,\"prompt_n\":186,\"prompt_ms\":353.4,\"prompt_per_token_ms\":1.9,\"prompt_per_second\":526.3157894736843,\"predicted_n\":19,\"predicted_ms\":359.09999999999997,\"predicted_per_token_ms\":18.9,\"predicted_per_second\":52.91005291005291}}"
+    }
+}

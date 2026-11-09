@@ -35,3 +35,5 @@ Thumbs.db
 /storage/golden/misses-*.json
 /storage/golden/results-*.json
 /storage/benchmarks/compare-*.json
+
+/models/*.gguf

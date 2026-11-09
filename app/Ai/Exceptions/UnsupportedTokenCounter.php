@@ -8,6 +8,6 @@ final class UnsupportedTokenCounter extends InvalidArgumentException
 {
     public function __construct(public readonly string $driver)
     {
-        parent::__construct("Token counter [{$driver}] is not available. Use ratio or tiktoken.");
+        parent::__construct("Token counter [{$driver}] is not available. Use ratio, tiktoken or llama-server.");
     }
 }

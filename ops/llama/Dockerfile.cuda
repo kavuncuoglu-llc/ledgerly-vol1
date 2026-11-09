@@ -1,0 +1,14 @@
+ARG LLAMA_TAG=b11988
+
+FROM ghcr.io/ggml-org/llama.cpp:server-cuda-${LLAMA_TAG}
+
+ARG LLAMA_TAG
+
+LABEL org.opencontainers.image.title="ledgerly-llama-server" \
+      org.opencontainers.image.description="llama-server (CUDA) pinned to llama.cpp ${LLAMA_TAG}" \
+      org.opencontainers.image.version="${LLAMA_TAG}"
+
+ENV LLAMA_ARG_HOST=0.0.0.0 \
+    LLAMA_ARG_PORT=8080
+
+EXPOSE 8080

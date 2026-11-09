@@ -7,6 +7,8 @@ use App\Ai\Doctor\CheckResult;
 use App\Ai\Doctor\CheckStatus;
 use App\Ai\Doctor\Doctor;
 use App\Ai\Doctor\DoctorContextFactory;
+use App\Ai\Doctor\Llama\LlamaDoctor;
+use App\Ai\Doctor\Llama\LlamaDoctorContextFactory;
 use App\Ai\Exceptions\UnknownModelArchitecture;
 use App\Ai\Exceptions\UnknownProvider;
 use App\Ai\Hardware\ByteSize;
@@ -23,7 +25,7 @@ class AiDoctor extends Command
     protected $signature = 'ai:doctor
         {--size : Check that a model, its KV cache and headroom fit the memory this machine can give a GPU}
         {--model= : Model name, e.g. llama3.1:70b-instruct-q4_K_M (default: the provider\'s model)}
-        {--provider= : Provider whose Ollama server is checked, or asked about the model with --size (default: ai.default)}
+        {--provider= : Provider whose Ollama or llama-server is checked, or asked about the model with --size (default: ai.default)}
         {--ctx= : Context window in tokens the checks and the sizing compare against (default: ai.budget.window)}
         {--slots=1 : Parallel sequences the server keeps a cache for}
         {--cache=f16 : KV cache type: f16, q8_0 or q4_0}
@@ -35,12 +37,12 @@ class AiDoctor extends Command
         {--head-dim= : Head dimension}
         {--quantization= : Weight quantization, e.g. q4_k_m}';
 
-    protected $description = 'Check an Ollama setup for the silent failures (context window, placement, keep-alive, exposure), or with --size, memory sizing';
+    protected $description = 'Check an Ollama or llama-server setup for the silent failures (context window, placement, slots, exposure), or with --size, memory sizing';
 
-    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor): int
+    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor): int
     {
         if (! $this->option('size')) {
-            return $this->runChecks($ai, $contexts, $doctor);
+            return $this->runChecks($ai, $contexts, $doctor, $llamaContexts, $llamaDoctor);
         }
 
         try {
@@ -64,7 +66,7 @@ class AiDoctor extends Command
             : Command::FAILURE;
     }
 
-    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor): int
+    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor, LlamaDoctorContextFactory $llamaContexts, LlamaDoctor $llamaDoctor): int
     {
         $provider = (string) ($this->option('provider') ?: config('ai.default'));
 
@@ -76,15 +78,34 @@ class AiDoctor extends Command
             return Command::FAILURE;
         }
 
+        $window = (int) ($this->option('ctx') ?: config('ai.budget.window'));
+
+        if ($llamaContexts->isLlamaServer($provider)) {
+            return $this->runLlamaChecks($llamaContexts, $llamaDoctor, $provider, $window);
+        }
+
         if (! $contexts->isOllama($provider)) {
-            $this->error("Provider {$provider} does not point at an Ollama server. Pass --provider=<an Ollama provider> or set AI_OLLAMA=true.");
+            $this->error("Provider {$provider} does not point at an Ollama server or a llama-server. Pass --provider=<an Ollama or llama-server provider>, or set AI_OLLAMA=true or AI_LLAMA=true on the provider.");
 
             return Command::FAILURE;
         }
 
-        $window = (int) ($this->option('ctx') ?: config('ai.budget.window'));
-
         $results = $doctor->run($contexts->make($provider, $window));
+
+        foreach ($results as $result) {
+            $this->line($result->line());
+        }
+
+        return $this->summarize($results);
+    }
+
+    private function runLlamaChecks(LlamaDoctorContextFactory $contexts, LlamaDoctor $doctor, string $provider, int $window): int
+    {
+        $context = $contexts->make($provider, $window);
+
+        $this->line("llama-server at {$context->client->baseUrl()}");
+
+        $results = $doctor->run($context);
 
         foreach ($results as $result) {
             $this->line($result->line());
