@@ -4,7 +4,7 @@ namespace Tests\Unit\Ai\Agents;
 
 use App\Ai\Agents\AgentBudget;
 use App\Ai\Agents\AgentState;
-use App\Ai\Http\Usage;
+use App\Ai\Contracts\Usage;
 use App\Ai\Tools\ToolKind;
 use App\Ai\Tools\ToolResult;
 use Illuminate\Support\Carbon;

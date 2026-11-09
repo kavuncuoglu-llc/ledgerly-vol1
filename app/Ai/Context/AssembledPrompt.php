@@ -9,6 +9,7 @@ final readonly class AssembledPrompt
         public array $breakdown,
         public array $overBudget = [],
         public array $labelMap = [],
+        public array $breakpoints = [],
     ) {}
 
     public function total(): int

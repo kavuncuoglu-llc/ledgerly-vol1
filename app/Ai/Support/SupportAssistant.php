@@ -5,13 +5,14 @@ namespace App\Ai\Support;
 use App\Ai\Cache\CacheLookup;
 use App\Ai\Cache\SupportCacheGate;
 use App\Ai\Context\AssembledPrompt;
+use App\Ai\Contracts\ChatResponse;
+use App\Ai\Contracts\FinishReason;
+use App\Ai\Contracts\Usage;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\HistoryBudget;
 use App\Ai\Conversations\SummarizeConversation;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Http\CallDetails;
-use App\Ai\Http\ChatResponse;
-use App\Ai\Http\Usage;
 use App\Ai\Memory\MemoryStore;
 use App\Ai\Prompts\SupportPrompt;
 use App\Ai\Retrieval\CitationChecker;
@@ -85,6 +86,7 @@ final class SupportAssistant
             options: [
                 'profile' => 'assistant',
                 'max_tokens' => config('ai.budget.answer'),
+                'cache_breakpoints_after' => $assembled->breakpoints,
             ],
             feature: 'support.reply',
             promptVersion: SupportPrompt::VERSION,
@@ -125,7 +127,9 @@ final class SupportAssistant
             return $this->runner;
         }
 
-        return $this->runner->restrictedTo($route->tools);
+        return $this->runner
+            ->restrictedTo($route->tools)
+            ->escalatingAfter($route->escalateAfterRounds);
     }
 
     private function scopeFor(User $user, CacheLookup $lookup, Route $route): RetrievalScope
@@ -296,7 +300,7 @@ final class SupportAssistant
             model: self::CACHE_MODEL,
             content: $hit->answer,
             toolCalls: [],
-            finishReason: 'stop',
+            finishReason: FinishReason::Stop,
             usage: new Usage(promptTokens: 0, completionTokens: 0),
             raw: [
                 'semantic_cache' => [

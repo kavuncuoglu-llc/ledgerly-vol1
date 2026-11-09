@@ -1,0 +1,12 @@
+{
+    "provider": "gemini",
+    "driver": "gemini",
+    "source": "Hand-written from the provider's published API shape. Not recorded: no credentials for this provider were available.",
+    "response": {
+        "status": 503,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"error\":{\"code\":503,\"message\":\"The model is overloaded. Please try again later.\",\"status\":\"UNAVAILABLE\"}}"
+    }
+}

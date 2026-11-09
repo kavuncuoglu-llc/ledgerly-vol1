@@ -3,7 +3,6 @@
 namespace Tests\Unit\Ai\Context;
 
 use App\Ai\Context\ContextAssembler;
-use App\Ai\Context\ProviderCapabilities;
 use App\Ai\Retrieval\RetrievedChunk;
 use App\Ai\Tokens\RatioCounter;
 use Tests\TestCase;
@@ -76,7 +75,7 @@ class ContextAssemblerTest extends TestCase
         $this->assertSame(['system', 'question'], array_keys($prompt->breakdown));
     }
 
-    public function test_build_emits_no_breakpoints_when_the_provider_does_not_want_them(): void
+    public function test_build_never_writes_provider_markers_into_the_messages(): void
     {
         $prompt = $this->full()->build();
 
@@ -85,27 +84,28 @@ class ContextAssemblerTest extends TestCase
         }
     }
 
-    public function test_build_marks_the_system_and_summary_messages_when_the_provider_wants_breakpoints(): void
+    public function test_build_reports_a_breakpoint_after_the_system_and_summary_messages(): void
     {
-        $prompt = $this->full(new ProviderCapabilities('anthropic'))->build();
+        $prompt = $this->full()->build();
 
-        $this->assertSame(['type' => 'ephemeral'], $prompt->messages[0]['cache_control']);
-        $this->assertSame(['type' => 'ephemeral'], $prompt->messages[1]['cache_control']);
-
-        foreach (array_slice($prompt->messages, 2) as $message) {
-            $this->assertArrayNotHasKey('cache_control', $message);
-        }
+        $this->assertSame([0, 1], $prompt->breakpoints);
     }
 
-    public function test_build_marks_only_the_system_message_when_there_is_no_summary(): void
+    public function test_build_reports_only_the_system_message_when_there_is_no_summary(): void
     {
-        $prompt = $this->assembler(new ProviderCapabilities('anthropic'))
+        $prompt = $this->assembler()
             ->system('SYSTEM')
             ->question('q')
             ->build();
 
-        $this->assertSame(['type' => 'ephemeral'], $prompt->messages[0]['cache_control']);
-        $this->assertArrayNotHasKey('cache_control', $prompt->messages[1]);
+        $this->assertSame([0], $prompt->breakpoints);
+    }
+
+    public function test_build_reports_no_breakpoints_without_stable_slots(): void
+    {
+        $prompt = $this->assembler()->question('q')->build();
+
+        $this->assertSame([], $prompt->breakpoints);
     }
 
     public function test_the_stable_prefix_is_byte_identical_when_only_the_context_and_question_change(): void
@@ -182,9 +182,9 @@ class ContextAssemblerTest extends TestCase
         $this->assertGreaterThan($withoutCalls->breakdown['history'], $withCalls->breakdown['history']);
     }
 
-    private function full(?ProviderCapabilities $provider = null): ContextAssembler
+    private function full(): ContextAssembler
     {
-        return $this->assembler($provider)
+        return $this->assembler()
             ->system('SYSTEM')
             ->summary('SUMMARY')
             ->history([
@@ -201,12 +201,9 @@ class ContextAssemblerTest extends TestCase
             ->question('the question');
     }
 
-    private function assembler(?ProviderCapabilities $provider = null): ContextAssembler
+    private function assembler(): ContextAssembler
     {
-        return new ContextAssembler(
-            counter: new RatioCounter(charsPerToken: 3.6),
-            provider: $provider ?? new ProviderCapabilities('ollama'),
-        );
+        return new ContextAssembler(counter: new RatioCounter(charsPerToken: 3.6));
     }
 
     private function chunk(string $source, string $content): RetrievedChunk

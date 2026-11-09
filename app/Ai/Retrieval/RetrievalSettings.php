@@ -30,7 +30,7 @@ final readonly class RetrievalSettings
             k: (int) config('ai.retrieval.k'),
             rrfConstant: (int) config('ai.retrieval.rrf_constant'),
             candidatePool: (int) config('ai.retrieval.candidate_pool'),
-            dimensions: (int) config('ai.embed_dimensions'),
+            dimensions: (int) config('ai.providers.'.config('ai.embedding.provider').'.dimensions'),
         );
     }
 

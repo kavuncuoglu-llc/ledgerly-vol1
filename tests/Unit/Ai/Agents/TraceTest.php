@@ -3,8 +3,9 @@
 namespace Tests\Unit\Ai\Agents;
 
 use App\Ai\Agents\Trace;
-use App\Ai\Http\ChatResponse;
-use App\Ai\Http\Usage;
+use App\Ai\Contracts\ChatResponse;
+use App\Ai\Contracts\FinishReason;
+use App\Ai\Contracts\Usage;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -37,7 +38,7 @@ class TraceTest extends TestCase
     {
         $trace = new Trace('investigate', 'state-1');
 
-        $trace->decision(3, new ChatResponse('id', 'm', 'The invoice is overdue.', [], 'stop', new Usage(1, 1), []));
+        $trace->decision(3, new ChatResponse('id', 'm', 'The invoice is overdue.', [], FinishReason::Stop, new Usage(1, 1), []));
 
         $this->assertStringContainsString('r3 decision → done: The invoice is overdue.', $trace->lines()[0]);
     }
@@ -99,7 +100,7 @@ class TraceTest extends TestCase
                     ],
                 ],
             ],
-            finishReason: 'tool_calls',
+            finishReason: FinishReason::ToolCalls,
             usage: new Usage(1, 1),
             raw: [],
         );

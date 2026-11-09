@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Ai\Retrieval;
 
-use App\Ai\Http\AiHttpClient;
+use App\Ai\AiManager;
 use App\Ai\Retrieval\QueryRewriter;
 use App\Ai\Retrieval\RewriteMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -123,6 +123,6 @@ class QueryRewriterTest extends TestCase
 
     private function rewriter(RewriteMode $mode, ?string $model = null): QueryRewriter
     {
-        return new QueryRewriter(app(AiHttpClient::class), $mode, $model);
+        return new QueryRewriter(app(AiManager::class), $mode, $model);
     }
 }

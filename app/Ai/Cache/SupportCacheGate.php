@@ -2,6 +2,7 @@
 
 namespace App\Ai\Cache;
 
+use App\Ai\Contracts\FinishReason;
 use App\Ai\Exceptions\StructuredOutputFailed;
 use App\Ai\Exceptions\StructuredRefusal;
 use App\Ai\Prompts\SupportPrompt;
@@ -151,6 +152,6 @@ final class SupportCacheGate
             return false;
         }
 
-        return $result->response->finishReason === 'stop';
+        return $result->response->finishReason === FinishReason::Stop;
     }
 }

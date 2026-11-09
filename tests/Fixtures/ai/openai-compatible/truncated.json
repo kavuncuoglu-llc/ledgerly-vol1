@@ -1,0 +1,39 @@
+{
+    "provider": "local",
+    "driver": "openai-compatible",
+    "recorded_at": "2026-11-09T18:55:12+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/v1/chat/completions",
+        "headers": {
+            "Content-Length": "181",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "temperature": 0,
+            "top_p": 0.9,
+            "max_tokens": 5,
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Explain in detail how late fees work on a monthly invoice."
+                }
+            ],
+            "stream": false
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Date": "Mon, 09 Nov 2026 18:55:12 GMT",
+            "Content-Length": "353"
+        },
+        "body": "{\"id\":\"chatcmpl-319\",\"object\":\"chat.completion\",\"created\":1794250512,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Late fees on a monthly\"},\"finish_reason\":\"length\"}],\"usage\":{\"prompt_tokens\":23,\"prompt_tokens_details\":{\"cached_tokens\":2},\"completion_tokens\":5,\"total_tokens\":28}}\n"
+    }
+}

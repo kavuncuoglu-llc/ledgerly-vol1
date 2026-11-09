@@ -26,9 +26,6 @@ class InvoiceRead extends Command
             $invoice = $structured->extract(
                 class: InvoiceData::class,
                 messages: InvoicePrompt::messages($images->dataUrl((string) $this->argument('path'))),
-                options: [
-                    'model' => config('ai.vision_model'),
-                ],
                 feature: 'invoice.extract',
             );
         } catch (UnreadableInvoice|ModelRequestFailed|StructuredOutputFailed|StructuredRefusal $exception) {

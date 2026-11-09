@@ -2,7 +2,7 @@
 
 namespace App\Ai\Agents;
 
-use App\Ai\Http\ChatResponse;
+use App\Ai\Contracts\ChatResponse;
 use Illuminate\Support\Str;
 
 final class Trace

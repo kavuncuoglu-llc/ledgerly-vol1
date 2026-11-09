@@ -2,10 +2,11 @@
 
 namespace App\Ai\Bench;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Encoding\DataEncoder;
 use App\Ai\Encoding\Shape;
 use App\Ai\Exceptions\UnusableBenchmark;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Tokens\TokenCounter;
 use Illuminate\Support\Collection;
 
@@ -25,7 +26,7 @@ final class EncodingBenchmark
     public function __construct(
         private readonly DataEncoder $encoder,
         private readonly TokenCounter $tokens,
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
     ) {}
 
     public function encode(Collection $rows, Shape $shape, array $encodings): array
@@ -70,11 +71,11 @@ final class EncodingBenchmark
         $promptTokens = 0;
 
         foreach ($questions as $index => $question) {
-            $response = $this->client->chat(
+            $response = $this->ai->for(self::FEATURE)->chat(ChatRequest::fromOptions(
                 messages: BenchPrompt::messages($data, $question['question']),
                 options: $this->options($model),
                 feature: self::FEATURE,
-            );
+            ));
 
             $promptTokens += $response->usage->promptTokens;
 

@@ -2,11 +2,15 @@
 
 namespace App\Ai\Tools;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatModel;
+use App\Ai\Contracts\ChatRequest;
+use App\Ai\Contracts\ChatResponse;
+use App\Ai\Contracts\Stream\Delta;
+use App\Ai\Contracts\Stream\StreamEvent;
+use App\Ai\Contracts\Stream\ToolCallStarted;
 use App\Ai\Events\ToolCalled;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Http\CallDetails;
-use App\Ai\Http\ChatResponse;
-use App\Ai\Http\ToolCallStarted;
 use App\Ai\Streaming\StreamTaps;
 use App\Ai\Tokens\TokenCounter;
 use App\Models\PendingToolCall;
@@ -19,10 +23,11 @@ final class ToolRunner
     public const MAX_ROUNDS = 5;
 
     public function __construct(
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
         private readonly ToolRegistry $tools,
         private readonly ToolGate $gate,
         private readonly TokenCounter $counter,
+        private readonly int $escalateAfterRounds = 0,
     ) {}
 
     public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null, ?CallDetails $details = null, ?StreamTaps $taps = null): ToolRunResult
@@ -63,10 +68,22 @@ final class ToolRunner
     public function restrictedTo(array $toolNames): self
     {
         return new self(
-            client: $this->client,
+            ai: $this->ai,
             tools: $this->tools->only($toolNames),
             gate: $this->gate,
             counter: $this->counter,
+            escalateAfterRounds: $this->escalateAfterRounds,
+        );
+    }
+
+    public function escalatingAfter(int $rounds): self
+    {
+        return new self(
+            ai: $this->ai,
+            tools: $this->tools,
+            gate: $this->gate,
+            counter: $this->counter,
+            escalateAfterRounds: $rounds,
         );
     }
 
@@ -141,6 +158,7 @@ final class ToolRunner
 
         for ($round = $firstRound; $round <= self::MAX_ROUNDS; $round++) {
             $response = $this->complete(
+                $this->modelFor($feature, $round),
                 $messages,
                 $requestOptions,
                 $feature,
@@ -176,20 +194,26 @@ final class ToolRunner
         return new ToolRunResult($response, $messages, rounds: self::MAX_ROUNDS, hitCap: true, inputCount: $inputCount, modelCallIds: $modelCallIds);
     }
 
-    private function complete(array $messages, array $requestOptions, string $feature, ?string $promptVersion, ToolContext $ctx, ?CallDetails $details, ?StreamTaps $taps): ChatResponse
+    private function modelFor(string $feature, int $round): ChatModel
     {
-        if ($taps === null) {
-            return $this->client->chat(
-                $messages,
-                $requestOptions,
-                $feature,
-                $promptVersion,
-                conversationId: $ctx->conversationId,
-                details: $details,
-            );
+        if ($this->escalateAfterRounds === 0) {
+            return $this->ai->for($feature);
         }
 
-        $stream = $this->client->stream(
+        if ($round <= $this->escalateAfterRounds) {
+            return $this->ai->for($feature);
+        }
+
+        if (! $this->ai->hasEscalation($feature)) {
+            return $this->ai->for($feature);
+        }
+
+        return $this->ai->escalation($feature);
+    }
+
+    private function complete(ChatModel $model, array $messages, array $requestOptions, string $feature, ?string $promptVersion, ToolContext $ctx, ?CallDetails $details, ?StreamTaps $taps): ChatResponse
+    {
+        $request = ChatRequest::fromOptions(
             $messages,
             $requestOptions,
             $feature,
@@ -198,6 +222,12 @@ final class ToolRunner
             details: $details,
         );
 
+        if ($taps === null) {
+            return $model->chat($request);
+        }
+
+        $stream = $model->stream($request);
+
         foreach ($stream as $item) {
             $this->relay($item, $taps);
         }
@@ -205,7 +235,7 @@ final class ToolRunner
         return $stream->getReturn();
     }
 
-    private function relay(string|ToolCallStarted $item, StreamTaps $taps): void
+    private function relay(StreamEvent $item, StreamTaps $taps): void
     {
         if ($item instanceof ToolCallStarted) {
             ($taps->onToolStart)($item->name);
@@ -213,7 +243,9 @@ final class ToolRunner
             return;
         }
 
-        ($taps->onDelta)($item);
+        if ($item instanceof Delta) {
+            ($taps->onDelta)($item->text);
+        }
     }
 
     private function detailsForRound(?CallDetails $details, array $requestOptions, array $messages, int $inputCount): ?CallDetails

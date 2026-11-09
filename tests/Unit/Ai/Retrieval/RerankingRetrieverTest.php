@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Ai\Retrieval;
 
+use App\Ai\Contracts\Reranker;
 use App\Ai\Exceptions\SidecarFailed;
 use App\Ai\Retrieval\ConfigurableRetriever;
-use App\Ai\Retrieval\Reranker;
 use App\Ai\Retrieval\RerankingRetriever;
 use App\Ai\Retrieval\RetrievalMode;
 use App\Ai\Retrieval\RetrievalScope;

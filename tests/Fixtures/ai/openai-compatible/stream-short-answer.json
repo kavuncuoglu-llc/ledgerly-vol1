@@ -1,0 +1,46 @@
+{
+    "provider": "local",
+    "driver": "openai-compatible",
+    "recorded_at": "2026-11-09T18:55:15+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/v1/chat/completions",
+        "headers": {
+            "Content-Length": "295",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "temperature": 0,
+            "top_p": 0.9,
+            "max_tokens": 20,
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You classify support tickets. Reply with one lowercase word."
+                },
+                {
+                    "role": "user",
+                    "content": "I was charged twice for my March invoice."
+                }
+            ],
+            "stream": true,
+            "stream_options": {
+                "include_usage": true
+            }
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Date": "Mon, 09 Nov 2026 18:55:15 GMT",
+            "Connection": "close"
+        },
+        "body": "data: {\"id\":\"chatcmpl-690\",\"object\":\"chat.completion.chunk\",\"created\":1794250515,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"duplicate\"},\"finish_reason\":null}]}\n\ndata: {\"id\":\"chatcmpl-690\",\"object\":\"chat.completion.chunk\",\"created\":1794250515,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: {\"id\":\"chatcmpl-690\",\"object\":\"chat.completion.chunk\",\"created\":1794250515,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[],\"usage\":{\"prompt_tokens\":35,\"prompt_tokens_details\":{\"cached_tokens\":34},\"completion_tokens\":2,\"total_tokens\":37},\"timings\":{\"prompt_n\":35,\"prompt_ms\":64,\"prompt_per_token_ms\":1.8285714285714285,\"prompt_per_second\":546.875,\"predicted_n\":2,\"predicted_ms\":58,\"predicted_per_token_ms\":29,\"predicted_per_second\":34.48275862068966}}\n\ndata: [DONE]\n\n"
+    }
+}

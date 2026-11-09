@@ -2,7 +2,7 @@
 
 namespace App\Ai\Tools;
 
-use App\Ai\Http\ChatResponse;
+use App\Ai\Contracts\ChatResponse;
 
 final readonly class ToolRunResult
 {

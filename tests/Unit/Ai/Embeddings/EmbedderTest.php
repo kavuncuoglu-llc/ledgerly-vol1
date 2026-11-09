@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Ai\Embeddings;
 
+use App\Ai\AiManager;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\ModelRequestFailed;
-use App\Ai\Http\AiHttpClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
@@ -40,7 +40,7 @@ class EmbedderTest extends TestCase
 
     public function test_embed_posts_the_configured_model_to_the_embeddings_endpoint(): void
     {
-        config()->set('ai.base_url', 'http://model.test/v1');
+        config()->set('ai.providers.local-embed.base_url', 'http://model.test/v1');
         Http::fake(['*' => Http::response($this->embeddingBody([0.1, 0.2, 0.3]))]);
 
         $this->embedder(dimensions: 3, model: 'other-embedder')->query('hello');
@@ -88,11 +88,7 @@ class EmbedderTest extends TestCase
 
     private function embedder(int $dimensions, string $model = 'nomic-embed-text'): Embedder
     {
-        return new Embedder(
-            client: new AiHttpClient(config('ai')),
-            model: $model,
-            dimensions: $dimensions,
-        );
+        return new Embedder(app(AiManager::class)->embedUsing($model, $dimensions));
     }
 
     private function embeddingBody(array $vector): array

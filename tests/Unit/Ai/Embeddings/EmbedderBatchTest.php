@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Ai\Embeddings;
 
+use App\Ai\AiManager;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\EmbeddingFailed;
-use App\Ai\Http\AiHttpClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
@@ -87,8 +87,8 @@ class EmbedderBatchTest extends TestCase
 
     private function embedder(): Embedder
     {
-        config()->set('ai.base_url', 'http://model.test/v1');
+        config()->set('ai.providers.local-embed.base_url', 'http://model.test/v1');
 
-        return new Embedder(new AiHttpClient(config('ai')), 'nomic-embed-text', 2);
+        return new Embedder(app(AiManager::class)->embedUsing('nomic-embed-text', 2));
     }
 }

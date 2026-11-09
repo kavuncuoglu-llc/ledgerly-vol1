@@ -2,7 +2,7 @@
 
 namespace App\Ai\Agents;
 
-use App\Ai\Http\Usage;
+use App\Ai\Contracts\Usage;
 use App\Ai\Tools\ToolKind;
 use App\Ai\Tools\ToolResult;
 

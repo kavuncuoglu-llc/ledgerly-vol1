@@ -2,19 +2,97 @@
 
 return [
 
-    'provider' => env('AI_PROVIDER', 'ollama'),
+    'default' => env('AI_DEFAULT_PROVIDER', 'local'),
 
-    'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+    'providers' => [
+        'local' => [
+            'driver' => env('AI_DRIVER', 'openai-compatible'),
+            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'api_key' => env('AI_API_KEY', 'ollama'),
+            'model' => env('AI_MODEL', 'llama3.1:8b'),
+            'cache_breakpoints' => env('AI_CACHE_BREAKPOINTS') === null
+                ? null
+                : filter_var(env('AI_CACHE_BREAKPOINTS'), FILTER_VALIDATE_BOOLEAN),
+        ],
+        'local-embed' => [
+            'driver' => 'openai-compatible',
+            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'api_key' => env('AI_API_KEY', 'ollama'),
+            'model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
+            'dimensions' => (int) env('AI_EMBED_DIMENSIONS', 768),
+            'prefixes' => [
+                'query' => 'search_query: ',
+                'document' => 'search_document: ',
+            ],
+        ],
+        'vision' => [
+            'driver' => 'openai-compatible',
+            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'api_key' => env('AI_API_KEY', 'ollama'),
+            'model' => env('AI_VISION_MODEL', 'llama3.2-vision:11b'),
+            'vision' => true,
+        ],
+        'frontier' => [
+            'driver' => env('FRONTIER_DRIVER', 'anthropic'),
+            'base_url' => env('FRONTIER_URL') ?: null,
+            'api_key' => env('FRONTIER_KEY') ?: null,
+            'model' => env('FRONTIER_MODEL') ?: null,
+            'timeout' => (int) env('FRONTIER_TIMEOUT', 60),
+            'max_tokens' => (int) env('FRONTIER_MAX_TOKENS', 1024),
+            'vision' => true,
+            'cache_breakpoints' => env('FRONTIER_CACHE_BREAKPOINTS') === null
+                ? null
+                : filter_var(env('FRONTIER_CACHE_BREAKPOINTS'), FILTER_VALIDATE_BOOLEAN),
+        ],
+        'rerank' => [
+            'driver' => 'sidecar',
+            'model' => 'bge-reranker-base',
+        ],
+        'rerank-lexical' => [
+            'driver' => 'lexical',
+        ],
+        'fake' => [
+            'driver' => 'fake',
+        ],
+    ],
 
-    'api_key' => env('AI_API_KEY', 'ollama'),
+    'features' => [
+        'ticket.classify' => [
+            'provider' => 'local',
+            'profile' => 'deterministic',
+        ],
+        'ticket.extract' => [
+            'provider' => 'local',
+            'profile' => 'deterministic',
+        ],
+        'support.reply' => [
+            'provider' => 'local',
+            'profile' => 'assistant',
+            'escalate_to' => 'frontier',
+        ],
+        'invoice.extract' => [
+            'provider' => 'vision',
+            'profile' => 'deterministic',
+        ],
+        'conversation.summarize' => [
+            'provider' => 'local',
+            'profile' => 'deterministic',
+        ],
+    ],
 
-    'model' => env('AI_MODEL', 'llama3.1:8b'),
+    'embedding' => [
+        'provider' => 'local-embed',
+        'batch_size' => (int) env('AI_EMBED_BATCH', 48),
+    ],
 
-    'vision_model' => env('AI_VISION_MODEL', 'llama3.2-vision:11b'),
+    'reranking' => [
+        'provider' => 'rerank',
+    ],
 
-    'embed_model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
-
-    'embed_dimensions' => (int) env('AI_EMBED_DIMENSIONS', 768),
+    'debug' => [
+        'features' => array_filter(explode(',', (string) env('AI_DEBUG_FEATURES', ''))),
+        'conversations' => array_map('intval', array_filter(explode(',', (string) env('AI_DEBUG_CONVERSATIONS', '')))),
+    ],
 
     'connect_timeout' => env('AI_CONNECT_TIMEOUT', 2),
 
@@ -66,7 +144,6 @@ return [
     ],
 
     'prompt_cache' => [
-        'breakpoints' => env('AI_CACHE_BREAKPOINTS'),
         'prefix_memory_minutes' => 60,
     ],
 
@@ -115,6 +192,7 @@ return [
         'summary_trigger_tokens' => env('AI_SUMMARY_TRIGGER_TOKENS') ?: null,
         'summary_max_tokens' => 400,
         'summary_input_tokens' => 4000,
+        'summary_context_window' => env('AI_SUMMARY_CONTEXT_WINDOW') ?: null,
         'message_overhead_tokens' => 4,
     ],
 
@@ -197,10 +275,6 @@ return [
 
     'horizon_viewers' => array_filter(explode(',', (string) env('AI_HORIZON_VIEWERS', ''))),
 
-    'embedding' => [
-        'batch_size' => (int) env('AI_EMBED_BATCH', 48),
-    ],
-
     'mcp_servers' => [],
 
     'tool_allow_lists' => [],
@@ -208,7 +282,7 @@ return [
     'mcp_stdio_user_email' => env('MCP_STDIO_USER_EMAIL'),
 
     'rates' => [
-        'ollama' => [
+        'local' => [
             'llama3.1:8b' => [
                 'in' => 0,
                 'out' => 0,

@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
+use App\Ai\Contracts\Stream\Delta;
+use App\Ai\Contracts\Stream\StreamEvent;
+use App\Ai\Contracts\Stream\ToolCallStarted;
 use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\StreamTruncated;
 use App\Ai\Exceptions\UnknownSamplingProfile;
-use App\Ai\Http\AiHttpClient;
-use App\Ai\Http\ToolCallStarted;
 use Generator;
 use Illuminate\Console\Command;
 
@@ -18,22 +21,22 @@ class AiStream extends Command
 
     protected $description = 'Stream a model reply to the terminal as the tokens arrive';
 
-    public function handle(AiHttpClient $client): int
+    public function handle(AiManager $ai): int
     {
-        $stream = $client->stream(
-            messages: [
-                [
-                    'role' => 'user',
-                    'content' => (string) $this->argument('prompt'),
-                ],
-            ],
-            options: [
-                'profile' => (string) $this->option('profile'),
-            ],
-            feature: 'cli.stream',
-        );
-
         try {
+            $stream = $ai->for('cli.stream')->stream(ChatRequest::fromOptions(
+                messages: [
+                    [
+                        'role' => 'user',
+                        'content' => (string) $this->argument('prompt'),
+                    ],
+                ],
+                options: [
+                    'profile' => (string) $this->option('profile'),
+                ],
+                feature: 'cli.stream',
+            ));
+
             return $this->printStream($stream);
         } catch (StreamTruncated) {
             $this->newLine();
@@ -53,26 +56,28 @@ class AiStream extends Command
 
     private function printStream(Generator $stream): int
     {
-        foreach ($stream as $delta) {
-            $this->printDelta($delta);
+        foreach ($stream as $event) {
+            $this->printEvent($event);
         }
 
         $final = $stream->getReturn();
 
         $this->newLine();
-        $this->line("[{$final->finishReason} · in {$final->usage->promptTokens} out {$final->usage->completionTokens}]");
+        $this->line("[{$final->finishReason->value} · in {$final->usage->promptTokens} out {$final->usage->completionTokens}]");
 
         return Command::SUCCESS;
     }
 
-    private function printDelta(string|ToolCallStarted $delta): void
+    private function printEvent(StreamEvent $event): void
     {
-        if ($delta instanceof ToolCallStarted) {
-            $this->line("[calling {$delta->name}...]");
+        if ($event instanceof ToolCallStarted) {
+            $this->line("[calling {$event->name}...]");
 
             return;
         }
 
-        $this->output->write($delta);
+        if ($event instanceof Delta) {
+            $this->output->write($event->text);
+        }
     }
 }

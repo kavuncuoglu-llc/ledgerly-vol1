@@ -2,6 +2,7 @@
 
 namespace App\Ai\Retrieval;
 
+use App\Ai\Contracts\Reranker;
 use App\Ai\Exceptions\SidecarFailed;
 use App\Ai\Sidecar\SidecarClient;
 

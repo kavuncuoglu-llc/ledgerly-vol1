@@ -2,9 +2,11 @@
 
 namespace App\Ai\Http;
 
+use App\Ai\Exceptions\ModelRequestFailed;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Sleep;
 use Throwable;
 
 final class RetryPolicy
@@ -17,20 +19,42 @@ final class RetryPolicy
 
     private const MAX_JITTER_MILLISECONDS = 250;
 
-    public function apply(PendingRequest $request): PendingRequest
+    public function run(Closure $attempt): mixed
     {
-        return $request->retry(
-            times: self::ATTEMPTS,
-            sleepMilliseconds: fn (int $attempt, Throwable $exception): int => $this->delayMilliseconds($attempt, $exception),
-            when: fn (Throwable $exception): bool => $this->isRetryable($exception),
-            throw: true,
-        );
+        $number = 1;
+
+        while (true) {
+            try {
+                return $attempt();
+            } catch (Throwable $exception) {
+                $this->pauseBeforeRetry($number, $exception);
+
+                $number++;
+            }
+        }
+    }
+
+    public function pauseBeforeRetry(int $attempt, Throwable $exception): void
+    {
+        if ($attempt >= self::ATTEMPTS) {
+            throw $exception;
+        }
+
+        if (! $this->isRetryable($exception)) {
+            throw $exception;
+        }
+
+        Sleep::usleep($this->delayMilliseconds($attempt, $exception) * 1000);
     }
 
     public function isRetryable(Throwable $exception): bool
     {
         if ($exception instanceof ConnectionException) {
             return true;
+        }
+
+        if ($exception instanceof ModelRequestFailed) {
+            return $exception->isRetryable();
         }
 
         if (! $exception instanceof RequestException) {
@@ -53,6 +77,10 @@ final class RetryPolicy
 
     private function retryAfterSeconds(?Throwable $exception): ?int
     {
+        if ($exception instanceof ModelRequestFailed) {
+            return $exception->retryAfterSeconds;
+        }
+
         if (! $exception instanceof RequestException) {
             return null;
         }

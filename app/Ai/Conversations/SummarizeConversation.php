@@ -2,8 +2,12 @@
 
 namespace App\Ai\Conversations;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\Capabilities\SupportsContextWindowOverride;
+use App\Ai\Contracts\ChatModel;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Exceptions\SummarizationFailed;
-use App\Ai\Http\AiHttpClient;
+use App\Ai\ModelCapabilities;
 use App\Ai\Prompts\SummarizePrompt;
 use App\Models\Conversation;
 use App\Support\Tenancy\CurrentTenant;
@@ -34,15 +38,15 @@ final class SummarizeConversation implements ShouldQueue
         return [10, 60];
     }
 
-    public function handle(AiHttpClient $client, ConversationStore $store, CurrentTenant $tenant): void
+    public function handle(AiManager $ai, ConversationStore $store, CurrentTenant $tenant): void
     {
         $tenant->runAs(
             $this->conversation->tenant_id,
-            fn () => $this->compactThenSummarize($client, $store),
+            fn () => $this->compactThenSummarize($ai, $store),
         );
     }
 
-    private function compactThenSummarize(AiHttpClient $client, ConversationStore $store): void
+    private function compactThenSummarize(AiManager $ai, ConversationStore $store): void
     {
         $conversation = $this->conversation->fresh();
 
@@ -66,7 +70,7 @@ final class SummarizeConversation implements ShouldQueue
             return;
         }
 
-        $this->storeSummary($client, $conversation, $toSummarize);
+        $this->storeSummary($ai, $conversation, $toSummarize);
     }
 
     private function shouldSummarize(ConversationStore $store, Conversation $conversation): bool
@@ -78,9 +82,9 @@ final class SummarizeConversation implements ShouldQueue
         return $store->needsSummary($conversation, $this->allowance);
     }
 
-    private function storeSummary(AiHttpClient $client, Conversation $conversation, Collection $toSummarize): void
+    private function storeSummary(AiManager $ai, Conversation $conversation, Collection $toSummarize): void
     {
-        $response = $client->chat(
+        $response = $this->modelFor($ai)->chat(ChatRequest::fromOptions(
             SummarizePrompt::messages(existing: $conversation->summary, exchanges: $toSummarize),
             [
                 'profile' => 'deterministic',
@@ -89,7 +93,7 @@ final class SummarizeConversation implements ShouldQueue
             'conversation.summarize',
             SummarizePrompt::VERSION,
             conversationId: $conversation->id,
-        );
+        ));
 
         $summary = trim((string) $response->content);
 
@@ -101,6 +105,23 @@ final class SummarizeConversation implements ShouldQueue
             'summary' => $summary,
             'summary_through_seq' => $toSummarize->last()->lastSeq(),
         ]);
+    }
+
+    private function modelFor(AiManager $ai): ChatModel
+    {
+        $model = $ai->for('conversation.summarize');
+
+        $window = config('ai.conversation.summary_context_window');
+
+        if ($window === null) {
+            return $model;
+        }
+
+        if (! ModelCapabilities::has($model, SupportsContextWindowOverride::class)) {
+            return $model;
+        }
+
+        return ModelCapabilities::withContextWindow($model, (int) $window);
     }
 
     private function withinInputCap(Collection $exchanges): Collection

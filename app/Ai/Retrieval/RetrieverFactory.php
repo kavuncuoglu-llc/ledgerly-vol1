@@ -2,17 +2,16 @@
 
 namespace App\Ai\Retrieval;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\Reranker;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\UnsupportedReranker;
-use App\Ai\Http\AiHttpClient;
-use App\Ai\Sidecar\SidecarClient;
 
 final class RetrieverFactory
 {
     public function __construct(
         private readonly Embedder $embedder,
-        private readonly AiHttpClient $client,
-        private readonly SidecarClient $sidecar,
+        private readonly AiManager $ai,
     ) {}
 
     public function make(
@@ -38,8 +37,8 @@ final class RetrieverFactory
     {
         return match ($driver) {
             'none' => null,
-            'sidecar' => new SidecarReranker($this->sidecar),
-            'lexical' => new LexicalReranker,
+            'sidecar' => $this->ai->reranker(),
+            'lexical' => $this->ai->reranker('rerank-lexical'),
             default => throw new UnsupportedReranker($driver),
         };
     }
@@ -52,7 +51,7 @@ final class RetrieverFactory
 
         return new QueryRewritingRetriever(
             inner: $retriever,
-            rewriter: new QueryRewriter($this->client, $mode, config('ai.retrieval.rewrite_model')),
+            rewriter: new QueryRewriter($this->ai, $mode, config('ai.retrieval.rewrite_model')),
         );
     }
 

@@ -1,0 +1,23 @@
+{
+    "messages": [
+        {"role": "system", "content": "You are a billing assistant. Use the tool to look up invoices."},
+        {"role": "user", "content": "What is the status of invoice 4471?"}
+    ],
+    "options": {"temperature": 0, "max_tokens": 200},
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "lookup_invoice",
+                "description": "Look up one invoice by its number.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "invoice_number": {"type": "string", "description": "The invoice number, digits only."}
+                    },
+                    "required": ["invoice_number"]
+                }
+            }
+        }
+    ]
+}

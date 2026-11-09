@@ -2,10 +2,11 @@
 
 namespace App\Ai\Retrieval;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\EmbedKind;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\InvalidIndexTable;
-use App\Ai\Http\AiHttpClient;
 use App\Casts\Vector;
 use Closure;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ final class CandidateIndex
 {
     private const COPIED_COLUMNS = 'id, source, position, heading, content, tokens, created_at, updated_at, title, heading_path, tags, help_version, source_modified_at, chunk_key, parent_id, kind, context_header';
 
-    public function __construct(private readonly AiHttpClient $client) {}
+    public function __construct(private readonly AiManager $ai) {}
 
     public static function assertBenchTable(string $table): void
     {
@@ -25,16 +26,13 @@ final class CandidateIndex
 
     public function dimensionsOf(string $model): int
     {
-        $vector = $this->client->post('/embeddings', [
-            'model' => $model,
-            'input' => 'search_query: dimensions probe',
-        ])->json('data.0.embedding');
+        $vectors = $this->ai->embedUsing($model, dimensions: 0)->embed(['dimensions probe'], EmbedKind::Query);
 
-        if (! is_array($vector)) {
+        if (! isset($vectors[0])) {
             throw EmbeddingFailed::malformed();
         }
 
-        return count($vector);
+        return count($vectors[0]);
     }
 
     public function build(string $table, Embedder $embedder, int $dimensions, Closure $afterEach): int

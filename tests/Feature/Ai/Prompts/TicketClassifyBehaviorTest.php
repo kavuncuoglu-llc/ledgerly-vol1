@@ -2,8 +2,9 @@
 
 namespace Tests\Feature\Ai\Prompts;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Exceptions\EnforcementNotApplied;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Prompts\TicketClassifyPrompt;
 use App\Ai\Support\ClassifyTicket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,13 +42,13 @@ class TicketClassifyBehaviorTest extends TestCase
     {
         $this->fakeScriptedModel();
 
-        $output = app(AiHttpClient::class)->chat(
+        $output = app(AiManager::class)->chat()->chat(ChatRequest::fromOptions(
             messages: TicketClassifyPrompt::messages($message),
             options: [
                 'profile' => 'deterministic',
                 'max_tokens' => 4,
             ],
-        )->content;
+        ))->content;
 
         $this->assertContains(json_decode($output, true)['category'], TicketClassifyPrompt::LABELS);
     }

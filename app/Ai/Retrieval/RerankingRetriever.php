@@ -2,6 +2,7 @@
 
 namespace App\Ai\Retrieval;
 
+use App\Ai\Contracts\Reranker;
 use App\Ai\Exceptions\SidecarFailed;
 
 final class RerankingRetriever implements ConfigurableRetriever

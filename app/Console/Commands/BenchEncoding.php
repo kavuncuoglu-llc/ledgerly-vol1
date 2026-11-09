@@ -32,7 +32,7 @@ class BenchEncoding extends Command
     {
         $date = Carbon::now()->toDateString();
 
-        $model = (string) ($this->option('model') ?: config('ai.model'));
+        $model = (string) ($this->option('model') ?: config('ai.providers.local.model'));
 
         try {
             $fixture = BenchFixture::fromFile($this->absolutePath((string) $this->option('fixture')));

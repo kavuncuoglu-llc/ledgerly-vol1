@@ -2,10 +2,12 @@
 
 namespace App\Ai\Structured;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\Capability;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Exceptions\EnforcementNotApplied;
 use App\Ai\Exceptions\StructuredOutputFailed;
 use App\Ai\Exceptions\StructuredRefusal;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Schema\SchemaBuilder;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Validator as ValidationValidator;
@@ -14,7 +16,7 @@ use JsonException;
 final class StructuredClient
 {
     public function __construct(
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
         private readonly SchemaBuilder $schemas,
     ) {}
 
@@ -27,12 +29,14 @@ final class StructuredClient
         string $sourceText = '',
         ?int $conversationId = null,
     ): object {
-        $options = $this->requestOptions($class, $options);
+        $model = $this->ai->for($feature);
+
+        $options = $this->requestOptions($class, $options, $model->supports(Capability::StructuredOutput));
 
         $attempts = [];
 
         foreach ([false, true] as $repaired) {
-            $response = $this->client->chat($messages, $options, $feature, $promptVersion, repaired: $repaired, conversationId: $conversationId);
+            $response = $model->chat(ChatRequest::fromOptions($messages, $options, $feature, $promptVersion, repaired: $repaired, conversationId: $conversationId));
 
             $data = $this->decode($class, (string) $response->content);
 
@@ -55,10 +59,18 @@ final class StructuredClient
         throw new StructuredOutputFailed($class, $attempts, $validator->errors());
     }
 
-    private function requestOptions(string $class, array $options): array
+    private function requestOptions(string $class, array $options, bool $nativeEnforcement): array
     {
-        return [
+        $options = [
             'profile' => 'deterministic',
+            ...$options,
+        ];
+
+        if (! $nativeEnforcement) {
+            return $options;
+        }
+
+        return [
             ...$options,
             'response_format' => [
                 'type' => 'json_schema',

@@ -2,6 +2,7 @@
 
 namespace App\Ai\Replies;
 
+use App\Ai\AiManager;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Events\ReplyCompleted;
 use App\Ai\Events\ReplyFailed;
@@ -165,10 +166,12 @@ final class ReplyLifecycle
 
     private function recordFailedCall(Reply $reply): void
     {
+        $provider = app(AiManager::class)->providerNameFor('support.reply');
+
         event(new ModelCalled(
             feature: 'support.reply',
-            provider: config('ai.provider'),
-            model: config('ai.model'),
+            provider: $provider,
+            model: (string) config("ai.providers.{$provider}.model"),
             usage: [
                 'prompt_tokens' => 0,
                 'completion_tokens' => 0,

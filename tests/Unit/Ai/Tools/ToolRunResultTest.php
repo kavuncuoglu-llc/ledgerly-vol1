@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\Ai\Tools;
 
-use App\Ai\Http\ChatResponse;
-use App\Ai\Http\Usage;
+use App\Ai\Contracts\ChatResponse;
+use App\Ai\Contracts\FinishReason;
+use App\Ai\Contracts\Usage;
 use App\Ai\Tools\ToolResult;
 use App\Ai\Tools\ToolRunResult;
 use PHPUnit\Framework\TestCase;
@@ -81,7 +82,7 @@ class ToolRunResultTest extends TestCase
             model: 'm',
             content: $content,
             toolCalls: $toolCalls,
-            finishReason: 'stop',
+            finishReason: FinishReason::Stop,
             usage: new Usage(1, 1),
             raw: [],
         );

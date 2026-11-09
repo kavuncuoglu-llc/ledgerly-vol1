@@ -1,0 +1,64 @@
+{
+    "provider": "local",
+    "driver": "openai-compatible",
+    "recorded_at": "2026-11-09T18:55:15+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/v1/chat/completions",
+        "headers": {
+            "Content-Length": "531",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "temperature": 0,
+            "top_p": 0.9,
+            "max_tokens": 200,
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a billing assistant. Use the tool to look up invoices."
+                },
+                {
+                    "role": "user",
+                    "content": "What is the status of invoice 4471?"
+                }
+            ],
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "lookup_invoice",
+                        "description": "Look up one invoice by its number.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "invoice_number": {
+                                    "type": "string",
+                                    "description": "The invoice number, digits only."
+                                }
+                            },
+                            "required": [
+                                "invoice_number"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "stream": false
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Date": "Mon, 09 Nov 2026 18:55:15 GMT",
+            "Content-Length": "485"
+        },
+        "body": "{\"id\":\"chatcmpl-116\",\"object\":\"chat.completion\",\"created\":1794250515,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_aqzhss6m\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"lookup_invoice\",\"arguments\":\"{\\\"invoice_number\\\":\\\"4471\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":188,\"prompt_tokens_details\":{\"cached_tokens\":2},\"completion_tokens\":19,\"total_tokens\":207}}\n"
+    }
+}

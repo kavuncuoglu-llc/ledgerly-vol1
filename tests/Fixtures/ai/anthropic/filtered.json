@@ -1,0 +1,12 @@
+{
+    "provider": "anthropic",
+    "driver": "anthropic",
+    "source": "Hand-written from the provider's published API shape. Not recorded: no credentials for this provider were available.",
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"id\":\"msg_01ABC\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-sonnet-4-5\",\"stop_sequence\":null,\"content\":[{\"type\":\"text\",\"text\":\"I cannot help with that.\"}],\"stop_reason\":\"refusal\",\"usage\":{\"input_tokens\":20,\"output_tokens\":6}}"
+    }
+}

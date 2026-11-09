@@ -2,9 +2,8 @@
 
 namespace Tests\Unit\Ai\Retrieval;
 
-use App\Ai\Context\ProviderCapabilities;
+use App\Ai\AiManager;
 use App\Ai\Exceptions\ContextGenerationFailed;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Retrieval\ContextualizeChunks;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -42,10 +41,10 @@ class ContextualizeChunksTest extends TestCase
 
     public function test_context_for_marks_the_article_as_a_cache_breakpoint_on_providers_that_support_it(): void
     {
+        config()->set('ai.providers.local.cache_breakpoints', true);
         Http::fake(['*' => Http::response($this->chatReply('Context.'))]);
-        $capabilities = new ProviderCapabilities('anthropic');
 
-        (new ContextualizeChunks(app(AiHttpClient::class), $capabilities))->contextFor('ARTICLE', 'CHUNK');
+        $this->contextualizer()->contextFor('ARTICLE', 'CHUNK');
 
         Http::assertSent(fn (Request $request): bool => $request['messages'][0]['cache_control'] === ['type' => 'ephemeral']);
     }
@@ -54,7 +53,7 @@ class ContextualizeChunksTest extends TestCase
     {
         Http::fake(['*' => Http::response($this->chatReply('Context.'))]);
 
-        (new ContextualizeChunks(app(AiHttpClient::class), new ProviderCapabilities('ollama'), 'llama3.2:3b'))->contextFor('A', 'C');
+        (new ContextualizeChunks(app(AiManager::class), 'llama3.2:3b'))->contextFor('A', 'C');
 
         Http::assertSent(fn (Request $request): bool => $request['model'] === 'llama3.2:3b');
     }
@@ -70,6 +69,6 @@ class ContextualizeChunksTest extends TestCase
 
     private function contextualizer(): ContextualizeChunks
     {
-        return new ContextualizeChunks(app(AiHttpClient::class), new ProviderCapabilities('ollama'));
+        return new ContextualizeChunks(app(AiManager::class));
     }
 }

@@ -2,28 +2,29 @@
 
 namespace App\Ai\Retrieval;
 
-use App\Ai\Context\ProviderCapabilities;
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Exceptions\ContextGenerationFailed;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Prompts\ContextualizePrompt;
 use Illuminate\Support\Str;
 
 final class ContextualizeChunks
 {
     public function __construct(
-        private readonly AiHttpClient $client,
-        private readonly ProviderCapabilities $capabilities,
+        private readonly AiManager $ai,
         private readonly ?string $model = null,
     ) {}
 
     public function contextFor(string $articleBody, string $chunkText): string
     {
-        $reply = $this->client->chat(
+        $request = ChatRequest::fromOptions(
             messages: $this->messages($articleBody, $chunkText),
-            options: $this->options(),
+            options: [...$this->options(), 'cache_breakpoints_after' => [0]],
             feature: 'retrieval.context',
             promptVersion: ContextualizePrompt::VERSION,
         );
+
+        $reply = $this->ai->for('retrieval.context')->chat($request);
 
         $context = trim((string) preg_replace('/\s+/u', ' ', (string) $reply->content));
 
@@ -47,20 +48,10 @@ final class ContextualizeChunks
 
     private function documentMessage(string $articleBody): array
     {
-        $message = [
+        return [
             'role' => 'system',
             'content' => ContextualizePrompt::document($articleBody),
         ];
-
-        if (! $this->capabilities->supportsCacheBreakpoints()) {
-            return $message;
-        }
-
-        $message['cache_control'] = [
-            'type' => 'ephemeral',
-        ];
-
-        return $message;
     }
 
     private function options(): array

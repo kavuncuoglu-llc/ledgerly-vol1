@@ -1,0 +1,6 @@
+{
+    "messages": [
+        {"role": "user", "content": "Explain in detail how late fees work on a monthly invoice."}
+    ],
+    "options": {"temperature": 0, "max_tokens": 5}
+}

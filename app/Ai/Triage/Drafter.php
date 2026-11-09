@@ -2,9 +2,10 @@
 
 namespace App\Ai\Triage;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\ModelRequestFailed;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Prompts\DraftReplyPrompt;
 use App\Ai\Retrieval\RetrievalScope;
 use App\Ai\Retrieval\Retriever;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 final class Drafter
 {
     public function __construct(
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
         private readonly Retriever $retriever,
     ) {}
 
@@ -23,7 +24,7 @@ final class Drafter
     {
         $chunks = $this->passagesFor($ticket, $area);
 
-        $response = $this->client->chat(
+        $response = $this->ai->for('ticket.draft')->chat(ChatRequest::fromOptions(
             messages: DraftReplyPrompt::messages($ticket, $category, $findings, $chunks),
             options: [
                 'profile' => 'grounded',
@@ -31,7 +32,7 @@ final class Drafter
             ],
             feature: 'ticket.draft',
             promptVersion: DraftReplyPrompt::VERSION,
-        );
+        ));
 
         return trim((string) $response->content);
     }

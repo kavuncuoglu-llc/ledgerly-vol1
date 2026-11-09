@@ -2,6 +2,8 @@
 
 namespace App\Ai\Retrieval;
 
+use App\Ai\Contracts\Reranker;
+
 final class LexicalReranker implements Reranker
 {
     private const MIN_TERM_LENGTH = 3;

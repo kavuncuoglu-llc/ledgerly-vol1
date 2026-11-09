@@ -1,0 +1,69 @@
+{
+    "provider": "local",
+    "driver": "openai-compatible",
+    "recorded_at": "2026-11-09T18:55:18+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/v1/chat/completions",
+        "headers": {
+            "Content-Length": "513",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "temperature": 0,
+            "top_p": 0.9,
+            "max_tokens": 60,
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Classify the support ticket into one category."
+                },
+                {
+                    "role": "user",
+                    "content": "I was charged twice for my March invoice."
+                }
+            ],
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "ticket_category",
+                    "strict": true,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "billing",
+                                    "account",
+                                    "bug",
+                                    "howto",
+                                    "other"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "category"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "stream": false
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json",
+            "Date": "Mon, 09 Nov 2026 18:55:18 GMT",
+            "Content-Length": "356"
+        },
+        "body": "{\"id\":\"chatcmpl-492\",\"object\":\"chat.completion\",\"created\":1794250518,\"model\":\"llama3.1:8b\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"category\\\": \\\"billing\\\"}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":33,\"prompt_tokens_details\":{\"cached_tokens\":5},\"completion_tokens\":7,\"total_tokens\":40}}\n"
+    }
+}

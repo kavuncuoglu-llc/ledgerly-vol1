@@ -2,9 +2,10 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
+use App\Ai\Contracts\ChatResponse;
 use App\Ai\Exceptions\AgentRunNotResumable;
-use App\Ai\Http\AiHttpClient;
-use App\Ai\Http\ChatResponse;
 use App\Ai\Tools\Tool;
 use App\Ai\Tools\ToolContext;
 use App\Ai\Tools\ToolRunner;
@@ -14,7 +15,7 @@ use Throwable;
 final class AgentRunner
 {
     public function __construct(
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
         private readonly ToolRunner $tools,
     ) {}
 
@@ -111,7 +112,7 @@ final class AgentRunner
 
     private function decide(Agent $agent, AgentState $state): ChatResponse
     {
-        return $this->client->chat(
+        return $this->ai->for($agent->feature())->chat(ChatRequest::fromOptions(
             messages: $agent->prompt($state),
             options: [
                 ...$agent->options(),
@@ -119,7 +120,7 @@ final class AgentRunner
             ],
             feature: $agent->feature(),
             promptVersion: $agent->promptVersion(),
-        );
+        ));
     }
 
     private function actOn(Agent $agent, ChatResponse $response, AgentState $state, AgentBudget $budget, Trace $trace, ToolContext $ctx, int $round): AgentState

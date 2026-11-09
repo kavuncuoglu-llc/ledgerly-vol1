@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Ai\Retrieval;
 
-use App\Ai\Http\AiHttpClient;
+use App\Ai\AiManager;
 use App\Ai\Retrieval\ConfigurableRetriever;
 use App\Ai\Retrieval\QueryRewriter;
 use App\Ai\Retrieval\QueryRewritingRetriever;
@@ -64,7 +64,7 @@ class QueryRewritingRetrieverTest extends TestCase
 
     private function retriever(MapRetriever $inner): QueryRewritingRetriever
     {
-        return new QueryRewritingRetriever($inner, new QueryRewriter(app(AiHttpClient::class), RewriteMode::Rewrite));
+        return new QueryRewritingRetriever($inner, new QueryRewriter(app(AiManager::class), RewriteMode::Rewrite));
     }
 
     private function chunk(int $id): RetrievedChunk

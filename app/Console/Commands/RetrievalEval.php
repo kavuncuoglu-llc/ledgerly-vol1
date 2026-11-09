@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Ai\AiManager;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Exceptions\EmbeddingFailed;
 use App\Ai\Exceptions\InvalidIndexTable;
@@ -9,7 +10,6 @@ use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\SidecarFailed;
 use App\Ai\Exceptions\UnreadableGoldenSet;
 use App\Ai\Exceptions\UnsupportedReranker;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Retrieval\CandidateIndex;
 use App\Ai\Retrieval\EvalReport;
 use App\Ai\Retrieval\GoldenSet;
@@ -40,7 +40,7 @@ class RetrievalEval extends Command
 
     protected $description = 'Score retrieval alone against the golden set: recall, precision, MRR and the off-topic questions';
 
-    public function handle(RetrieverFactory $factory, RetrievalEvaluator $evaluator, Embedder $embedder, CandidateIndex $candidateIndex, AiHttpClient $client): int
+    public function handle(RetrieverFactory $factory, RetrievalEvaluator $evaluator, Embedder $embedder, CandidateIndex $candidateIndex, AiManager $ai): int
     {
         try {
             $questions = GoldenSet::fromFile($this->goldenPath());
@@ -65,7 +65,7 @@ class RetrievalEval extends Command
         }
 
         try {
-            return $this->evaluateWith($factory, $evaluator, $embedder, $candidateIndex, $client, $questions, $settings, $rewrite, $reranker);
+            return $this->evaluateWith($factory, $evaluator, $embedder, $candidateIndex, $ai, $questions, $settings, $rewrite, $reranker);
         } catch (ModelRequestFailed|EmbeddingFailed|SidecarFailed|InvalidIndexTable $exception) {
             $this->error($exception->getMessage());
 
@@ -73,10 +73,10 @@ class RetrievalEval extends Command
         }
     }
 
-    private function evaluateWith(RetrieverFactory $factory, RetrievalEvaluator $evaluator, Embedder $embedder, CandidateIndex $candidateIndex, AiHttpClient $client, array $questions, RetrievalSettings $settings, RewriteMode $rewrite, string $reranker): int
+    private function evaluateWith(RetrieverFactory $factory, RetrievalEvaluator $evaluator, Embedder $embedder, CandidateIndex $candidateIndex, AiManager $ai, array $questions, RetrievalSettings $settings, RewriteMode $rewrite, string $reranker): int
     {
         if ($this->option('reindex-to') !== null) {
-            return $this->compareCandidate($factory, $evaluator, $candidateIndex, $client, $questions, $settings, $reranker);
+            return $this->compareCandidate($factory, $evaluator, $candidateIndex, $ai, $questions, $settings, $reranker);
         }
 
         if ($this->option('steps')) {
@@ -142,17 +142,17 @@ class RetrievalEval extends Command
         $this->store($report, $settings, $label, $reranker, $rewrite);
     }
 
-    private function compareCandidate(RetrieverFactory $factory, RetrievalEvaluator $evaluator, CandidateIndex $candidateIndex, AiHttpClient $client, array $questions, RetrievalSettings $settings, string $reranker): int
+    private function compareCandidate(RetrieverFactory $factory, RetrievalEvaluator $evaluator, CandidateIndex $candidateIndex, AiManager $ai, array $questions, RetrievalSettings $settings, string $reranker): int
     {
         $table = (string) $this->option('reindex-to');
 
         CandidateIndex::assertBenchTable($table);
 
-        $model = (string) ($this->option('embed-model') ?: config('ai.embed_model'));
+        $model = (string) ($this->option('embed-model') ?: config('ai.providers.'.config('ai.embedding.provider').'.model'));
 
         $dimensions = (int) ($this->option('embed-dimensions') ?: $candidateIndex->dimensionsOf($model));
 
-        $candidate = new Embedder($client, $model, $dimensions);
+        $candidate = new Embedder($ai->embedUsing($model, $dimensions));
 
         $this->info("Re-embedding into {$table} with {$model} ({$dimensions} dims)...");
 

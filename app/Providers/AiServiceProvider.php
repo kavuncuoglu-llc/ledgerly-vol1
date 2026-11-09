@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Ai\AiManager;
 use App\Ai\Cache\HelpVersion;
-use App\Ai\Context\ProviderCapabilities;
+use App\Ai\Contracts\ChatModel;
+use App\Ai\Contracts\EmbeddingModel;
+use App\Ai\Contracts\Reranker;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\EloquentConversationStore;
+use App\Ai\Drivers\Support\DebugLog;
 use App\Ai\Embeddings\BoilerplateStripper;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
@@ -19,7 +23,6 @@ use App\Ai\Encoding\Formats\YamlFormat;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Events\ToolCalled;
 use App\Ai\Exceptions\UnsupportedTokenCounter;
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
 use App\Ai\Listeners\TriageTicket;
@@ -61,22 +64,19 @@ class AiServiceProvider extends ServiceProvider
 
         $this->app->singleton(ConversationStore::class, EloquentConversationStore::class);
 
-        $this->app->singleton(AiHttpClient::class, fn () => new AiHttpClient(config('ai')));
+        $this->app->singleton(AiManager::class, fn () => new AiManager($this->app));
 
-        $this->app->singleton(ProviderCapabilities::class, fn () => new ProviderCapabilities(
-            provider: (string) config('ai.provider'),
-            cacheBreakpointsOverride: config('ai.prompt_cache.breakpoints') === null
-                ? null
-                : filter_var(config('ai.prompt_cache.breakpoints'), FILTER_VALIDATE_BOOLEAN),
-        ));
+        $this->app->singleton(DebugLog::class);
+
+        $this->app->bind(ChatModel::class, fn () => $this->app->make(AiManager::class)->chat());
+
+        $this->app->bind(EmbeddingModel::class, fn () => $this->app->make(AiManager::class)->embed());
+
+        $this->app->bind(Reranker::class, fn () => $this->app->make(AiManager::class)->reranker());
 
         $this->app->singleton(HelpVersion::class, fn () => new HelpVersion(resource_path('help')));
 
-        $this->app->singleton(Embedder::class, fn () => new Embedder(
-            client: $this->app->make(AiHttpClient::class),
-            model: config('ai.embed_model'),
-            dimensions: config('ai.embed_dimensions'),
-        ));
+        $this->app->bind(Embedder::class, fn () => new Embedder($this->app->make(AiManager::class)->embed()));
 
         $this->app->singleton(BoilerplateStripper::class, fn () => new BoilerplateStripper(config('ai.ingestion.boilerplate_patterns')));
 
@@ -126,8 +126,7 @@ class AiServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(ContextualizeChunks::class, fn () => new ContextualizeChunks(
-            client: $this->app->make(AiHttpClient::class),
-            capabilities: $this->app->make(ProviderCapabilities::class),
+            ai: $this->app->make(AiManager::class),
             model: config('ai.retrieval.context_model'),
         ));
 

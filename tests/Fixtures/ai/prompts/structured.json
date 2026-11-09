@@ -1,0 +1,22 @@
+{
+    "messages": [
+        {"role": "system", "content": "Classify the support ticket into one category."},
+        {"role": "user", "content": "I was charged twice for my March invoice."}
+    ],
+    "options": {"temperature": 0, "max_tokens": 60},
+    "response_format": {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "ticket_category",
+            "strict": true,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "category": {"type": "string", "enum": ["billing", "account", "bug", "howto", "other"]}
+                },
+                "required": ["category"],
+                "additionalProperties": false
+            }
+        }
+    }
+}

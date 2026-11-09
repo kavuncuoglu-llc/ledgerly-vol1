@@ -45,6 +45,25 @@ class SummarizeConversationTest extends TestCase
         $this->assertSame(4, $fresh->summary_through_seq);
     }
 
+    public function test_handle_asks_the_provider_for_a_bigger_window_when_one_is_configured(): void
+    {
+        config()->set('ai.conversation.summary_context_window', 16384);
+        Http::fake(['*' => Http::response($this->completion('S'))]);
+
+        SummarizeConversation::dispatchSync($this->longConversation(6), 100);
+
+        Http::assertSent(fn (Request $request): bool => $request['num_ctx'] === 16384);
+    }
+
+    public function test_handle_leaves_the_providers_window_alone_by_default(): void
+    {
+        Http::fake(['*' => Http::response($this->completion('S'))]);
+
+        SummarizeConversation::dispatchSync($this->longConversation(6), 100);
+
+        Http::assertSent(fn (Request $request): bool => ! isset($request['num_ctx']));
+    }
+
     public function test_handle_sends_the_summarize_prompt_with_identifiers_and_the_turns_to_delete(): void
     {
         Http::fake(['*' => Http::response($this->completion('S'))]);

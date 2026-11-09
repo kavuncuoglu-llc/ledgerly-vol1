@@ -2,13 +2,14 @@
 
 namespace App\Ai\Retrieval;
 
-use App\Ai\Http\AiHttpClient;
+use App\Ai\AiManager;
+use App\Ai\Contracts\ChatRequest;
 use App\Ai\Prompts\RewritePrompt;
 
 final class QueryRewriter
 {
     public function __construct(
-        private readonly AiHttpClient $client,
+        private readonly AiManager $ai,
         private readonly RewriteMode $mode,
         private readonly ?string $model = null,
     ) {}
@@ -47,12 +48,12 @@ final class QueryRewriter
             $options['model'] = $this->model;
         }
 
-        $reply = $this->client->chat(
+        $reply = $this->ai->for('retrieval.rewrite')->chat(ChatRequest::fromOptions(
             messages: RewritePrompt::messages($this->mode, $question),
             options: $options,
             feature: 'retrieval.rewrite',
             promptVersion: RewritePrompt::VERSION,
-        );
+        ));
 
         return match ($this->mode) {
             RewriteMode::Expand => $this->listFrom((string) $reply->content),

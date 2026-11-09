@@ -19,10 +19,7 @@ final class ContextAssembler
 
     private string $questionText = '';
 
-    public function __construct(
-        private readonly TokenCounter $counter,
-        private readonly ProviderCapabilities $provider,
-    ) {}
+    public function __construct(private readonly TokenCounter $counter) {}
 
     public function system(string $text): self
     {
@@ -68,9 +65,11 @@ final class ContextAssembler
 
     public function build(): AssembledPrompt
     {
+        $stable = [$this->systemMessages(), $this->summaryMessages()];
+
         $messages = array_values(array_filter([
-            ...$this->withBreakpoint($this->systemMessages()),
-            ...$this->withBreakpoint($this->summaryMessages()),
+            ...$stable[0],
+            ...$stable[1],
             ...$this->historyMessages,
             ...$this->contextMessages(),
             ...$this->questionMessages(),
@@ -83,6 +82,7 @@ final class ContextAssembler
             breakdown: $breakdown,
             overBudget: $this->overBudget($breakdown),
             labelMap: LabelMap::for($this->contextChunks),
+            breakpoints: $this->breakpointsAfter($stable),
         );
     }
 
@@ -151,23 +151,21 @@ final class ContextAssembler
         ];
     }
 
-    private function withBreakpoint(array $slotMessages): array
+    private function breakpointsAfter(array $stableSlots): array
     {
-        if ($slotMessages === []) {
-            return [];
+        $breakpoints = [];
+
+        $count = 0;
+
+        foreach ($stableSlots as $slotMessages) {
+            $count += count(array_filter($slotMessages));
+
+            if ($slotMessages !== []) {
+                $breakpoints[] = $count - 1;
+            }
         }
 
-        if (! $this->provider->supportsCacheBreakpoints()) {
-            return $slotMessages;
-        }
-
-        $last = array_key_last($slotMessages);
-
-        $slotMessages[$last]['cache_control'] = [
-            'type' => 'ephemeral',
-        ];
-
-        return $slotMessages;
+        return $breakpoints;
     }
 
     private function breakdown(): array
