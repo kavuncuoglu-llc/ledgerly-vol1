@@ -17,6 +17,8 @@
         "laravel/mcp": "^1.1",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
+        "league/html-to-markdown": "^5.2",
+        "phpoffice/phpword": "^1.4",
         "yethee/tiktoken": "^1.1"
     },
     "require-dev": {

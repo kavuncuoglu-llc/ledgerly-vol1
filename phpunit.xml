@@ -20,6 +20,9 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="AI_SEMANTIC_CACHE" value="false"/>
+        <env name="AI_RERANKER" value="none"/>
+        <env name="AI_RETRIEVAL_REWRITE" value="off"/>
+        <env name="AI_CHUNK_STRATEGY" value="heading"/>
         <env name="AI_SEMANTIC_CACHE_REQUIRE_GROUNDING" value="false"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

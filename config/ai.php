@@ -47,6 +47,8 @@ return [
     'chunking' => [
         'min_tokens' => 200,
         'max_tokens' => 400,
+        'strategy' => env('AI_CHUNK_STRATEGY', 'parent-child'),
+        'child_max_tokens' => 200,
     ],
 
     'budget' => [
@@ -83,7 +85,19 @@ return [
         'k' => 5,
         'rrf_constant' => 60,
         'candidate_pool' => 20,
+        'reranker' => env('AI_RERANKER', 'sidecar'),
+        'rerank_candidates' => (int) env('AI_RETRIEVAL_RERANK_CANDIDATES', 20),
+        'rewrite' => env('AI_RETRIEVAL_REWRITE', 'rewrite'),
+        'rewrite_model' => env('AI_RETRIEVAL_REWRITE_MODEL') ?: null,
+        'context_model' => env('AI_RETRIEVAL_CONTEXT_MODEL') ?: null,
         'golden_set' => 'storage/golden/retrieval.jsonl',
+    ],
+
+    'sidecar' => [
+        'url' => env('AI_SIDECAR_URL', 'http://localhost:8008'),
+        'timeout' => (int) env('AI_SIDECAR_TIMEOUT', 5),
+        'parse_timeout' => (int) env('AI_SIDECAR_PARSE_TIMEOUT', 180),
+        'max_upload_mb' => 25,
     ],
 
     'ingestion' => [

@@ -4,19 +4,16 @@ namespace App\Ai\Retrieval;
 
 use App\Ai\Embeddings\Embedder;
 use App\Casts\Vector;
-use App\Models\HelpChunk;
 use Illuminate\Support\Facades\DB;
 
-final class PgRetriever implements Retriever
+final class PgRetriever implements ConfigurableRetriever
 {
-    private const EMBEDDING = 'embedding::halfvec(768)';
-
     public function __construct(
         private readonly Embedder $embedder,
         private RetrievalSettings $settings,
     ) {}
 
-    public function using(RetrievalSettings $settings): self
+    public function using(RetrievalSettings $settings): static
     {
         $clone = clone $this;
 
@@ -42,15 +39,16 @@ final class PgRetriever implements Retriever
 
         return collect($rows)
             ->filter(fn (object $row): bool => $this->passesFloor($row))
+            ->groupBy('id')
+            ->map(fn ($group): RetrievedChunk => $this->chunkFrom($group->first(), (float) $group->max('sim'), $group->contains(fn (object $row): bool => $row->kw_rank !== null)))
             ->take($k)
-            ->map(fn (object $row): RetrievedChunk => $this->chunkFrom($row))
             ->values()
             ->all();
     }
 
     private function ingestedVersion(): string
     {
-        return (string) HelpChunk::query()
+        return (string) DB::table($this->settings->table)
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->value('help_version');
@@ -65,7 +63,7 @@ final class PgRetriever implements Retriever
         return (float) $row->sim >= $this->settings->similarityFloor;
     }
 
-    private function chunkFrom(object $row): RetrievedChunk
+    private function chunkFrom(object $row, float $similarity, bool $keywordMatched): RetrievedChunk
     {
         return new RetrievedChunk(
             id: (int) $row->id,
@@ -74,9 +72,10 @@ final class PgRetriever implements Retriever
             headingPath: $row->heading_path,
             content: $row->content,
             helpVersion: $row->help_version,
-            similarity: (float) $row->sim,
+            similarity: $similarity,
             rrf: (float) $row->rrf,
-            keywordMatched: $row->kw_rank !== null,
+            keywordMatched: $keywordMatched,
+            matchedText: (string) $row->matched_text,
         );
     }
 
@@ -118,6 +117,8 @@ final class PgRetriever implements Retriever
 
         $rrf = $this->settings->rrfConstant;
 
+        $table = $this->settings->table;
+
         return <<<SQL
 WITH vec AS (
     {$this->vectorSide($filters, $pool)}
@@ -125,11 +126,13 @@ WITH vec AS (
 kw AS (
     {$this->keywordSide($filters, $pool)}
 )
-SELECT c.id, c.source, c.title, c.heading_path, c.content, c.help_version,
+SELECT COALESCE(p.id, c.id) AS id, c.source, c.title, c.heading_path, COALESCE(p.content, c.content) AS content, c.help_version,
+    CASE WHEN p.id IS NULL THEN NULL ELSE trim(COALESCE(c.context_header, '') || E'\n\n' || c.content) END AS matched_text,
     {$this->similaritySelect()} AS sim,
     kw.r AS kw_rank,
     COALESCE(1.0 / ({$rrf} + vec.r), 0) + COALESCE(1.0 / ({$rrf} + kw.r), 0) AS rrf
-FROM help_chunks c
+FROM {$table} c
+LEFT JOIN {$table} p ON p.id = c.parent_id
 LEFT JOIN vec ON vec.id = c.id
 LEFT JOIN kw ON kw.id = c.id
 WHERE vec.id IS NOT NULL OR kw.id IS NOT NULL
@@ -144,7 +147,7 @@ SQL;
             return '0.0';
         }
 
-        return '1 - (c.'.self::EMBEDDING.' <=> :v::halfvec(768))';
+        return '1 - (c.'.$this->embedding().' <=> :v::halfvec('.$this->settings->dimensions.'))';
     }
 
     private function vectorSide(string $filters, int $pool): string
@@ -153,13 +156,17 @@ SQL;
             return 'SELECT NULL::bigint AS id, NULL::bigint AS r WHERE false';
         }
 
-        $embedding = self::EMBEDDING;
+        $embedding = $this->embedding();
+
+        $dimensions = $this->settings->dimensions;
+
+        $table = $this->settings->table;
 
         return <<<SQL
-SELECT id, ROW_NUMBER() OVER (ORDER BY {$embedding} <=> :v::halfvec(768)) AS r
-    FROM help_chunks
+SELECT id, ROW_NUMBER() OVER (ORDER BY {$embedding} <=> :v::halfvec({$dimensions})) AS r
+    FROM {$table}
     WHERE {$filters}
-    ORDER BY {$embedding} <=> :v::halfvec(768)
+    ORDER BY {$embedding} <=> :v::halfvec({$dimensions})
     LIMIT {$pool}
 SQL;
     }
@@ -170,9 +177,11 @@ SQL;
             return 'SELECT NULL::bigint AS id, NULL::bigint AS r WHERE false';
         }
 
+        $table = $this->settings->table;
+
         return <<<SQL
 SELECT id, ROW_NUMBER() OVER (ORDER BY ts_rank(search, websearch_to_tsquery('english', :q)) DESC, id) AS r
-    FROM help_chunks
+    FROM {$table}
     WHERE {$filters} AND search @@ websearch_to_tsquery('english', :q)
     ORDER BY ts_rank(search, websearch_to_tsquery('english', :q)) DESC, id
     LIMIT {$pool}
@@ -183,6 +192,7 @@ SQL;
     {
         $filters = [
             'help_version = :ver',
+            'embedding IS NOT NULL',
         ];
 
         if ($scope->plan !== '') {
@@ -194,5 +204,10 @@ SQL;
         }
 
         return implode(' AND ', $filters);
+    }
+
+    private function embedding(): string
+    {
+        return 'embedding::halfvec('.$this->settings->dimensions.')';
     }
 }

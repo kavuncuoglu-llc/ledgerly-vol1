@@ -14,6 +14,7 @@ final class SourcedChunk
         public readonly string $headingPath = '',
         public readonly array $tags = [],
         public readonly ?CarbonImmutable $sourceModifiedAt = null,
+        public readonly string $articleBody = '',
     ) {}
 
     public function chunkKey(): string

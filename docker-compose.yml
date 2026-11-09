@@ -30,6 +30,22 @@ services:
       timeout: 5s
       retries: 10
 
+  sidecar:
+    build: ./sidecar
+    container_name: ledgerly-sidecar
+    ports:
+      - "127.0.0.1:8008:8000"
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
+
+networks:
+  internal:
+
 volumes:
   ledgerly-postgres:
   ledgerly-redis:

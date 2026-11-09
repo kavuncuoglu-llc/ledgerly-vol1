@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Model;
     'help_version',
     'source_modified_at',
     'chunk_key',
+    'parent_id',
+    'kind',
+    'context_header',
 ])]
 class HelpChunk extends Model
 {
@@ -41,11 +44,17 @@ class HelpChunk extends Model
         ];
     }
 
+    public function scopeSearchable(Builder $query): Builder
+    {
+        return $query->whereNotNull('embedding');
+    }
+
     public function scopeNearestTo(Builder $query, array $vector, int $limit = 5): Builder
     {
         $literal = Vector::toLiteral($vector);
 
         return $query
+            ->searchable()
             ->select([
                 'id',
                 'source',

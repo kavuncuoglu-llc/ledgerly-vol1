@@ -9,6 +9,7 @@ use App\Ai\Conversations\EloquentConversationStore;
 use App\Ai\Embeddings\BoilerplateStripper;
 use App\Ai\Embeddings\Embedder;
 use App\Ai\Embeddings\MarkdownChunker;
+use App\Ai\Embeddings\ParentChildChunker;
 use App\Ai\Encoding\DataEncoder;
 use App\Ai\Encoding\Formats\JsonFormat;
 use App\Ai\Encoding\Formats\MarkdownFormat;
@@ -22,9 +23,12 @@ use App\Ai\Http\AiHttpClient;
 use App\Ai\Listeners\ClassifyReceivedTicket;
 use App\Ai\Listeners\RecordModelCall;
 use App\Ai\Listeners\RecordToolCall;
-use App\Ai\Retrieval\PgRetriever;
-use App\Ai\Retrieval\RetrievalSettings;
+use App\Ai\Parsing\DocumentParser;
+use App\Ai\Parsing\SidecarPdfParser;
+use App\Ai\Retrieval\ContextualizeChunks;
 use App\Ai\Retrieval\Retriever;
+use App\Ai\Retrieval\RetrieverFactory;
+use App\Ai\Sidecar\SidecarClient;
 use App\Ai\Tokens\RatioCounter;
 use App\Ai\Tokens\TiktokenCounter;
 use App\Ai\Tokens\TokenCounter;
@@ -73,10 +77,16 @@ class AiServiceProvider extends ServiceProvider
 
         $this->app->singleton(BoilerplateStripper::class, fn () => new BoilerplateStripper(config('ai.ingestion.boilerplate_patterns')));
 
-        $this->app->bind(Retriever::class, fn () => new PgRetriever(
-            embedder: $this->app->make(Embedder::class),
-            settings: RetrievalSettings::fromConfig(),
+        $this->app->singleton(SidecarClient::class, fn () => new SidecarClient(
+            baseUrl: (string) config('ai.sidecar.url'),
+            timeout: (int) config('ai.sidecar.timeout'),
+            parseTimeout: (int) config('ai.sidecar.parse_timeout'),
+            maxUploadMegabytes: (int) config('ai.sidecar.max_upload_mb'),
         ));
+
+        $this->app->bind(DocumentParser::class, SidecarPdfParser::class);
+
+        $this->app->bind(Retriever::class, fn () => $this->app->make(RetrieverFactory::class)->make());
 
         $this->app->singleton(DataEncoder::class, fn () => new DataEncoder([
             'toon' => new ToonFormat,
@@ -99,6 +109,17 @@ class AiServiceProvider extends ServiceProvider
             ->add(new ListInvoices($this->app->make(DataEncoder::class)))
             ->add(new OpenTicket)
             ->addSource($this->app->make(McpToolSource::class)));
+
+        $this->app->singleton(ParentChildChunker::class, fn () => new ParentChildChunker(
+            tokens: $this->app->make(TokenCounter::class),
+            maxChildTokens: (int) config('ai.chunking.child_max_tokens'),
+        ));
+
+        $this->app->singleton(ContextualizeChunks::class, fn () => new ContextualizeChunks(
+            client: $this->app->make(AiHttpClient::class),
+            capabilities: $this->app->make(ProviderCapabilities::class),
+            model: config('ai.retrieval.context_model'),
+        ));
 
         $this->app->singleton(MarkdownChunker::class, fn () => new MarkdownChunker(
             tokens: $this->app->make(TokenCounter::class),

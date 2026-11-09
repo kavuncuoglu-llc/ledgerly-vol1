@@ -21,7 +21,33 @@ final readonly class RetrievedChunk
         public float $similarity = 0.0,
         public float $rrf = 0.0,
         public bool $keywordMatched = false,
+        public string $matchedText = '',
     ) {}
+
+    public function matchText(): string
+    {
+        if ($this->matchedText !== '') {
+            return $this->matchedText;
+        }
+
+        return $this->content;
+    }
+
+    public function fusedWith(float $rrf, float $similarity, bool $keywordMatched): self
+    {
+        return new self(
+            id: $this->id,
+            source: $this->source,
+            title: $this->title,
+            headingPath: $this->headingPath,
+            content: $this->content,
+            helpVersion: $this->helpVersion,
+            similarity: $similarity,
+            rrf: $rrf,
+            keywordMatched: $keywordMatched,
+            matchedText: $this->matchedText,
+        );
+    }
 
     public function category(): string
     {

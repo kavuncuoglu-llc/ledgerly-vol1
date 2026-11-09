@@ -21,10 +21,11 @@ final class HelpIndexer
         private readonly BoilerplateStripper $boilerplate,
     ) {}
 
-    public function chunks(): Collection
+    public function chunks(?Collection $importedArticles = null): Collection
     {
         return $this->helpCenter
             ->all()
+            ->concat($importedArticles ?? collect())
             ->flatMap(fn (HelpArticle $article): array => $this->chunksOf($article))
             ->values();
     }
@@ -45,7 +46,9 @@ final class HelpIndexer
     public function diff(Collection $chunks, bool $force = false): IngestDiff
     {
         $stored = HelpChunk::query()
-            ->get(['chunk_key', 'content', 'title', 'heading_path', 'tags'])
+            ->select(['chunk_key', 'content', 'title', 'heading_path', 'tags'])
+            ->selectRaw('(embedding IS NULL) AS unembedded')
+            ->get()
             ->keyBy('chunk_key');
 
         $incoming = $chunks->keyBy(fn (SourcedChunk $sourced): string => $sourced->chunkKey());
@@ -90,6 +93,10 @@ final class HelpIndexer
 
     private function sameAsStored(SourcedChunk $sourced, HelpChunk $stored): bool
     {
+        if ($stored->unembedded) {
+            return false;
+        }
+
         return $stored->content === $sourced->chunk->content
             && $stored->title === $sourced->title
             && $stored->heading_path === $sourced->headingPath
@@ -98,7 +105,9 @@ final class HelpIndexer
 
     private function chunksOf(HelpArticle $article): array
     {
-        $chunks = $this->chunker->chunk($article->title, $this->boilerplate->strip($article->markdown));
+        $body = $this->boilerplate->strip($article->markdown);
+
+        $chunks = $this->chunker->chunk($article->title, $body);
 
         return array_map(
             fn (Chunk $chunk, int $index): SourcedChunk => new SourcedChunk(
@@ -109,6 +118,7 @@ final class HelpIndexer
                 headingPath: $this->headingPath($article, $chunk),
                 tags: $article->tags,
                 sourceModifiedAt: $article->modifiedAt,
+                articleBody: $body,
             ),
             $chunks,
             array_keys($chunks),
@@ -142,6 +152,9 @@ final class HelpIndexer
                 'tags' => $sourced->tags,
                 'help_version' => $version,
                 'source_modified_at' => $sourced->sourceModifiedAt ?? now(),
+                'kind' => 'parent',
+                'parent_id' => null,
+                'context_header' => null,
             ],
         );
     }

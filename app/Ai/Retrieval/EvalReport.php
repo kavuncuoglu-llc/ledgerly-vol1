@@ -12,6 +12,7 @@ final readonly class EvalReport
         public int $emptyTotal,
         public array $misses,
         public int $questions,
+        public float $queryMs = 0.0,
     ) {}
 
     public function toArray(): array
@@ -24,6 +25,7 @@ final readonly class EvalReport
             'empty_total' => $this->emptyTotal,
             'misses' => array_column($this->misses, 'id'),
             'questions' => $this->questions,
+            'query_ms' => round($this->queryMs, 1),
         ];
     }
 }

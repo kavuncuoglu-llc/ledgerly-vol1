@@ -21,8 +21,12 @@ final class Vector implements CastsAttributes
         return array_map('floatval', json_decode($value, true));
     }
 
-    public function set(Model $model, string $key, mixed $value, array $attributes): string
+    public function set(Model $model, string $key, mixed $value, array $attributes): ?string
     {
+        if ($value === null) {
+            return null;
+        }
+
         return self::toLiteral($value);
     }
 }

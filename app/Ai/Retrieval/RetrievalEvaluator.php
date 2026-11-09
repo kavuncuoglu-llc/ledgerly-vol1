@@ -14,8 +14,14 @@ final class RetrievalEvaluator
 
         $emptyTotal = 0;
 
+        $elapsedMs = 0.0;
+
         foreach ($questions as $question) {
+            $started = hrtime(true);
+
             $retrieved = $retriever->retrieve($question->question, new RetrievalScope, k: max(self::CUTOFFS));
+
+            $elapsedMs += (hrtime(true) - $started) / 1_000_000;
 
             if ($question->expectsNothing()) {
                 $emptyTotal++;
@@ -42,6 +48,9 @@ final class RetrievalEvaluator
             emptyTotal: $emptyTotal,
             misses: $this->misses($answerable),
             questions: count($questions),
+            queryMs: $questions === []
+                ? 0.0
+                : $elapsedMs / count($questions),
         );
     }
 
