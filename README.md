@@ -51,7 +51,9 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Ai/Listeners/RecordModelCall.php` | Writes one `model_calls` row per event and warns when a completion was truncated |
 | `app/Ai/Prompt/Budget.php` | Token budget arithmetic over `config/ai.php` (`budget`) |
 | `app/Providers/AiServiceProvider.php` | Binds `TokenCounter` from `AI_TOKEN_COUNTER` and registers the listener |
-| `config/ai.php` | `token_counter`, `budget`, and the per-model `rates` table (USD per million tokens) |
+| `app/Console/Commands/AiSample.php` | `php artisan ai:sample`: sends a prompt with explicit sampling parameters and prints completion, finish reason, and token counts |
+| `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
+| `config/ai.php` | `base_url`, `api_key`, `model`, timeouts, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php` | The usage log table |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |

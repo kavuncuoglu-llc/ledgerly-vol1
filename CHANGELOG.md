@@ -4,6 +4,13 @@ Fixes go on `main`. Chapter tags never move once published; a chapter whose code
 
 ## Unreleased
 
+## ch05
+
+- `php artisan ai:sample "<prompt>"` with `--profile`, `--model`, `--runs`, `--temperature`, `--top-p`, `--top-k`, `--min-p`, `--max-tokens`, `--seed`, `--frequency-penalty`, `--presence-penalty`, `--repeat-penalty`, and repeatable `--stop` (`\n` is read as a newline). Prints `[n] completion  finish_reason · in N out M` per run.
+- `App\Ai\Sampling\ChatSampler` and `SampleResult`: the one OpenAI-compatible `/chat/completions` call behind the command, with `App\Ai\Exceptions\ModelRequestFailed` for unreachable, rejected, and malformed responses. The full client (`AiHttpClient`) still arrives in Chapter 8; `ai:sample` does not write `model_calls` rows.
+- `config/ai.php`: `base_url`, `api_key`, `model`, `connect_timeout`, `timeout` (all from `.env`), and the four sampling `profiles` (`deterministic`, `grounded`, `assistant`, `creative`) from Figure 5-10.
+- Tests use `Http::fake()` only; no model is called by the test suite.
+
 ## ch04
 
 - Identical to `ch02`; the chapter has no companion-app change. The tag points at the same commit.

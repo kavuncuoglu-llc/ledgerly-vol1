@@ -2,7 +2,37 @@
 
 return [
 
+    'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+
+    'api_key' => env('AI_API_KEY', 'ollama'),
+
+    'model' => env('AI_MODEL', 'llama3.1:8b'),
+
+    'connect_timeout' => env('AI_CONNECT_TIMEOUT', 2),
+
+    'timeout' => env('AI_TIMEOUT', 120),
+
     'token_counter' => env('AI_TOKEN_COUNTER', 'ratio'),
+
+    'profiles' => [
+        'deterministic' => [
+            'temperature' => 0,
+            'top_p' => 1.0,
+            'seed' => 42,
+        ],
+        'grounded' => [
+            'temperature' => 0.2,
+            'top_p' => 0.9,
+        ],
+        'assistant' => [
+            'temperature' => 0.7,
+            'top_p' => 0.9,
+        ],
+        'creative' => [
+            'temperature' => 1.0,
+            'top_p' => 0.95,
+        ],
+    ],
 
     'budget' => [
         'window' => (int) env('AI_CONTEXT_WINDOW', 8192),
