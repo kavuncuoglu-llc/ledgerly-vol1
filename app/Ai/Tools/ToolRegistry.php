@@ -70,6 +70,8 @@ final class ToolRegistry
     public function definitions(): array
     {
         return $this->all()
+            ->sortBy(fn (Tool $tool): string => $tool->name())
+            ->values()
             ->map(fn (Tool $tool): array => [
                 'type' => 'function',
                 'function' => [

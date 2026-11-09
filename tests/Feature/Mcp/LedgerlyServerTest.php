@@ -147,7 +147,7 @@ class LedgerlyServerTest extends TestCase
         $classify = Ledgerly::actingAs($user)->prompt(TicketClassifyPromptMcp::class, ['message' => 'The export button is broken']);
 
         $support->assertSee('You are the support assistant for Ledgerly');
-        $support->assertSee('Question: What is a late fee?');
+        $support->assertSee('What is a late fee?');
         $classify->assertSee('Reply with the category word only');
         $classify->assertSee('The export button is broken');
     }

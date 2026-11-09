@@ -122,16 +122,16 @@ class SupportToolsTest extends TestCase
         $this->assertSame(['ok' => true, 'found' => false], json_decode($toolTurn['content'], true));
     }
 
-    public function test_ask_sends_the_tool_definitions_and_prompt_version_four(): void
+    public function test_ask_sends_the_tool_definitions_sorted_by_name_and_prompt_version_five(): void
     {
         Http::fake(['*' => Http::response($this->answerResponse('Hi'))]);
 
         $this->actingAs($this->customerUser())->postJson('support/ask', ['question' => 'Hi']);
 
         $request = Http::recorded()[0][0];
-        $this->assertSame(['lookup_invoice', 'list_invoices', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
-        $this->assertStringContainsString('You have tools.', $request['messages'][0]['content']);
-        $this->assertSame('2026-11-09.4', ModelCall::query()->sole()->prompt_version);
+        $this->assertSame(['list_invoices', 'lookup_invoice', 'open_ticket'], collect($request['tools'])->pluck('function.name')->all());
+        $this->assertStringContainsString('Tools: use lookup_invoice', $request['messages'][0]['content']);
+        $this->assertSame('2026-11-09.5', ModelCall::query()->sole()->prompt_version);
     }
 
     public function test_ask_reports_the_cap_without_failing(): void

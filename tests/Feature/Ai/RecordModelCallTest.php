@@ -56,6 +56,50 @@ class RecordModelCallTest extends TestCase
         $this->assertFalse(ModelCall::query()->sole()->repaired);
     }
 
+    public function test_handle_stores_the_context_columns_the_event_carries(): void
+    {
+        event(new ModelCalled(
+            feature: 'support.reply',
+            provider: 'ollama',
+            model: 'llama3.1:8b',
+            usage: [
+                'prompt_tokens' => 1200,
+                'completion_tokens' => 150,
+            ],
+            finishReason: 'stop',
+            latencyMs: 2840,
+            cachedTokens: 900,
+            ttftMs: 410,
+            contextBreakdown: [
+                'system' => 302,
+                'history' => 600,
+            ],
+            semanticCacheHit: false,
+            cachedTokensEstimated: true,
+        ));
+
+        $call = ModelCall::query()->sole();
+
+        $this->assertSame(900, $call->cached_tokens);
+        $this->assertTrue($call->cached_tokens_estimated);
+        $this->assertSame(410, $call->ttft_ms);
+        $this->assertSame(['system' => 302, 'history' => 600], $call->context_breakdown);
+        $this->assertFalse($call->semantic_cache_hit);
+    }
+
+    public function test_handle_leaves_the_context_columns_null_for_a_plain_event(): void
+    {
+        event($this->modelCalled());
+
+        $call = ModelCall::query()->sole();
+
+        $this->assertNull($call->cached_tokens);
+        $this->assertFalse($call->cached_tokens_estimated);
+        $this->assertNull($call->ttft_ms);
+        $this->assertNull($call->context_breakdown);
+        $this->assertNull($call->semantic_cache_hit);
+    }
+
     public function test_handle_costs_a_model_without_a_rate_at_zero(): void
     {
         event($this->modelCalled(provider: 'ollama', model: 'unlisted:1b'));

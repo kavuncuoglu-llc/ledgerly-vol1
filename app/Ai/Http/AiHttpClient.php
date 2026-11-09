@@ -2,6 +2,7 @@
 
 namespace App\Ai\Http;
 
+use App\Ai\Cache\PrefixCacheEstimator;
 use App\Ai\Events\ModelCalled;
 use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\StreamTruncated;
@@ -19,7 +20,7 @@ final class AiHttpClient
 {
     public function __construct(private readonly array $config) {}
 
-    public function chat(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null, bool $repaired = false, ?int $conversationId = null): ChatResponse
+    public function chat(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null, bool $repaired = false, ?int $conversationId = null, ?CallDetails $details = null): ChatResponse
     {
         $body = [
             ...$this->buildBody($messages, $options),
@@ -34,6 +35,8 @@ final class AiHttpClient
 
         $chat = ChatResponse::fromArray($response->json());
 
+        $cached = $this->cachedTokens($chat, $feature, $conversationId, $messages);
+
         $event = new ModelCalled(
             $feature,
             $this->config['provider'],
@@ -44,6 +47,10 @@ final class AiHttpClient
             conversationId: $conversationId,
             promptVersion: $promptVersion,
             repaired: $repaired,
+            cachedTokens: $cached['tokens'],
+            contextBreakdown: $details?->contextBreakdown,
+            semanticCacheHit: $details?->semanticCacheHit,
+            cachedTokensEstimated: $cached['estimated'],
         );
 
         event($event);
@@ -71,6 +78,8 @@ final class AiHttpClient
 
         $interruption = null;
 
+        $firstDeltaMs = null;
+
         try {
             foreach ($this->payloads($response->toPsrResponse()->getBody()) as $payload) {
                 if ($payload === '[DONE]') {
@@ -89,6 +98,8 @@ final class AiHttpClient
                     continue;
                 }
 
+                $firstDeltaMs ??= $this->elapsedMilliseconds($started);
+
                 yield $delta;
             }
         } catch (ModelRequestFailed $exception) {
@@ -105,6 +116,7 @@ final class AiHttpClient
             $this->streamFinishReason($accumulator),
             $this->elapsedMilliseconds($started),
             promptVersion: $promptVersion,
+            ttftMs: $firstDeltaMs,
         );
 
         if (! $accumulator->isDone()) {
@@ -125,6 +137,32 @@ final class AiHttpClient
         } catch (RequestException $exception) {
             throw ModelRequestFailed::rejected($exception->response->status(), $exception->response->body());
         }
+    }
+
+    private function cachedTokens(ChatResponse $chat, string $feature, ?int $conversationId, array $messages): array
+    {
+        $reported = $chat->usage->extras['prompt_tokens_details']['cached_tokens'] ?? null;
+
+        if ($conversationId === null) {
+            return [
+                'tokens' => $reported === null ? null : (int) $reported,
+                'estimated' => false,
+            ];
+        }
+
+        $estimate = app(PrefixCacheEstimator::class)->estimate($feature, $conversationId, $messages, $chat->usage->promptTokens);
+
+        if ($reported !== null) {
+            return [
+                'tokens' => (int) $reported,
+                'estimated' => false,
+            ];
+        }
+
+        return [
+            'tokens' => $estimate,
+            'estimated' => true,
+        ];
     }
 
     private function http(): PendingRequest

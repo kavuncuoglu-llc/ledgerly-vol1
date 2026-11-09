@@ -17,6 +17,11 @@ use Illuminate\Database\Eloquent\Model;
     'conversation_id',
     'prompt_version',
     'repaired',
+    'cached_tokens',
+    'cached_tokens_estimated',
+    'ttft_ms',
+    'context_breakdown',
+    'semantic_cache_hit',
 ])]
 class ModelCall extends Model
 {
@@ -29,6 +34,11 @@ class ModelCall extends Model
             'cost_micros' => 'integer',
             'conversation_id' => 'integer',
             'repaired' => 'boolean',
+            'cached_tokens' => 'integer',
+            'cached_tokens_estimated' => 'boolean',
+            'ttft_ms' => 'integer',
+            'context_breakdown' => 'array',
+            'semantic_cache_hit' => 'boolean',
         ];
     }
 }

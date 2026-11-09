@@ -57,6 +57,26 @@ return [
         'context' => 3500,
     ],
 
+    'slot_budgets' => [
+        'memories' => 150,
+        'summary' => 400,
+        'context' => 3500,
+    ],
+
+    'prompt_cache' => [
+        'breakpoints' => env('AI_CACHE_BREAKPOINTS'),
+        'prefix_memory_minutes' => 60,
+    ],
+
+    'semantic_cache' => [
+        'enabled' => (bool) env('AI_SEMANTIC_CACHE', true),
+        'thresholds' => [
+            'howto' => 0.92,
+        ],
+        'ttl_days' => 30,
+        'require_grounding' => (bool) env('AI_SEMANTIC_CACHE_REQUIRE_GROUNDING', false),
+    ],
+
     'conversation' => [
         'keep_recent_exchanges' => (int) env('AI_CONVERSATION_KEEP_RECENT', 4),
         'compact_after_exchanges' => (int) env('AI_CONVERSATION_COMPACT_AFTER', 2),

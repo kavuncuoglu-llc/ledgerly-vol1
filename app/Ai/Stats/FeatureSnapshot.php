@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Ai\Stats;
+
+final readonly class FeatureSnapshot
+{
+    public function __construct(
+        public int $calls,
+        public ?float $promptCacheHitRate,
+        public bool $promptCacheEstimated,
+        public ?float $semanticHitRate,
+        public int $semanticHits,
+        public int $semanticLookups,
+        public ?int $tokensPerAnswer,
+        public array $slots,
+        public ?int $averageTtftMs,
+        public ?int $averageLatencyMs,
+    ) {}
+}

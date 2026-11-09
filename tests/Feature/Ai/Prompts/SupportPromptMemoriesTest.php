@@ -48,4 +48,30 @@ class SupportPromptMemoriesTest extends TestCase
         $this->assertSame(['system', 'user'], array_column($messages, 'role'));
         $this->assertStringContainsString('- timezone: America/New_York', $messages[0]['content']);
     }
+
+    public function test_assemble_counts_the_memories_apart_from_the_system_text_but_sends_the_same_bytes_as_system(): void
+    {
+        $user = $this->userInTenant();
+        $this->actingAs($user);
+        UserMemory::factory()->forUser($user)->create(['key' => 'timezone', 'value' => 'America/New_York']);
+
+        $assembled = SupportPrompt::assemble(question: 'Hi', user: $user);
+
+        $this->assertSame(SupportPrompt::system($user), $assembled->messages[0]['content']);
+        $this->assertGreaterThan(0, $assembled->breakdown['memories']);
+        $this->assertGreaterThan($assembled->breakdown['memories'], $assembled->breakdown['system']);
+    }
+
+    public function test_the_system_message_is_byte_identical_across_turns_for_the_same_user(): void
+    {
+        $user = $this->userInTenant();
+        $this->actingAs($user);
+        UserMemory::factory()->forUser($user)->create(['key' => 'role', 'value' => 'bookkeeper']);
+        UserMemory::factory()->forUser($user)->create(['key' => 'billing_contact', 'value' => 'billing@acme.example']);
+
+        $first = SupportPrompt::messages(question: 'First', user: $user)[0]['content'];
+        $second = SupportPrompt::messages(question: 'Second', user: $user, history: [['role' => 'user', 'content' => 'x']])[0]['content'];
+
+        $this->assertSame(md5($first), md5($second));
+    }
 }

@@ -79,16 +79,14 @@ class SupportAskTest extends TestCase
         $this->assertSame(SupportPrompt::VERSION, ModelCall::query()->sole()->prompt_version);
     }
 
-    public function test_ask_sends_no_context_yet_so_the_assistant_is_told_none_was_provided(): void
+    public function test_ask_sends_no_context_block_yet_because_retrieval_arrives_in_chapter_fifteen(): void
     {
         Http::fake(['*' => Http::response($this->completion('ok'))]);
 
         $this->actingAs($this->user())->postJson('support/ask', ['question' => 'What late fee does Ledgerly charge?']);
 
-        Http::assertSent(fn (Request $request): bool => str_contains(
-            $request['messages'][1]['content'],
-            "Context:\n(no context provided)\n\nQuestion: What late fee does Ledgerly charge?",
-        ));
+        Http::assertSent(fn (Request $request): bool => count($request['messages']) === 2
+            && $request['messages'][1]['content'] === 'What late fee does Ledgerly charge?');
     }
 
     public function test_ask_rejects_a_guest_with_401(): void

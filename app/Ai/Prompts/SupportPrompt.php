@@ -2,28 +2,35 @@
 
 namespace App\Ai\Prompts;
 
+use App\Ai\Context\AssembledPrompt;
+use App\Ai\Context\ContextAssembler;
 use App\Ai\Memory\MemoryStore;
 use App\Models\User;
 
 final class SupportPrompt
 {
-    public const VERSION = '2026-11-09.4';
+    public const VERSION = '2026-11-09.5';
 
     public static function system(?User $user = null): string
     {
         $base = self::baseSystem();
 
-        if ($user === null) {
-            return $base;
-        }
-
-        $memories = app(MemoryStore::class)->block($user);
+        $memories = self::memoriesBlock($user);
 
         if ($memories === '') {
             return $base;
         }
 
         return $base."\n\n".$memories;
+    }
+
+    public static function memoriesBlock(?User $user = null): string
+    {
+        if ($user === null) {
+            return '';
+        }
+
+        return app(MemoryStore::class)->block($user);
     }
 
     public static function summaryNote(string $summary): string
@@ -34,69 +41,45 @@ final class SupportPrompt
     private static function baseSystem(): string
     {
         return <<<'PROMPT'
-You are the support assistant for Ledgerly, an invoicing product for small businesses.
-You answer questions about using Ledgerly. For anything else, say it is outside what you
-can help with.
+You are the support assistant for Ledgerly, an invoicing product for small businesses. Answer questions about using Ledgerly; anything else is outside what you can help with.
 
 Rules:
-- Answer directly in plain language. Do not add disclaimers about being an AI.
-- At most four sentences unless the question has steps; then a numbered list.
+- Answer directly in plain language. No disclaimers about being an AI.
+- At most four sentences, unless the question has steps: then a numbered list.
 - Plain text only. No headers, bold, or bullet points.
-- Do not restate the question. Do not end with an offer of further help.
-- Never state a policy, fee, deadline, or account detail unless it appears in the
-provided context or in a tool result. Those are the only sources of Ledgerly-specific facts.
-- The customer may be mistaken. If what they say contradicts the context, say so
-politely and give the correct information.
+- Do not restate the question or end with an offer of more help.
+- State a policy, fee, deadline, or account detail only if it appears in the provided context or a tool result.
+- If the customer contradicts the context, say so politely and give the correct information.
 
-If the answer is not in the provided context, or depends on the customer's account
-data, say so in one sentence and say you can open a support ticket. Do not guess.
+If the answer is not in the provided context, or depends on the customer's account data, say so in one sentence and offer to open a support ticket. Do not guess.
 
-You have tools. Use lookup_invoice whenever the customer asks about a specific invoice or
-payment; never guess at invoice details. Use open_ticket when the customer reports a problem
-you cannot resolve from the context and tools, or asks you to log an issue. Tell the customer
-the ticket number.
+Tools: use lookup_invoice for any question about a specific invoice or payment; never guess invoice details. Use open_ticket when the customer reports a problem you cannot resolve from the context and tools, or asks you to log an issue; tell them the ticket number.
 PROMPT;
     }
 
     public static function messages(string $question, ?User $user = null, ?string $summary = null, array $history = [], array $contextChunks = []): array
     {
-        return [
-            [
-                'role' => 'system',
-                'content' => self::system($user),
-            ],
-            ...self::summaryMessages($summary),
-            ...$history,
-            [
-                'role' => 'user',
-                'content' => "Context:\n".self::renderContext($contextChunks)."\n\nQuestion: {$question}",
-            ],
-        ];
+        return self::assemble($question, $user, $summary, $history, $contextChunks)->messages;
     }
 
-    private static function summaryMessages(?string $summary): array
+    public static function assemble(string $question, ?User $user = null, ?string $summary = null, array $history = [], array $contextChunks = []): AssembledPrompt
+    {
+        return app(ContextAssembler::class)
+            ->system(self::baseSystem())
+            ->memories(self::memoriesBlock($user))
+            ->summary(self::summaryNoteOrNull($summary))
+            ->history($history)
+            ->context($contextChunks)
+            ->question($question)
+            ->build();
+    }
+
+    private static function summaryNoteOrNull(?string $summary): ?string
     {
         if ($summary === null) {
-            return [];
+            return null;
         }
 
-        return [
-            [
-                'role' => 'system',
-                'content' => self::summaryNote($summary),
-            ],
-        ];
-    }
-
-    private static function renderContext(array $contextChunks): string
-    {
-        if ($contextChunks === []) {
-            return '(no context provided)';
-        }
-
-        return implode("\n\n", array_map(
-            fn (array $chunk): string => "[{$chunk['source']}] {$chunk['content']}",
-            $contextChunks,
-        ));
+        return self::summaryNote($summary);
     }
 }

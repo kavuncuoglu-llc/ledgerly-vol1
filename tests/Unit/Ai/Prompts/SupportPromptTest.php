@@ -8,13 +8,26 @@ use Tests\TestCase;
 
 class SupportPromptTest extends TestCase
 {
-    private const SYSTEM_TEXT_HASH = '2e81a8e161f68f89a2f9b42913c7bbb7';
+    private const SYSTEM_TEXT_HASH = 'e4323b3382edc014b551739177dd3d37';
 
     public function test_system_fits_the_token_budget(): void
     {
         $tokens = app(TokenCounter::class)->count(SupportPrompt::system());
 
         $this->assertLessThanOrEqual(config('ai.budget.system'), $tokens);
+    }
+
+    public function test_system_text_is_shorter_than_the_chapter_thirteen_version(): void
+    {
+        $tokens = app(TokenCounter::class)->count(SupportPrompt::system());
+
+        $this->assertLessThan(320, $tokens);
+    }
+
+    public function test_system_text_carries_no_date_so_the_prefix_does_not_change_daily(): void
+    {
+        $this->assertDoesNotMatchRegularExpression('/\b\d{4}-\d{2}-\d{2}\b/', SupportPrompt::system());
+        $this->assertStringNotContainsString('Today', SupportPrompt::system());
     }
 
     public function test_system_text_is_unchanged_since_the_version_was_set(): void
@@ -28,9 +41,9 @@ class SupportPromptTest extends TestCase
         );
     }
 
-    public function test_version_is_the_fourth_revision_which_adds_the_chapter_thirteen_memories_block(): void
+    public function test_version_is_the_fifth_revision_which_compresses_the_system_text_for_chapter_fourteen(): void
     {
-        $this->assertSame('2026-11-09.4', SupportPrompt::VERSION);
+        $this->assertSame('2026-11-09.5', SupportPrompt::VERSION);
     }
 
     public function test_messages_match_the_stored_snapshot(): void
@@ -65,15 +78,12 @@ class SupportPromptTest extends TestCase
         );
     }
 
-    public function test_messages_say_no_context_was_provided_when_there_are_no_chunks(): void
+    public function test_messages_have_no_context_slot_when_there_are_no_chunks(): void
     {
         $messages = SupportPrompt::messages('What late fee does Ledgerly charge?');
 
         $this->assertCount(2, $messages);
-        $this->assertSame(
-            "Context:\n(no context provided)\n\nQuestion: What late fee does Ledgerly charge?",
-            $messages[1]['content'],
-        );
+        $this->assertSame('What late fee does Ledgerly charge?', $messages[1]['content']);
     }
 
     public function test_messages_keep_the_question_in_the_last_user_turn_and_out_of_the_system_text(): void
@@ -84,7 +94,7 @@ class SupportPromptTest extends TestCase
 
         $this->assertStringNotContainsString($question, $messages[0]['content']);
         $this->assertSame('user', end($messages)['role']);
-        $this->assertStringEndsWith("Question: {$question}", end($messages)['content']);
+        $this->assertSame($question, end($messages)['content']);
     }
 
     public function test_system_text_has_the_four_parts_in_order(): void

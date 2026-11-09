@@ -1,0 +1,34 @@
+{
+    "description": "Twenty generic how-to questions about Ledgerly features, none of which depends on who is asking. Run twice with php artisan support:ask-batch to see the semantic cache fill and then answer.",
+    "questions": [
+        "How do I set up recurring invoices?",
+        "How do I add a new client?",
+        "How do I send an invoice by email?",
+        "How do I record a payment made outside Ledgerly?",
+        "How do I issue a refund?",
+        "How do I add a discount to an invoice?",
+        "How do I set up tax rates?",
+        "How do I invite a team member?",
+        "How do I turn on two-factor authentication?",
+        "How do I export invoices to CSV?",
+        "How do I change the late fee percentage?",
+        "How do I pause a recurring schedule?",
+        "How do I add a logo to invoices?",
+        "How do I import clients from a spreadsheet?",
+        "How do I void an invoice?",
+        "How do I download an invoice as a PDF?",
+        "How do I connect a bank account for payouts?",
+        "How do I upgrade to a higher plan?",
+        "How do I cancel a subscription?",
+        "How do I schedule a report email?"
+    ],
+    "rephrasings": {
+        "How do I set up recurring invoices?": "Can I make an invoice repeat every month?",
+        "How do I turn on two-factor authentication?": "Where do I enable a second login step for extra security?",
+        "How do I void an invoice?": "What is the way to cancel an invoice that was sent by mistake?"
+    },
+    "account_specific": [
+        "Why is my March invoice late?",
+        "What is the late fee on INV-4471?"
+    ]
+}

@@ -26,6 +26,17 @@ class ToolRegistryTest extends TestCase
         $this->assertSame(['invoice_number', 'month'], $definitions[0]['function']['parameters']['required']);
     }
 
+    public function test_definitions_are_sorted_by_name_whatever_order_the_tools_were_added_in(): void
+    {
+        $forward = (new ToolRegistry)->add(new LookupInvoice)->add(new RefundTool);
+        $backward = (new ToolRegistry)->add(new RefundTool)->add(new LookupInvoice);
+
+        $names = array_column(array_column($forward->definitions(), 'function'), 'name');
+
+        $this->assertSame(['issue_refund', 'lookup_invoice'], $names);
+        $this->assertSame(json_encode($forward->definitions()), json_encode($backward->definitions()));
+    }
+
     public function test_get_throws_for_an_unknown_name(): void
     {
         $this->expectException(UnknownTool::class);

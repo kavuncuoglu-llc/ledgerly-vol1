@@ -7,6 +7,7 @@ use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\StreamTruncated;
 use App\Ai\Exceptions\UnknownSamplingProfile;
 use App\Ai\Http\AiHttpClient;
+use App\Ai\Http\CallDetails;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Event;
@@ -282,6 +283,86 @@ class AiHttpClientTest extends TestCase
             && $event->model === 'served:8b'
             && $event->usage['prompt_tokens'] === 18
             && $event->finishReason === 'stop');
+    }
+
+    public function test_stream_records_the_time_to_the_first_delta(): void
+    {
+        Http::fake(['*' => Http::response($this->sse([
+            $this->chunk(['content' => 'Hi']),
+            $this->chunk([], 'stop', ['prompt_tokens' => 18, 'completion_tokens' => 2]),
+        ], done: true))]);
+
+        iterator_to_array($this->client()->stream(messages: [$this->userMessage('Hi')]), false);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->ttftMs !== null
+            && $event->ttftMs <= $event->latencyMs);
+    }
+
+    public function test_stream_records_no_first_delta_time_when_nothing_was_streamed(): void
+    {
+        Http::fake(['*' => Http::response($this->sse([
+            $this->chunk([], 'stop', ['prompt_tokens' => 18, 'completion_tokens' => 0]),
+        ], done: true))]);
+
+        iterator_to_array($this->client()->stream(messages: [$this->userMessage('Hi')]), false);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->ttftMs === null);
+    }
+
+    public function test_chat_carries_the_call_details_onto_the_event(): void
+    {
+        Http::fake(['*' => Http::response($this->completion())]);
+
+        $this->client()->chat(
+            messages: [$this->userMessage('Hi')],
+            details: new CallDetails(
+                contextBreakdown: ['system' => 10],
+                semanticCacheHit: false,
+            ),
+        );
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->contextBreakdown === ['system' => 10]
+            && $event->semanticCacheHit === false
+            && $event->ttftMs === null);
+    }
+
+    public function test_chat_reports_no_cached_tokens_without_a_conversation_or_a_provider_figure(): void
+    {
+        Http::fake(['*' => Http::response($this->completion())]);
+
+        $this->client()->chat(messages: [$this->userMessage('Hi')]);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->cachedTokens === null
+            && $event->cachedTokensEstimated === false);
+    }
+
+    public function test_chat_uses_the_cached_tokens_the_provider_reports(): void
+    {
+        $body = $this->completion();
+        $body['usage']['prompt_tokens_details'] = ['cached_tokens' => 64];
+        Http::fake(['*' => Http::response($body)]);
+
+        $this->client()->chat(messages: [$this->userMessage('Hi')], conversationId: 5);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->cachedTokens === 64
+            && $event->cachedTokensEstimated === false);
+    }
+
+    public function test_chat_estimates_cached_tokens_from_the_prefix_shared_with_the_previous_call_in_the_conversation(): void
+    {
+        Http::fake(['*' => Http::response($this->completion())]);
+        $system = [
+            'role' => 'system',
+            'content' => str_repeat('A long and stable system message. ', 6),
+        ];
+
+        $this->client()->chat(messages: [$system, $this->userMessage('first')], feature: 'support.reply', conversationId: 5);
+        $this->client()->chat(messages: [$system, $this->userMessage('second')], feature: 'support.reply', conversationId: 5);
+
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->cachedTokensEstimated === true
+            && $event->cachedTokens === 0);
+        Event::assertDispatched(ModelCalled::class, fn (ModelCalled $event): bool => $event->cachedTokensEstimated === true
+            && $event->cachedTokens > 0);
     }
 
     public function test_stream_passes_the_prompt_version_to_model_called(): void

@@ -22,6 +22,11 @@ final class RecordModelCall
             'conversation_id' => $event->conversationId,
             'prompt_version' => $event->promptVersion,
             'repaired' => $event->repaired,
+            'cached_tokens' => $event->cachedTokens,
+            'cached_tokens_estimated' => $event->cachedTokensEstimated,
+            'ttft_ms' => $event->ttftMs,
+            'context_breakdown' => $event->contextBreakdown,
+            'semantic_cache_hit' => $event->semanticCacheHit,
         ]);
 
         $event->modelCallId = $row->id;

@@ -95,7 +95,7 @@ class SupportConversationTest extends TestCase
         $roles = array_column($secondRequest['messages'], 'role');
         $this->assertSame(['system', 'user', 'assistant', 'user'], $roles);
         $this->assertSame('Why is my March invoice late?', $secondRequest['messages'][1]['content']);
-        $this->assertStringEndsWith('Question: What about the April one?', $secondRequest['messages'][3]['content']);
+        $this->assertSame('What about the April one?', $secondRequest['messages'][3]['content']);
         $this->assertSame($conversationId, ModelCall::query()->latest('id')->first()->conversation_id);
         $this->assertSame(4, Message::query()->withoutGlobalScopes()->count());
     }

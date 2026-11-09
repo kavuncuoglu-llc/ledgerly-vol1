@@ -4,7 +4,9 @@ namespace App\Ai\Tools;
 
 use App\Ai\Events\ToolCalled;
 use App\Ai\Http\AiHttpClient;
+use App\Ai\Http\CallDetails;
 use App\Ai\Http\ChatResponse;
+use App\Ai\Tokens\TokenCounter;
 use App\Models\PendingToolCall;
 use App\Models\ToolCall;
 use Illuminate\Validation\ValidationException;
@@ -18,11 +20,12 @@ final class ToolRunner
         private readonly AiHttpClient $client,
         private readonly ToolRegistry $tools,
         private readonly ToolGate $gate,
+        private readonly TokenCounter $counter,
     ) {}
 
-    public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null): ToolRunResult
+    public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null, ?CallDetails $details = null): ToolRunResult
     {
-        return $this->loop($messages, $ctx, $options, $feature, $promptVersion, 1);
+        return $this->loop($messages, $ctx, $options, $feature, $promptVersion, 1, $details);
     }
 
     public function resume(string $runId): ToolRunResult
@@ -113,7 +116,7 @@ final class ToolRunner
         );
     }
 
-    private function loop(array $messages, ToolContext $ctx, array $options, string $feature, ?string $promptVersion, int $firstRound): ToolRunResult
+    private function loop(array $messages, ToolContext $ctx, array $options, string $feature, ?string $promptVersion, int $firstRound, ?CallDetails $details = null): ToolRunResult
     {
         $requestOptions = $this->withToolOptions($options);
 
@@ -124,7 +127,14 @@ final class ToolRunner
         $response = null;
 
         for ($round = $firstRound; $round <= self::MAX_ROUNDS; $round++) {
-            $response = $this->client->chat($messages, $requestOptions, $feature, $promptVersion, conversationId: $ctx->conversationId);
+            $response = $this->client->chat(
+                $messages,
+                $requestOptions,
+                $feature,
+                $promptVersion,
+                conversationId: $ctx->conversationId,
+                details: $this->detailsForRound($details, $requestOptions, $messages, $inputCount),
+            );
 
             $modelCallIds[] = $response->modelCallId;
 
@@ -150,6 +160,38 @@ final class ToolRunner
         }
 
         return new ToolRunResult($response, $messages, rounds: self::MAX_ROUNDS, hitCap: true, inputCount: $inputCount, modelCallIds: $modelCallIds);
+    }
+
+    private function detailsForRound(?CallDetails $details, array $requestOptions, array $messages, int $inputCount): ?CallDetails
+    {
+        if ($details === null) {
+            return null;
+        }
+
+        if (count($messages) === $inputCount) {
+            return $this->withToolSlot($details, $requestOptions);
+        }
+
+        $produced = json_encode(array_slice($messages, $inputCount));
+
+        return $this->withToolSlot($details, $requestOptions)->forFollowUpRound([
+            'tool_results' => $this->counter->count((string) $produced),
+        ]);
+    }
+
+    private function withToolSlot(CallDetails $details, array $requestOptions): CallDetails
+    {
+        if (empty($requestOptions['tools'])) {
+            return $details;
+        }
+
+        return new CallDetails(
+            contextBreakdown: [
+                ...($details->contextBreakdown ?? []),
+                'tools' => $this->counter->count((string) json_encode($requestOptions['tools'])),
+            ],
+            semanticCacheHit: $details->semanticCacheHit,
+        );
     }
 
     private function withToolOptions(array $options): array

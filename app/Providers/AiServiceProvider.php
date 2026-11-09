@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Ai\Cache\HelpVersion;
+use App\Ai\Context\ProviderCapabilities;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\EloquentConversationStore;
 use App\Ai\Embeddings\Embedder;
@@ -49,6 +51,15 @@ class AiServiceProvider extends ServiceProvider
         $this->app->singleton(ConversationStore::class, EloquentConversationStore::class);
 
         $this->app->singleton(AiHttpClient::class, fn () => new AiHttpClient(config('ai')));
+
+        $this->app->singleton(ProviderCapabilities::class, fn () => new ProviderCapabilities(
+            provider: (string) config('ai.provider'),
+            cacheBreakpointsOverride: config('ai.prompt_cache.breakpoints') === null
+                ? null
+                : filter_var(config('ai.prompt_cache.breakpoints'), FILTER_VALIDATE_BOOLEAN),
+        ));
+
+        $this->app->singleton(HelpVersion::class, fn () => new HelpVersion(resource_path('help')));
 
         $this->app->singleton(Embedder::class, fn () => new Embedder(
             client: $this->app->make(AiHttpClient::class),
