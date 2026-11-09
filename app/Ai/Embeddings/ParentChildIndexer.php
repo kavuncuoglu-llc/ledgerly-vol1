@@ -42,18 +42,10 @@ final class ParentChildIndexer
 
     public function ingest(ParentChildPlan $plan, string $version, Closure $afterEachEmbedding): void
     {
-        $embedded = $plan->toEmbed()->map(function (ChildUnit $unit) use ($afterEachEmbedding): array {
-            $header = $unit->reusableHeader ?? $this->generatedHeader($unit);
-
-            $vector = $this->embedder->document($unit->withHeader($header));
-
-            $afterEachEmbedding($unit);
-
-            return [
-                'header' => $header,
-                'vector' => $vector,
-            ];
-        });
+        $embedded = $plan->toEmbed()
+            ->chunk(max(1, (int) config('ai.embedding.batch_size')))
+            ->flatMap(fn (Collection $batch): array => $this->embedBatch($batch, $afterEachEmbedding))
+            ->values();
 
         DB::transaction(function () use ($plan, $version, $embedded): void {
             HelpChunk::query()->whereIn('chunk_key', $plan->removedKeys)->delete();
@@ -67,6 +59,26 @@ final class ParentChildIndexer
                 ->where('help_version', '!=', $version)
                 ->update(['help_version' => $version]);
         });
+    }
+
+    private function embedBatch(Collection $batch, Closure $afterEachEmbedding): array
+    {
+        $headers = $batch
+            ->map(fn (ChildUnit $unit): string => $unit->reusableHeader ?? $this->generatedHeader($unit))
+            ->values();
+
+        $vectors = $this->embedder->documents(
+            $batch->values()->map(fn (ChildUnit $unit, int $index): string => $unit->withHeader($headers[$index]))->all(),
+        );
+
+        $batch->each(fn (ChildUnit $unit) => $afterEachEmbedding($unit));
+
+        return $headers
+            ->map(fn (string $header, int $index): array => [
+                'header' => $header,
+                'vector' => $vectors[$index],
+            ])
+            ->all();
     }
 
     private function units(Collection $parents, Collection $stored, bool $contextHeaders): Collection

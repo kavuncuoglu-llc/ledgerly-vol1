@@ -168,6 +168,39 @@ return [
         'retrieval_k' => 3,
     ],
 
+    'replies' => [
+        'enabled' => (bool) env('AI_QUEUED_REPLIES', true),
+        'queue' => 'ai',
+        'batch_queue' => 'ai-batch',
+        'timeout' => 180,
+        'tries' => 3,
+        'backoff' => [5, 15, 60],
+        'unique_for' => 900,
+        'flush_ms' => (int) env('AI_STREAM_FLUSH_MS', 50),
+        'flush_tokens' => (int) env('AI_STREAM_FLUSH_TOKENS', 20),
+        'buffer_store' => env('AI_REPLY_BUFFER_STORE') ?: null,
+        'buffer_ttl_seconds' => 900,
+        'buffer_done_ttl_seconds' => 60,
+        'broadcast_pause_seconds' => 5,
+        'sse_max_seconds' => 120,
+        'sse_poll_ms' => 100,
+        'paused_expiry_days' => (int) env('AI_PAUSED_EXPIRY_DAYS', 7),
+        'queue_depth_alert' => (int) env('AI_QUEUE_DEPTH_ALERT', 20),
+        'tool_labels' => [
+            'lookup_invoice' => 'Looking up your invoice...',
+            'list_invoices' => 'Checking your invoices...',
+            'account_status' => 'Checking your account...',
+            'open_ticket' => 'Opening a ticket...',
+        ],
+        'default_tool_label' => 'Working on it...',
+    ],
+
+    'horizon_viewers' => array_filter(explode(',', (string) env('AI_HORIZON_VIEWERS', ''))),
+
+    'embedding' => [
+        'batch_size' => (int) env('AI_EMBED_BATCH', 48),
+    ],
+
     'mcp_servers' => [],
 
     'tool_allow_lists' => [],

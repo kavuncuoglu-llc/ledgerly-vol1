@@ -24,6 +24,10 @@ class AskRequest extends FormRequest
                 'string',
                 'max:2000',
             ],
+            'request_id' => [
+                'nullable',
+                'uuid',
+            ],
             'conversation_id' => [
                 'nullable',
                 'integer',

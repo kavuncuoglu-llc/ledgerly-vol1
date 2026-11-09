@@ -6,6 +6,8 @@ use App\Ai\Events\ToolCalled;
 use App\Ai\Http\AiHttpClient;
 use App\Ai\Http\CallDetails;
 use App\Ai\Http\ChatResponse;
+use App\Ai\Http\ToolCallStarted;
+use App\Ai\Streaming\StreamTaps;
 use App\Ai\Tokens\TokenCounter;
 use App\Models\PendingToolCall;
 use App\Models\ToolCall;
@@ -23,12 +25,12 @@ final class ToolRunner
         private readonly TokenCounter $counter,
     ) {}
 
-    public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null, ?CallDetails $details = null): ToolRunResult
+    public function run(array $messages, ToolContext $ctx, array $options = [], string $feature = 'tools', ?string $promptVersion = null, ?CallDetails $details = null, ?StreamTaps $taps = null): ToolRunResult
     {
-        return $this->loop($messages, $ctx, $options, $feature, $promptVersion, 1, $details);
+        return $this->loop($messages, $ctx, $options, $feature, $promptVersion, 1, $details, $taps);
     }
 
-    public function resume(string $runId): ToolRunResult
+    public function resume(string $runId, ?StreamTaps $taps = null): ToolRunResult
     {
         $rows = PendingToolCall::query()
             ->where('run_id', $runId)
@@ -54,6 +56,7 @@ final class ToolRunner
             feature: $first->feature ?? 'tools',
             promptVersion: $first->prompt_version,
             firstRound: min($first->round + 1, self::MAX_ROUNDS),
+            taps: $taps,
         );
     }
 
@@ -126,7 +129,7 @@ final class ToolRunner
         );
     }
 
-    private function loop(array $messages, ToolContext $ctx, array $options, string $feature, ?string $promptVersion, int $firstRound, ?CallDetails $details = null): ToolRunResult
+    private function loop(array $messages, ToolContext $ctx, array $options, string $feature, ?string $promptVersion, int $firstRound, ?CallDetails $details = null, ?StreamTaps $taps = null): ToolRunResult
     {
         $requestOptions = $this->withToolOptions($options);
 
@@ -137,13 +140,14 @@ final class ToolRunner
         $response = null;
 
         for ($round = $firstRound; $round <= self::MAX_ROUNDS; $round++) {
-            $response = $this->client->chat(
+            $response = $this->complete(
                 $messages,
                 $requestOptions,
                 $feature,
                 $promptVersion,
-                conversationId: $ctx->conversationId,
-                details: $this->detailsForRound($details, $requestOptions, $messages, $inputCount),
+                $ctx,
+                $this->detailsForRound($details, $requestOptions, $messages, $inputCount),
+                $taps,
             );
 
             $modelCallIds[] = $response->modelCallId;
@@ -170,6 +174,46 @@ final class ToolRunner
         }
 
         return new ToolRunResult($response, $messages, rounds: self::MAX_ROUNDS, hitCap: true, inputCount: $inputCount, modelCallIds: $modelCallIds);
+    }
+
+    private function complete(array $messages, array $requestOptions, string $feature, ?string $promptVersion, ToolContext $ctx, ?CallDetails $details, ?StreamTaps $taps): ChatResponse
+    {
+        if ($taps === null) {
+            return $this->client->chat(
+                $messages,
+                $requestOptions,
+                $feature,
+                $promptVersion,
+                conversationId: $ctx->conversationId,
+                details: $details,
+            );
+        }
+
+        $stream = $this->client->stream(
+            $messages,
+            $requestOptions,
+            $feature,
+            $promptVersion,
+            conversationId: $ctx->conversationId,
+            details: $details,
+        );
+
+        foreach ($stream as $item) {
+            $this->relay($item, $taps);
+        }
+
+        return $stream->getReturn();
+    }
+
+    private function relay(string|ToolCallStarted $item, StreamTaps $taps): void
+    {
+        if ($item instanceof ToolCallStarted) {
+            ($taps->onToolStart)($item->name);
+
+            return;
+        }
+
+        ($taps->onDelta)($item);
     }
 
     private function detailsForRound(?CallDetails $details, array $requestOptions, array $messages, int $inputCount): ?CallDetails

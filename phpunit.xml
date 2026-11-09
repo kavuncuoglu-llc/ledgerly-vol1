@@ -22,6 +22,8 @@
         <env name="AI_SEMANTIC_CACHE" value="false"/>
         <env name="AI_ROUTING" value="false"/>
         <env name="AI_RERANKER" value="none"/>
+        <env name="AI_QUEUED_REPLIES" value="false"/>
+        <env name="AI_EMBED_BATCH" value="1"/>
         <env name="AI_RETRIEVAL_REWRITE" value="off"/>
         <env name="AI_CHUNK_STRATEGY" value="heading"/>
         <env name="AI_SEMANTIC_CACHE_REQUIRE_GROUNDING" value="false"/>

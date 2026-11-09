@@ -37,6 +37,8 @@ class PendingToolCall extends Model
 
     public const STATUS_DECLINED = 'declined';
 
+    public const STATUS_EXPIRED = 'expired';
+
     public $incrementing = false;
 
     protected $keyType = 'string';

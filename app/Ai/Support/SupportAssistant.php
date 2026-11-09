@@ -18,6 +18,7 @@ use App\Ai\Retrieval\CitationChecker;
 use App\Ai\Retrieval\CitationReport;
 use App\Ai\Retrieval\RetrievalScope;
 use App\Ai\Retrieval\Retriever;
+use App\Ai\Streaming\StreamTaps;
 use App\Ai\Structured\RepairPrompt;
 use App\Ai\Tools\ToolContext;
 use App\Ai\Tools\ToolRunner;
@@ -48,6 +49,16 @@ final class SupportAssistant
 
     public function answer(User $user, string $question, ?Conversation $conversation = null): ToolRunResult
     {
+        return $this->respond($user, $question, $conversation, null);
+    }
+
+    public function answerStreaming(User $user, string $question, Conversation $conversation, StreamTaps $taps): ToolRunResult
+    {
+        return $this->respond($user, $question, $conversation, $taps);
+    }
+
+    private function respond(User $user, string $question, ?Conversation $conversation, ?StreamTaps $taps): ToolRunResult
+    {
         $started = hrtime(true);
 
         $conversation ??= $this->store->start($user, SupportPrompt::VERSION);
@@ -68,7 +79,7 @@ final class SupportAssistant
 
         $runner = $this->runnerFor($route);
 
-        $run = fn (array $messages): ToolRunResult => $runner->run(
+        $run = fn (array $messages, ?StreamTaps $streamTaps = null): ToolRunResult => $runner->run(
             messages: $messages,
             ctx: new ToolContext(user: $user, conversationId: $conversation->id),
             options: [
@@ -81,9 +92,10 @@ final class SupportAssistant
                 contextBreakdown: $assembled->breakdown,
                 semanticCacheHit: $lookup->semanticCacheHit(),
             ),
+            taps: $streamTaps,
         );
 
-        $result = $this->enforceCitations($run($assembled->messages), $assembled, $run);
+        $result = $this->enforceCitations($run($assembled->messages, $taps), $assembled, $run);
 
         $this->cache->store($user, $question, $lookup, $result, grounded: $assembled->labelMap !== [] && $result->citationsOk);
 

@@ -58,7 +58,7 @@ final class AiHttpClient
         return $chat->withModelCallId($event->modelCallId);
     }
 
-    public function stream(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null): Generator
+    public function stream(array $messages, array $options = [], string $feature = 'unknown', ?string $promptVersion = null, ?int $conversationId = null, ?CallDetails $details = null): Generator
     {
         $body = [
             ...$this->buildBody($messages, $options),
@@ -108,22 +108,33 @@ final class AiHttpClient
             $interruption = $exception;
         }
 
-        ModelCalled::dispatch(
+        $response = $accumulator->toResponse($body['model']);
+
+        $cached = $this->cachedTokens($response, $feature, $conversationId, $messages);
+
+        $event = new ModelCalled(
             $feature,
             $this->config['provider'],
             $accumulator->model($body['model']),
             $accumulator->usage()->toArray(),
             $this->streamFinishReason($accumulator),
             $this->elapsedMilliseconds($started),
+            conversationId: $conversationId,
             promptVersion: $promptVersion,
+            cachedTokens: $cached['tokens'],
             ttftMs: $firstDeltaMs,
+            contextBreakdown: $details?->contextBreakdown,
+            semanticCacheHit: $details?->semanticCacheHit,
+            cachedTokensEstimated: $cached['estimated'],
         );
+
+        event($event);
 
         if (! $accumulator->isDone()) {
             throw new StreamTruncated($accumulator->content(), $accumulator->finishReason(), $interruption);
         }
 
-        return $accumulator->toResponse($body['model']);
+        return $response->withModelCallId($event->modelCallId);
     }
 
     public function post(string $path, array $body, array $requestOptions = []): Response

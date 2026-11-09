@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MemoryController;
+use App\Http\Controllers\ReplyController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ToolApprovalController;
@@ -25,6 +27,8 @@ Route::get('help/{category}/{slug}', [HelpCenterController::class, 'show']);
 Route::get('inbox', [TicketController::class, 'index']);
 Route::get('inbox/{ticket}', [TicketController::class, 'show']);
 
+Route::get('chat', [ChatController::class, 'show']);
+
 Route::post('login', [LoginController::class, 'store'])->middleware('throttle:10,1');
 
 Route::post('support/ask', [SupportController::class, 'ask'])->middleware([
@@ -34,6 +38,12 @@ Route::post('support/ask', [SupportController::class, 'ask'])->middleware([
 
 Route::middleware('auth')->group(function () {
     Route::post('support/conversations/{conversation}/close', [ConversationController::class, 'close'])->middleware('throttle:ai');
+
+    Route::get('replies/{reply}', [ReplyController::class, 'show']);
+
+    Route::get('replies/{reply}/stream', [ReplyController::class, 'stream']);
+
+    Route::post('replies/{reply}/feedback', [ReplyController::class, 'feedback']);
 
     Route::get('support/memories', [MemoryController::class, 'index']);
 

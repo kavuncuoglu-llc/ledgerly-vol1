@@ -14,6 +14,7 @@
             <a href="{{ url('invoices') }}">Invoices</a>
             <a href="{{ url('help') }}">Help center</a>
             <a href="{{ url('inbox') }}">Support inbox</a>
+            <a href="{{ url('chat') }}">Assistant</a>
         </nav>
     </header>
 

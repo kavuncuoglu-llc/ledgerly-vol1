@@ -9,7 +9,21 @@ use Throwable;
 
 final class TriageTicket implements ShouldQueue
 {
+    public int $timeout = 180;
+
+    public int $tries = 3;
+
     public function __construct(private readonly TriageRunner $runner) {}
+
+    public function viaQueue(): string
+    {
+        return config('ai.replies.batch_queue');
+    }
+
+    public function backoff(): array
+    {
+        return config('ai.replies.backoff');
+    }
 
     public function handle(TicketReceived $event): void
     {

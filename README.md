@@ -36,6 +36,15 @@ php artisan serve
 
 Open <http://127.0.0.1:8000>. You get a customer list, an invoice list, the help center, and the support inbox.
 
+From `ch18` the assistant answers through a queue and streams over WebSockets, so run two more processes next to `php artisan serve` (the queue connection is Redis; `.env.example` sets it):
+
+```sh
+php artisan horizon
+php artisan reverb:start --host=127.0.0.1 --port=8080
+```
+
+Then open <http://127.0.0.1:8000/chat>, sign in as `acme@example.com` / `password`, and ask. `AI_QUEUED_REPLIES=false` brings back the synchronous `POST /support/ask` of earlier chapters. If port 8080 is taken on your machine, change `REVERB_PORT` and `REVERB_SERVER_PORT` in `.env`.
+
 The seeder is deterministic. It creates 40 customers, 599 invoices in every status, 93 support tickets, and the help center is read from Markdown in `resources/help/`. Customer 12 is **Acme Studios** (`acme@example.com`, password `password`), the account the book's examples keep coming back to.
 
 If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_PORT` in `.env` before `docker compose up -d`; Compose reads them from there.
@@ -110,6 +119,13 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Ai/Triage` | `TriagePipeline` (route, extract, urgency rule, assignment, one bounded `InvestigateAgent` for billing and account tickets, grounded draft), `TriageRunner` (idempotent per event id), `UrgencyRule`, `Assignment`, `Drafter`, `TriageResult` |
 | `app/Models/AgentRun.php`, `TriageRun.php`, `database/migrations/2026_01_17_*` | `agent_runs` (state, budget usage and trace of every run), `triage_runs` (one per event id; `status` `queued_for_review` is the review queue), and `tickets.assignee` and `tickets.urgent` |
 | `app/Console/Commands/TicketTriage.php`, `AgentTrace.php` | `php artisan ticket:triage [storage/samples/tickets.json] [--user=] [--fresh]` runs the twenty sample messages through the pipeline and prints a line per ticket; `php artisan agent:trace {run}` prints one agent run as a log |
+| `app/Ai/Replies` | The queued reply: `ReplyDispatcher` (placeholder row, idempotent on `request_id`), `AnswerQuestion` (unique per reply, 180 s, 3 tries, `ai` queue) and `ResumeReply` (continues a run after its approval), `ReplyLifecycle` (pending, streaming, paused, resuming, completed, failed, expired), `ReplyStream` (batches deltas into broadcasts and the buffer) and `ReplyBroadcaster` (a dead socket server never fails the job) |
+| `app/Ai/Streaming` | `DeltaBatcher` (flush every 50 ms or 20 deltas), `StreamTaps`, `ReplyBuffer` (numbered chunks per reply in the cache, the replay source) and `ReplyEventStream` (the server-sent-events relay) |
+| `app/Ai/Events/Reply*.php`, `routes/channels.php` | `ReplyDelta`, `ToolCallStarted`, `ReplyPaused`, `ReplyCompleted`, `ReplyFailed`, `ReplyRestarted`, broadcast on `private-reply.{id}`; the channel is authorized for the reply's owner under the tenant scope |
+| `app/Models/Reply.php`, `database/migrations/2026_01_18_*` | The `replies` table: the placeholder the job fills in (status, content, sources, `resume_token`, feedback) |
+| `app/Http/Controllers/ReplyController.php`, `ChatController.php`, `public/js/`, `resources/views/chat` | `GET /replies/{id}` (stored state plus in-flight chunks), `GET /replies/{id}/stream` (SSE), `POST /replies/{id}/feedback`, and the `/chat` page (`chat.js`, `reply-channel.js`: WebSocket with an SSE fallback, no build step) |
+| `app/Console/Commands/RepliesExpirePaused.php` | `php artisan replies:expire-paused` (scheduled daily at 03:00): expires replies waiting for an approval longer than `AI_PAUSED_EXPIRY_DAYS` (7) |
+| `config/horizon.php`, `config/reverb.php`, `config/broadcasting.php` | Horizon pools `ai-interactive` (queue `ai`, `AI_CONCURRENCY` workers), `ai-batch` (queue `ai-batch`, 1 to 2 workers) and `default`; the Reverb app and the broadcast connection |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
 | `docker-compose.yml` | Postgres with pgvector, and Redis |

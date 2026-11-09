@@ -71,13 +71,18 @@ final class HelpIndexer
 
     public function ingest(IngestDiff $diff, string $version, Closure $afterEachEmbedding): void
     {
-        $vectors = $diff->toEmbed()->map(function (SourcedChunk $sourced) use ($afterEachEmbedding): array {
-            $vector = $this->embedder->document($sourced->chunk->content);
+        $vectors = $diff->toEmbed()
+            ->chunk(max(1, (int) config('ai.embedding.batch_size')))
+            ->flatMap(function (Collection $batch) use ($afterEachEmbedding): array {
+                $vectors = $this->embedder->documents(
+                    $batch->map(fn (SourcedChunk $sourced): string => $sourced->chunk->content)->values()->all(),
+                );
 
-            $afterEachEmbedding($sourced);
+                $batch->each(fn (SourcedChunk $sourced) => $afterEachEmbedding($sourced));
 
-            return $vector;
-        });
+                return $vectors;
+            })
+            ->values();
 
         DB::transaction(function () use ($diff, $version, $vectors): void {
             HelpChunk::query()->whereIn('chunk_key', $diff->removedKeys)->delete();

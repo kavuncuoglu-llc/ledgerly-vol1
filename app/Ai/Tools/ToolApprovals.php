@@ -4,7 +4,10 @@ namespace App\Ai\Tools;
 
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Exceptions\ApprovalAlreadyResolved;
+use App\Ai\Replies\ReplyLifecycle;
+use App\Ai\Replies\ResumeReply;
 use App\Models\PendingToolCall;
+use App\Models\Reply;
 use Illuminate\Support\Facades\DB;
 
 final class ToolApprovals
@@ -12,6 +15,7 @@ final class ToolApprovals
     public function __construct(
         private readonly ToolRunner $runner,
         private readonly ConversationStore $conversations,
+        private readonly ReplyLifecycle $replies,
     ) {}
 
     public function approve(PendingToolCall $pending): ApprovalOutcome
@@ -75,11 +79,34 @@ final class ToolApprovals
             return new ApprovalOutcome($resolved);
         }
 
+        if ($this->handedToQueue($resolved->run_id)) {
+            return new ApprovalOutcome($resolved);
+        }
+
         $run = $this->runner->resume($resolved->run_id);
 
         $this->recordInConversation($resolved, $run);
 
         return new ApprovalOutcome($resolved, $run);
+    }
+
+    private function handedToQueue(string $runId): bool
+    {
+        $reply = Reply::query()
+            ->withoutGlobalScopes()
+            ->where('resume_token', $runId)
+            ->where('status', Reply::STATUS_PAUSED)
+            ->first();
+
+        if ($reply === null) {
+            return false;
+        }
+
+        $this->replies->resuming($reply);
+
+        ResumeReply::dispatch($reply->id);
+
+        return true;
     }
 
     private function recordInConversation(PendingToolCall $resolved, ToolRunResult $run): void

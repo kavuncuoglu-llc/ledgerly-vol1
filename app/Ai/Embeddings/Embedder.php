@@ -28,15 +28,37 @@ final class Embedder
         return $this->embed('search_document: '.$text);
     }
 
-    private function embed(string $input): array
+    public function documents(array $texts): array
     {
+        if (count($texts) <= 1) {
+            return array_map(fn (string $text): array => $this->document($text), array_values($texts));
+        }
+
         $response = $this->client->post('/embeddings', [
             'model' => $this->model,
-            'input' => $input,
+            'input' => array_map(fn (string $text): string => 'search_document: '.$text, array_values($texts)),
         ]);
 
-        $vector = $response->json('data.0.embedding');
+        return $this->vectorsOf($response->json('data'), count($texts));
+    }
 
+    private function vectorsOf(mixed $rows, int $expected): array
+    {
+        if (! is_array($rows)) {
+            throw EmbeddingFailed::malformed();
+        }
+
+        if (count($rows) !== $expected) {
+            throw EmbeddingFailed::malformed();
+        }
+
+        usort($rows, fn (array $left, array $right): int => ($left['index'] ?? 0) <=> ($right['index'] ?? 0));
+
+        return array_map(fn (array $row): array => $this->checked($row['embedding'] ?? null), $rows);
+    }
+
+    private function checked(mixed $vector): array
+    {
         if (! is_array($vector)) {
             throw EmbeddingFailed::malformed();
         }
@@ -46,5 +68,15 @@ final class Embedder
         }
 
         return array_map('floatval', $vector);
+    }
+
+    private function embed(string $input): array
+    {
+        $response = $this->client->post('/embeddings', [
+            'model' => $this->model,
+            'input' => $input,
+        ]);
+
+        return $this->checked($response->json('data.0.embedding'));
     }
 }
