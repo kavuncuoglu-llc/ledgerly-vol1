@@ -4,6 +4,7 @@ Fixes go on `main`. Chapter tags never move once published; a chapter whose code
 
 ## Unreleased
 
+- Security: CSRF protection is back on everywhere except when `APP_ENV=local`. Tags `ch09` and `ch10` exempted `login` and `support/*` in every environment so the book's `curl -b cookies.txt` flow works; `main` now exempts only `login` and `support/ask`, and only locally. In any other environment, send the `XSRF-TOKEN` cookie value back as the `X-XSRF-TOKEN` header. Do not deploy the `ch09` or `ch10` tags as they stand.
 - Fix a flaky `help:search` test at and after `ch06`: `RefreshDatabase` rolls back the bulk inserts of the `help:embed` tests, which leaves dead entries in the HNSW index, and an approximate index scan over a handful of rows could then miss the right chunk. The two search tests now turn off index scans for their transaction so they compare exactly; no application code changed. Test-only, so the `ch06` tag is unaffected.
 
 ## ch10

@@ -14,10 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn (Request $request): string => '/login');
 
-        $middleware->preventRequestForgery(except: [
-            'login',
-            'support/*',
-        ]);
+        $middleware->preventRequestForgery(except: env('APP_ENV') === 'local'
+            ? [
+                'login',
+                'support/ask',
+            ]
+            : []);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
