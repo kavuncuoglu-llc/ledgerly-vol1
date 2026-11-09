@@ -43,9 +43,58 @@ services:
           cpus: "2"
           memory: 2g
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ledgerly-ollama
+    profiles: ["linux-gpu"]
+    networks:
+      - internal
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+      - ./ops/ollama:/modelfiles:ro
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+      OLLAMA_NUM_PARALLEL: ${OLLAMA_NUM_PARALLEL:-2}
+      OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-3}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-30m}
+      OLLAMA_FLASH_ATTENTION: ${OLLAMA_FLASH_ATTENTION:-1}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ledgerly-ollama-init
+    profiles: ["linux-gpu"]
+    networks:
+      - internal
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./ops/ollama:/modelfiles:ro
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint:
+      - sh
+      - -c
+      - ollama pull nomic-embed-text && ollama pull llama3.1:8b-instruct-q4_K_M && ollama create ledgerly-support -f /modelfiles/Modelfile.ledgerly-support
+
 networks:
   internal:
 
 volumes:
   ledgerly-postgres:
   ledgerly-redis:
+  ollama-models:

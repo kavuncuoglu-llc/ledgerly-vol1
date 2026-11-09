@@ -3,6 +3,7 @@
 namespace Tests\Unit\Ai\Contracts;
 
 use App\Ai\Contracts\ChatRequest;
+use App\Ai\Contracts\ChatResponse;
 use App\Ai\Contracts\FinishReason;
 use App\Ai\Contracts\Usage;
 use App\Ai\Exceptions\ContextTooLong;
@@ -122,5 +123,23 @@ class ContractTypesTest extends TestCase
         $this->assertNotSame([], JsonSchemaCheck::violations(['category' => 'billing', 'extra' => 1], $schema));
         $this->assertNotSame([], JsonSchemaCheck::violations(['category' => 'billing', 'tags' => [1]], $schema));
         $this->assertNotSame([], JsonSchemaCheck::violations('billing', $schema));
+    }
+
+    public function test_a_reported_first_token_time_survives_the_copies_a_response_goes_through(): void
+    {
+        $response = (new ChatResponse(
+            id: 'a',
+            model: 'm',
+            content: 'x',
+            toolCalls: [],
+            finishReason: FinishReason::Stop,
+            usage: Usage::empty(),
+            raw: [],
+        ))->withFirstTokenMs(250);
+
+        $this->assertSame(250, $response->withModelCallId(7)->firstTokenMs);
+        $this->assertSame(250, $response->withContent('y')->firstTokenMs);
+        $this->assertSame(7, $response->withModelCallId(7)->withFirstTokenMs(null)->modelCallId);
+        $this->assertNull($response->withFirstTokenMs(null)->firstTokenMs);
     }
 }

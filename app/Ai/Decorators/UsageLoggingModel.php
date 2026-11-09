@@ -25,7 +25,7 @@ final class UsageLoggingModel extends ChatModelDecorator
 
         $response = $this->inner->chat($request);
 
-        $event = $this->eventFor($request, $response, $this->elapsedMilliseconds($started), $request->repaired);
+        $event = $this->eventFor($request, $response, $this->elapsedMilliseconds($started), $request->repaired, $response->firstTokenMs);
 
         event($event);
 
@@ -50,7 +50,7 @@ final class UsageLoggingModel extends ChatModelDecorator
             }
 
             if ($item instanceof Completed) {
-                $event = $this->eventFor($request, $item->response, $this->elapsedMilliseconds($started), false, $firstDeltaMs);
+                $event = $this->eventFor($request, $item->response, $this->elapsedMilliseconds($started), false, $firstDeltaMs ?? $item->response->firstTokenMs);
 
                 event($event);
 

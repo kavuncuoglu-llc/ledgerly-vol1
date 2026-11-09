@@ -1,0 +1,67 @@
+{
+    "provider": "local",
+    "driver": "ollama",
+    "recorded_at": "2026-11-09T21:39:37+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "headers": {
+            "Content-Length": "563",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a billing assistant. Use the tool to look up invoices."
+                },
+                {
+                    "role": "user",
+                    "content": "What is the status of invoice 4471?"
+                }
+            ],
+            "options": {
+                "temperature": 0,
+                "top_p": 0.9,
+                "num_predict": 200
+            },
+            "tools": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "lookup_invoice",
+                        "description": "Look up one invoice by its number.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "invoice_number": {
+                                    "type": "string",
+                                    "description": "The invoice number, digits only."
+                                }
+                            },
+                            "required": [
+                                "invoice_number"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "keep_alive": "30m",
+            "stream": false
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Date": "Mon, 09 Nov 2026 21:39:37 GMT",
+            "Content-Length": "446"
+        },
+        "body": "{\"model\":\"llama3.1:8b\",\"created_at\":\"2026-11-09T21:39:37.719892Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_gtge90og\",\"function\":{\"index\":0,\"name\":\"lookup_invoice\",\"arguments\":{\"invoice_number\":\"4471\"}}}]},\"done\":true,\"done_reason\":\"stop\",\"total_duration\":1552094333,\"load_duration\":4206667,\"prompt_eval_count\":188,\"prompt_eval_cached_count\":2,\"prompt_eval_duration\":780260000,\"eval_count\":19,\"eval_duration\":761526000}"
+    }
+}

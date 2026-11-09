@@ -13,6 +13,7 @@ final readonly class ChatResponse
         public Usage $usage,
         public array $raw,
         public ?int $modelCallId = null,
+        public ?int $firstTokenMs = null,
     ) {}
 
     public function withModelCallId(?int $modelCallId): self
@@ -26,6 +27,22 @@ final readonly class ChatResponse
             usage: $this->usage,
             raw: $this->raw,
             modelCallId: $modelCallId,
+            firstTokenMs: $this->firstTokenMs,
+        );
+    }
+
+    public function withFirstTokenMs(?int $firstTokenMs): self
+    {
+        return new self(
+            id: $this->id,
+            model: $this->model,
+            content: $this->content,
+            toolCalls: $this->toolCalls,
+            finishReason: $this->finishReason,
+            usage: $this->usage,
+            raw: $this->raw,
+            modelCallId: $this->modelCallId,
+            firstTokenMs: $firstTokenMs,
         );
     }
 
@@ -40,6 +57,7 @@ final readonly class ChatResponse
             usage: $this->usage,
             raw: $this->raw,
             modelCallId: $this->modelCallId,
+            firstTokenMs: $this->firstTokenMs,
         );
     }
 }

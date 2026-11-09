@@ -10,6 +10,9 @@ return [
             'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_MODEL', 'llama3.1:8b'),
+            'ollama' => env('AI_OLLAMA') === null
+                ? null
+                : filter_var(env('AI_OLLAMA'), FILTER_VALIDATE_BOOLEAN),
             'license' => env('AI_LICENSE', 'Llama 3.1 Community License'),
             'license_reviewed' => env('AI_LICENSE_REVIEWED') ?: null,
             'gpu_hour_cost' => is_numeric(env('AI_GPU_HOUR_COST'))
@@ -98,6 +101,15 @@ return [
         'fake' => [
             'driver' => 'fake',
         ],
+    ],
+
+    'ollama' => [
+        'native' => (bool) env('AI_OLLAMA_NATIVE', false),
+        'keep_alive' => env('AI_OLLAMA_KEEP_ALIVE', '30m'),
+        'num_ctx' => env('AI_NUM_CTX') ?: null,
+        'num_parallel' => env('OLLAMA_NUM_PARALLEL') ?: null,
+        'providers' => array_filter(explode(',', (string) env('AI_OLLAMA_CHECK_PROVIDERS', 'local,local-embed,vision'))),
+        'probe_timeout' => (int) env('AI_OLLAMA_PROBE_TIMEOUT', 120),
     ],
 
     'tiers' => [

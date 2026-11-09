@@ -105,12 +105,13 @@ class AiDoctorCommandTest extends TestCase
             ->assertFailed();
     }
 
-    public function test_without_size_it_says_what_exists_so_far(): void
+    public function test_without_size_it_runs_the_ollama_checks_and_stops_when_the_server_is_down(): void
     {
         $this->serverDown();
 
         $this->artisan('ai:doctor')
-            ->expectsOutputToContain('Only --size exists so far')
+            ->expectsOutputToContain('is not reachable')
+            ->expectsOutputToContain('0 warnings, 1 failure')
             ->assertFailed();
     }
 

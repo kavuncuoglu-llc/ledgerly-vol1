@@ -9,6 +9,9 @@ use App\Ai\Contracts\EmbeddingModel;
 use App\Ai\Contracts\Reranker;
 use App\Ai\Conversations\ConversationStore;
 use App\Ai\Conversations\EloquentConversationStore;
+use App\Ai\Doctor\BindProbe;
+use App\Ai\Doctor\Doctor;
+use App\Ai\Doctor\SocketBindProbe;
 use App\Ai\Drivers\Support\DebugLog;
 use App\Ai\Embeddings\BoilerplateStripper;
 use App\Ai\Embeddings\Embedder;
@@ -109,6 +112,10 @@ class AiServiceProvider extends ServiceProvider
         $this->app->bind(HostInspector::class, SystemHostInspector::class);
 
         $this->app->bind(BackgroundSampler::class, ProcessBackgroundSampler::class);
+
+        $this->app->bind(BindProbe::class, SocketBindProbe::class);
+
+        $this->app->bind(Doctor::class, fn () => Doctor::standard());
 
         $this->app->bind(MemoryProbeFactory::class, OllamaMemoryProbeFactory::class);
 

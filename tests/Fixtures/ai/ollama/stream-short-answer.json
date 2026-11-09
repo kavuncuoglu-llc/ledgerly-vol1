@@ -1,0 +1,46 @@
+{
+    "provider": "local",
+    "driver": "ollama",
+    "recorded_at": "2026-11-09T21:39:39+00:00",
+    "request": {
+        "method": "POST",
+        "url": "http://localhost:11434/api/chat",
+        "headers": {
+            "Content-Length": "287",
+            "User-Agent": "GuzzleHttp/7",
+            "Content-Type": "application/json",
+            "Host": "localhost:11434",
+            "Authorization": "[redacted]",
+            "Accept": "application/json"
+        },
+        "body": {
+            "model": "llama3.1:8b",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You classify support tickets. Reply with one lowercase word."
+                },
+                {
+                    "role": "user",
+                    "content": "I was charged twice for my March invoice."
+                }
+            ],
+            "options": {
+                "temperature": 0,
+                "top_p": 0.9,
+                "num_predict": 20
+            },
+            "keep_alive": "30m",
+            "stream": true
+        }
+    },
+    "response": {
+        "status": 200,
+        "headers": {
+            "Content-Type": "application/x-ndjson",
+            "Date": "Mon, 09 Nov 2026 21:39:39 GMT",
+            "Connection": "close"
+        },
+        "body": "{\"model\":\"llama3.1:8b\",\"created_at\":\"2026-11-09T21:39:39.140754Z\",\"message\":{\"role\":\"assistant\",\"content\":\"duplicate\"},\"done\":false}\n{\"model\":\"llama3.1:8b\",\"created_at\":\"2026-11-09T21:39:39.180735Z\",\"message\":{\"role\":\"assistant\",\"content\":\"\"},\"done\":true,\"done_reason\":\"stop\",\"total_duration\":121942084,\"load_duration\":1749917,\"prompt_eval_count\":35,\"prompt_eval_cached_count\":34,\"prompt_eval_duration\":66733999,\"eval_count\":2,\"eval_duration\":46974000}\n"
+    }
+}

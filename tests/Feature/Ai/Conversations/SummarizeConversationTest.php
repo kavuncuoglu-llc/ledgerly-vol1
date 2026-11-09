@@ -48,11 +48,11 @@ class SummarizeConversationTest extends TestCase
     public function test_handle_asks_the_provider_for_a_bigger_window_when_one_is_configured(): void
     {
         config()->set('ai.conversation.summary_context_window', 16384);
-        Http::fake(['*' => Http::response($this->completion('S'))]);
+        Http::fake(['*' => Http::response(['model' => 'llama3.1:8b', 'message' => ['role' => 'assistant', 'content' => 'S'], 'done' => true, 'done_reason' => 'stop', 'prompt_eval_count' => 120, 'eval_count' => 40])]);
 
         SummarizeConversation::dispatchSync($this->longConversation(6), 100);
 
-        Http::assertSent(fn (Request $request): bool => $request['num_ctx'] === 16384);
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/api/chat') && $request['options']['num_ctx'] === 16384);
     }
 
     public function test_handle_leaves_the_providers_window_alone_by_default(): void

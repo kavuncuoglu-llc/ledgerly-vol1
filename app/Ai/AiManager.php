@@ -14,6 +14,7 @@ use App\Ai\Drivers\BedrockDriver;
 use App\Ai\Drivers\FakeDriver;
 use App\Ai\Drivers\FakeEmbeddings;
 use App\Ai\Drivers\GeminiDriver;
+use App\Ai\Drivers\OllamaDriver;
 use App\Ai\Drivers\OpenAiCompatibleDriver;
 use App\Ai\Drivers\OpenAiCompatibleEmbeddings;
 use App\Ai\Drivers\Support\DebugLog;
@@ -183,6 +184,7 @@ class AiManager
 
         return match ($driver) {
             'openai-compatible' => new OpenAiCompatibleDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
+            'ollama' => new OllamaDriver($config, $this->app->make(TokenCounter::class), $this->app->make(DebugLog::class)),
             'anthropic' => new AnthropicDriver($config, $this->app->make(DebugLog::class)),
             'gemini' => new GeminiDriver($config, $this->app->make(DebugLog::class)),
             'bedrock' => new BedrockDriver($config, $this->app->make(DebugLog::class)),
@@ -199,7 +201,7 @@ class AiManager
         $driver = (string) ($config['driver'] ?? '');
 
         return match ($driver) {
-            'openai-compatible' => new RetryingEmbeddingModel(new OpenAiCompatibleEmbeddings($config)),
+            'openai-compatible', 'ollama' => new RetryingEmbeddingModel(new OpenAiCompatibleEmbeddings($config)),
             'fake' => new FakeEmbeddings($config),
             default => throw UnknownProvider::notEmbedding($name, $driver),
         };

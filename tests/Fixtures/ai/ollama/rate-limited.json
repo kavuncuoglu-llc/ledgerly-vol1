@@ -1,0 +1,12 @@
+{
+    "provider": "ollama",
+    "driver": "ollama",
+    "source": "Hand-written from the provider's published API shape. Not recorded.",
+    "response": {
+        "status": 429,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"error\":\"too many requests\"}"
+    }
+}

@@ -3,6 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Ai\AiManager;
+use App\Ai\Doctor\CheckResult;
+use App\Ai\Doctor\CheckStatus;
+use App\Ai\Doctor\Doctor;
+use App\Ai\Doctor\DoctorContextFactory;
 use App\Ai\Exceptions\UnknownModelArchitecture;
 use App\Ai\Exceptions\UnknownProvider;
 use App\Ai\Hardware\ByteSize;
@@ -19,8 +23,8 @@ class AiDoctor extends Command
     protected $signature = 'ai:doctor
         {--size : Check that a model, its KV cache and headroom fit the memory this machine can give a GPU}
         {--model= : Model name, e.g. llama3.1:70b-instruct-q4_K_M (default: the provider\'s model)}
-        {--provider= : Provider whose server is asked about the model (default: ai.default)}
-        {--ctx= : Context window in tokens (default: ai.budget.window)}
+        {--provider= : Provider whose Ollama server is checked, or asked about the model with --size (default: ai.default)}
+        {--ctx= : Context window in tokens the checks and the sizing compare against (default: ai.budget.window)}
         {--slots=1 : Parallel sequences the server keeps a cache for}
         {--cache=f16 : KV cache type: f16, q8_0 or q4_0}
         {--reserve-gib=0 : Memory other processes on this machine need, on top of the headroom}
@@ -31,14 +35,12 @@ class AiDoctor extends Command
         {--head-dim= : Head dimension}
         {--quantization= : Weight quantization, e.g. q4_k_m}';
 
-    protected $description = 'Memory sizing: weights plus KV cache plus headroom against the memory the GPU can reach';
+    protected $description = 'Check an Ollama setup for the silent failures (context window, placement, keep-alive, exposure), or with --size, memory sizing';
 
-    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator): int
+    public function handle(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator, DoctorContextFactory $contexts, Doctor $doctor): int
     {
         if (! $this->option('size')) {
-            $this->error('Only --size exists so far: php artisan ai:doctor --size [--model=...].');
-
-            return Command::FAILURE;
+            return $this->runChecks($ai, $contexts, $doctor);
         }
 
         try {
@@ -60,6 +62,53 @@ class AiDoctor extends Command
         return $result->fits()
             ? Command::SUCCESS
             : Command::FAILURE;
+    }
+
+    private function runChecks(AiManager $ai, DoctorContextFactory $contexts, Doctor $doctor): int
+    {
+        $provider = (string) ($this->option('provider') ?: config('ai.default'));
+
+        try {
+            $ai->providerConfig($provider);
+        } catch (UnknownProvider $exception) {
+            $this->error($exception->getMessage());
+
+            return Command::FAILURE;
+        }
+
+        if (! $contexts->isOllama($provider)) {
+            $this->error("Provider {$provider} does not point at an Ollama server. Pass --provider=<an Ollama provider> or set AI_OLLAMA=true.");
+
+            return Command::FAILURE;
+        }
+
+        $window = (int) ($this->option('ctx') ?: config('ai.budget.window'));
+
+        $results = $doctor->run($contexts->make($provider, $window));
+
+        foreach ($results as $result) {
+            $this->line($result->line());
+        }
+
+        return $this->summarize($results);
+    }
+
+    private function summarize(array $results): int
+    {
+        $warnings = $this->count($results, CheckStatus::Warn);
+
+        $failures = $this->count($results, CheckStatus::Fail);
+
+        $this->line("{$warnings} ".($warnings === 1 ? 'warning' : 'warnings').", {$failures} ".($failures === 1 ? 'failure' : 'failures'));
+
+        return $failures === 0
+            ? Command::SUCCESS
+            : Command::FAILURE;
+    }
+
+    private function count(array $results, CheckStatus $status): int
+    {
+        return count(array_filter($results, fn (CheckResult $result): bool => $result->status === $status));
     }
 
     private function sized(AiManager $ai, HardwareProbe $probe, ModelSpecs $specs, SizingCalculator $calculator): SizingResult

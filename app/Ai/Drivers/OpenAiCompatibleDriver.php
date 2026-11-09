@@ -19,6 +19,7 @@ use App\Ai\Drivers\Support\SseReader;
 use App\Ai\Drivers\Support\StreamAccumulator;
 use App\Ai\Exceptions\ModelRequestFailed;
 use App\Ai\Exceptions\StreamTruncated;
+use App\Ai\Native\OllamaEndpoint;
 use App\Ai\Tokens\TokenCounter;
 use Generator;
 use RuntimeException;
@@ -40,6 +41,8 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
 
     private readonly ProviderClient $client;
 
+    private ?OllamaDriver $native = null;
+
     public function __construct(
         private readonly array $config,
         private readonly TokenCounter $counter,
@@ -51,6 +54,10 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
             errors: new OpenAiErrors,
             headers: ['Authorization' => 'Bearer '.($config['api_key'] ?? '')],
         );
+
+        if (OllamaEndpoint::wantsNative($config)) {
+            $this->native = $this->nativeDriver();
+        }
     }
 
     public function name(): string
@@ -78,6 +85,12 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
     {
         $clone = clone $this;
 
+        if (OllamaEndpoint::isOllama($this->config)) {
+            $clone->native = ($this->native ?? $this->nativeDriver())->withContextWindow($tokens);
+
+            return $clone;
+        }
+
         $clone->extraOptions['num_ctx'] = $tokens;
 
         return $clone;
@@ -85,6 +98,10 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
 
     public function chat(ChatRequest $request): ChatResponse
     {
+        if ($this->native !== null) {
+            return $this->native->chat($request);
+        }
+
         $body = [
             ...$this->body($request),
             'stream' => false,
@@ -99,6 +116,10 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
 
     public function stream(ChatRequest $request): Generator
     {
+        if ($this->native !== null) {
+            return yield from $this->native->stream($request);
+        }
+
         $body = [
             ...$this->body($request),
             'stream' => true,
@@ -163,6 +184,11 @@ final class OpenAiCompatibleDriver implements ChatModel, SupportsContextWindowOv
         $response = $this->client->send($method, $path, $body);
 
         return $response->json() ?? ['body' => $response->body()];
+    }
+
+    private function nativeDriver(): OllamaDriver
+    {
+        return new OllamaDriver($this->config, $this->counter, $this->debug);
     }
 
     private function body(ChatRequest $request): array

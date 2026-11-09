@@ -97,6 +97,7 @@ class OpenAiCompatibleCapabilitiesTest extends TestCase
 
     public function test_the_context_window_override_adds_num_ctx_to_one_model_only(): void
     {
+        config()->set('ai.providers.local.ollama', false);
         $this->fakeOk();
 
         $base = app(AiManager::class)->chat('local');

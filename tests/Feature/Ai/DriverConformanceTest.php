@@ -38,6 +38,12 @@ class DriverConformanceTest extends TestCase
             'api_key' => 'test-key',
             'model' => 'conformance-model',
         ]);
+        config()->set('ai.providers.conformance-ollama', [
+            'driver' => 'ollama',
+            'base_url' => 'http://ollama.test:11434/v1',
+            'api_key' => 'ollama',
+            'model' => 'conformance-model',
+        ]);
         config()->set('ai.providers.conformance-anthropic', [
             'driver' => 'anthropic',
             'base_url' => 'http://anthropic.test',
@@ -128,7 +134,7 @@ class DriverConformanceTest extends TestCase
         $this->assertSame(2060, $response->usage->promptTokens);
     }
 
-    #[DataProvider('drivers')]
+    #[DataProvider('driversWithContentFilter')]
     public function test_a_content_filter_stop_normalizes_to_content_filter(string $driver): void
     {
         FakeHttp::replay($driver, 'filtered');
@@ -215,10 +221,16 @@ class DriverConformanceTest extends TestCase
     {
         return [
             'openai-compatible' => ['openai-compatible'],
+            'ollama' => ['ollama'],
             'anthropic' => ['anthropic'],
             'gemini' => ['gemini'],
             'bedrock' => ['bedrock'],
         ];
+    }
+
+    public static function driversWithContentFilter(): array
+    {
+        return array_diff_key(self::drivers(), ['ollama' => true]);
     }
 
     public static function errors(): array
@@ -230,6 +242,9 @@ class DriverConformanceTest extends TestCase
             $cases["{$driver} overloaded"] = [$driver, 'overloaded', ProviderUnavailable::class, 3];
             $cases["{$driver} context overflow"] = [$driver, 'context-overflow', ContextTooLong::class, 1];
         }
+
+        $cases['ollama rate limit'] = ['ollama', 'rate-limited', RateLimited::class, 3];
+        $cases['ollama busy'] = ['ollama', 'overloaded', ProviderUnavailable::class, 3];
 
         return $cases;
     }
