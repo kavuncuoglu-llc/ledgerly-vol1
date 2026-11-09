@@ -44,8 +44,15 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 
 | Path | What it is |
 | --- | --- |
-| `app/Models` | Customer, Invoice, InvoiceItem, Payment, Ticket, User |
+| `app/Models` | Customer, Invoice, InvoiceItem, Payment, Ticket, User, ModelCall |
 | `app/Support/HelpCenter.php` | Reads the Markdown help center from `resources/help/` |
+| `app/Ai/Tokens` | `TokenCounter` interface with `TiktokenCounter` (exact, OpenAI-family) and `RatioCounter` (estimate) |
+| `app/Ai/Events/ModelCalled.php` | Event every model call will dispatch with its usage, finish reason, and latency |
+| `app/Ai/Listeners/RecordModelCall.php` | Writes one `model_calls` row per event and warns when a completion was truncated |
+| `app/Ai/Prompt/Budget.php` | Token budget arithmetic over `config/ai.php` (`budget`) |
+| `app/Providers/AiServiceProvider.php` | Binds `TokenCounter` from `AI_TOKEN_COUNTER` and registers the listener |
+| `config/ai.php` | `token_counter`, `budget`, and the per-model `rates` table (USD per million tokens) |
+| `database/migrations/2026_01_01_000000_create_model_calls_table.php` | The usage log table |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
 | `docker-compose.yml` | Postgres with pgvector, and Redis |
