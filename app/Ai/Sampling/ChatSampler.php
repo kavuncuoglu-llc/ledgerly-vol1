@@ -14,15 +14,24 @@ final class ChatSampler
 
     public function sample(string $prompt, array $parameters = [], ?string $model = null): SampleResult
     {
-        $response = $this->endpoint->post('/chat/completions', [
-            ...$parameters,
-            'model' => $model ?? config('ai.model'),
-            'messages' => [
+        return $this->chat(
+            messages: [
                 [
                     'role' => 'user',
                     'content' => $prompt,
                 ],
             ],
+            parameters: $parameters,
+            model: $model,
+        );
+    }
+
+    public function chat(array $messages, array $parameters = [], ?string $model = null): SampleResult
+    {
+        $response = $this->endpoint->post('/chat/completions', [
+            ...$parameters,
+            'model' => $model ?? config('ai.model'),
+            'messages' => $messages,
             'stream' => false,
         ]);
 

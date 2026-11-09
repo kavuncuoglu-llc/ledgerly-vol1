@@ -8,6 +8,8 @@ return [
 
     'model' => env('AI_MODEL', 'llama3.1:8b'),
 
+    'vision_model' => env('AI_VISION_MODEL', 'llama3.2-vision:11b'),
+
     'embed_model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
 
     'embed_dimensions' => (int) env('AI_EMBED_DIMENSIONS', 768),

@@ -39,6 +39,34 @@ class ChatSamplerTest extends TestCase
         });
     }
 
+    public function test_chat_sends_the_given_messages_untouched(): void
+    {
+        Http::fake([
+            '*' => Http::response($this->completion()),
+        ]);
+        $messages = [
+            [
+                'role' => 'user',
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => 'Read this',
+                    ],
+                    [
+                        'type' => 'image_url',
+                        'image_url' => [
+                            'url' => 'data:image/jpeg;base64,AAAA',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->sampler()->chat(messages: $messages, model: 'vision:1b');
+
+        Http::assertSent(fn (Request $request): bool => $request['messages'] === $messages && $request['model'] === 'vision:1b');
+    }
+
     public function test_sample_defaults_to_the_configured_model(): void
     {
         config()->set('ai.model', 'configured:8b');

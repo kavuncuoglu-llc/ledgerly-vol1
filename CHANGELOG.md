@@ -6,6 +6,16 @@ Fixes go on `main`. Chapter tags never move once published; a chapter whose code
 
 - Fix a flaky `help:search` test at and after `ch06`: `RefreshDatabase` rolls back the bulk inserts of the `help:embed` tests, which leaves dead entries in the HNSW index, and an approximate index scan over a handful of rows could then miss the right chunk. The two search tests now turn off index scans for their transaction so they compare exactly; no application code changed. Test-only, so the `ch06` tag is unaffected.
 
+## ch07
+
+- `php artisan invoice:read <path>` takes a PDF or an image, resizes it to at most 1024 by 1024 pixels as a JPEG (quality 85), sends it as a base64 `image_url` data URL with the system and extraction prompts to `config('ai.vision_model')` using the `deterministic` profile, parses the JSON reply, and prints a field table plus `total (model)`, `total (lines)`, and `agree?` (`NO --- review` when they differ by 0.01 or more). A final line prints prompt and completion tokens and the elapsed seconds.
+- `App\Ai\Vision`: `ImageEncoder`, `PdfPageRenderer`, `InvoicePrompt` (system prompt, extraction prompt, lenient `parse()` that tolerates code fences and surrounding prose and throws `UnreadableInvoice` when there is no JSON), and `ExtractedInvoice`.
+- `ChatSampler::chat()` accepts a full `messages` array so the user message can carry an image part; `sample()` now calls it.
+- `config/ai.php` `vision_model` (`AI_VISION_MODEL`, default `llama3.2-vision:11b`).
+- `storage/samples/`: `clean.pdf` (born-digital), `phone-photo.jpg` (rotated, shaded, blurred), and `bad-scan.jpg` (low-resolution, noisy), generated programmatically from one synthetic invoice whose line items sum to 1,284.50.
+- Dependency: `intervention/image-laravel` (GD driver). PDFs are rendered with Poppler's `pdftoppm` rather than Imagick, so no PHP extension beyond GD is needed.
+- Tests fake the model with `Http::fake()`; the three sample files have not been read by a real vision model.
+
 ## ch06
 
 - `App\Ai\Embeddings\Embedder` (`query()` and `document()` add the `search_query: ` / `search_document: ` prefixes, POST `/embeddings`, and check the vector length against `AI_EMBED_DIMENSIONS`), `MarkdownChunker` (splits on `##` headings, keeps `Title › Heading` in every chunk, merges short neighbouring sections and splits long ones on paragraphs to stay within 200 to 400 tokens of the bound `TokenCounter`), and `HelpIndexer`.

@@ -23,7 +23,7 @@ Prefer a zip? On GitHub, choose a chapter tag from the branch menu, then **Code 
 
 ## Run it
 
-You need PHP 8.3+, Composer, Docker, and (from Chapter 0 on) [Ollama](https://ollama.com).
+You need PHP 8.3+ with the GD extension, Composer, Docker, and (from Chapter 0 on) [Ollama](https://ollama.com). From `ch07`, `invoice:read` on a PDF also needs Poppler's `pdftoppm` on your `PATH` (`brew install poppler`, `apt install poppler-utils`).
 
 ```sh
 cp .env.example .env
@@ -58,7 +58,10 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Console/Commands/HelpEmbed.php`, `HelpSearch.php` | `php artisan help:embed` chunks and embeds the help center; `php artisan help:search "<question>"` prints the five nearest chunks |
 | `app/Models/HelpChunk.php`, `app/Casts/Vector.php` | The `help_chunks` model (with a `nearestTo` scope using pgvector's `<=>`) and its pgvector cast |
 | `database/migrations/2026_01_02_000000_create_help_chunks_table.php` | `help_chunks` with `vector(768)` and an HNSW cosine index |
-| `config/ai.php` | `base_url`, `api_key`, `model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
+| `app/Console/Commands/InvoiceRead.php` | `php artisan invoice:read <path>`: sends an invoice image or PDF to a vision model and cross-checks the extracted total against the line items |
+| `app/Ai/Vision` | `ImageEncoder` (resize to about 1 MP, JPEG, base64 data URL), `PdfPageRenderer` (first page via `pdftoppm`), `InvoicePrompt` (prompts and lenient JSON parser), `ExtractedInvoice` (display and totals check) |
+| `storage/samples/` | `clean.pdf`, `phone-photo.jpg`, `bad-scan.jpg`: three renderings of one synthetic invoice (Northgate Paper Co, NP-20931) |
+| `config/ai.php` | `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, and the per-model `rates` table (USD per million tokens) |
 | `database/migrations/2026_01_01_000000_create_model_calls_table.php` | The usage log table |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |

@@ -1,0 +1,72 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1612 >>
+stream
+BT /F2 20 Tf 50 780 Td (Northgate Paper Co) Tj ET
+BT /F1 10 Tf 50 760 Td (41 Mill Road, Leeds LS1 4AB, United Kingdom) Tj ET
+BT /F2 24 Tf 50 735 Td (INVOICE) Tj ET
+BT /F1 11 Tf 50 705 Td (Invoice number: NP-20931) Tj ET
+BT /F1 11 Tf 50 688 Td (Invoice date: 2026-03-16) Tj ET
+BT /F1 11 Tf 50 671 Td (Due date: 2026-04-15) Tj ET
+BT /F1 11 Tf 50 654 Td (Currency: USD) Tj ET
+BT /F1 11 Tf 50 625 Td (Bill to: Acme Studios) Tj ET
+BT /F2 11 Tf 50 580 Td (Description) Tj ET
+BT /F2 11 Tf 300 580 Td (Qty) Tj ET
+BT /F2 11 Tf 360 580 Td (Unit price) Tj ET
+BT /F2 11 Tf 470 580 Td (Amount) Tj ET
+BT /F1 11 Tf 50 560 Td (A4 copy paper, 5 reams per box) Tj ET
+BT /F1 11 Tf 300 560 Td (40) Tj ET
+BT /F1 11 Tf 360 560 Td (14.50) Tj ET
+BT /F1 11 Tf 470 560 Td (580.00) Tj ET
+BT /F1 11 Tf 50 542 Td (Toner cartridge, black) Tj ET
+BT /F1 11 Tf 300 542 Td (3) Tj ET
+BT /F1 11 Tf 360 542 Td (89.50) Tj ET
+BT /F1 11 Tf 470 542 Td (268.50) Tj ET
+BT /F1 11 Tf 50 524 Td (Ring binders, A4) Tj ET
+BT /F1 11 Tf 300 524 Td (120) Tj ET
+BT /F1 11 Tf 360 524 Td (2.50) Tj ET
+BT /F1 11 Tf 470 524 Td (300.00) Tj ET
+BT /F1 11 Tf 50 506 Td (Delivery) Tj ET
+BT /F1 11 Tf 300 506 Td (1) Tj ET
+BT /F1 11 Tf 360 506 Td (136.00) Tj ET
+BT /F1 11 Tf 470 506 Td (136.00) Tj ET
+BT /F1 11 Tf 360 470 Td (Subtotal) Tj ET
+BT /F1 11 Tf 470 470 Td (1,284.50) Tj ET
+BT /F1 11 Tf 360 452 Td (Tax) Tj ET
+BT /F1 11 Tf 470 452 Td (0.00) Tj ET
+BT /F2 13 Tf 360 430 Td (Total) Tj ET
+BT /F2 13 Tf 470 430 Td (1,284.50) Tj ET
+BT /F1 10 Tf 50 380 Td (Payment terms: net 30. Bank transfer to the account on file.) Tj ET
+0.5 w 50 595 m 545 595 l S
+50 485 m 545 485 l S
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000001914 00000 n 
+0000001984 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2059
+%%EOF
