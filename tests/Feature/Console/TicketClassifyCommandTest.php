@@ -7,10 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use Tests\Concerns\FakesChatCompletions;
 use Tests\TestCase;
 
 class TicketClassifyCommandTest extends TestCase
 {
+    use FakesChatCompletions;
     use RefreshDatabase;
 
     private string $samplesPath;
@@ -40,7 +42,7 @@ class TicketClassifyCommandTest extends TestCase
 
     public function test_handle_prints_the_agreement_and_each_miss(): void
     {
-        Http::fake(fn (Request $request) => Http::response($this->completion($this->scriptedReply($request))));
+        Http::fake(fn (Request $request) => Http::response($this->completion($this->ticketJson($this->scriptedReply($request)))));
 
         $this->artisan('ticket:classify', ['path' => $this->samplesPath])
             ->expectsOutput('3/4 agree with human labels (75%)')
@@ -51,7 +53,7 @@ class TicketClassifyCommandTest extends TestCase
 
     public function test_handle_omits_the_misses_block_when_every_label_agrees(): void
     {
-        Http::fake(fn (Request $request) => Http::response($this->completion($this->perfectReply($request))));
+        Http::fake(fn (Request $request) => Http::response($this->completion($this->ticketJson($this->perfectReply($request)))));
 
         $this->artisan('ticket:classify', ['path' => $this->samplesPath])
             ->expectsOutput('4/4 agree with human labels (100%)')
@@ -61,7 +63,7 @@ class TicketClassifyCommandTest extends TestCase
 
     public function test_handle_logs_every_classification_with_the_prompt_version(): void
     {
-        Http::fake(['*' => Http::response($this->completion('other'))]);
+        Http::fake(['*' => Http::response($this->completion($this->ticketJson('other')))]);
 
         $this->artisan('ticket:classify', ['path' => $this->samplesPath])->assertSuccessful();
 
@@ -102,7 +104,7 @@ class TicketClassifyCommandTest extends TestCase
 
     public function test_handle_reads_the_default_sample_file_with_twenty_labeled_messages(): void
     {
-        Http::fake(['*' => Http::response($this->completion('other'))]);
+        Http::fake(['*' => Http::response($this->completion($this->ticketJson('other')))]);
 
         $this->artisan('ticket:classify')->assertSuccessful();
 
@@ -134,26 +136,5 @@ class TicketClassifyCommandTest extends TestCase
         $messages = $request['messages'];
 
         return end($messages)['content'];
-    }
-
-    private function completion(string $content): array
-    {
-        return [
-            'id' => 'chatcmpl-1',
-            'model' => 'llama3.1:8b',
-            'choices' => [
-                [
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => $content,
-                    ],
-                    'finish_reason' => 'stop',
-                ],
-            ],
-            'usage' => [
-                'prompt_tokens' => 120,
-                'completion_tokens' => 1,
-            ],
-        ];
     }
 }

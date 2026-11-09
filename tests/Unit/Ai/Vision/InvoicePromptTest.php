@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Ai\Vision;
 
-use App\Ai\Exceptions\UnreadableInvoice;
 use App\Ai\Vision\InvoicePrompt;
 use PHPUnit\Framework\TestCase;
 
@@ -21,32 +20,19 @@ class InvoicePromptTest extends TestCase
         }
     }
 
-    public function test_parse_reads_a_plain_json_reply(): void
+    public function test_messages_put_the_image_data_url_in_the_user_turn_after_the_extraction_text(): void
     {
-        $data = InvoicePrompt::parse('{"vendor_name": "Northgate Paper Co", "total": 1284.5}');
+        $messages = InvoicePrompt::messages('data:image/jpeg;base64,AAAA');
 
-        $this->assertSame('Northgate Paper Co', $data['vendor_name']);
-        $this->assertSame(1284.5, $data['total']);
+        $this->assertSame('system', $messages[0]['role']);
+        $this->assertSame(InvoicePrompt::system(), $messages[0]['content']);
+        $this->assertSame('user', $messages[1]['role']);
+        $this->assertSame(['type' => 'text', 'text' => InvoicePrompt::extract()], $messages[1]['content'][0]);
+        $this->assertSame('data:image/jpeg;base64,AAAA', $messages[1]['content'][1]['image_url']['url']);
     }
 
-    public function test_parse_strips_markdown_fences_and_surrounding_prose(): void
+    public function test_extract_tells_the_model_how_to_refuse_through_the_error_field(): void
     {
-        $reply = "Here is the invoice:\n```json\n{\"invoice_number\": \"NP-20931\"}\n```\nLet me know if you need more.";
-
-        $this->assertSame(['invoice_number' => 'NP-20931'], InvoicePrompt::parse($reply));
-    }
-
-    public function test_parse_throws_when_the_reply_has_no_json(): void
-    {
-        $this->expectException(UnreadableInvoice::class);
-
-        InvoicePrompt::parse('I cannot read this image.');
-    }
-
-    public function test_parse_throws_when_the_braces_do_not_hold_valid_json(): void
-    {
-        $this->expectException(UnreadableInvoice::class);
-
-        InvoicePrompt::parse('{vendor: Northgate}');
+        $this->assertStringContainsString('set error to a short reason', InvoicePrompt::extract());
     }
 }

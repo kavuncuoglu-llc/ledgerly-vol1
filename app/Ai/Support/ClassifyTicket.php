@@ -2,30 +2,22 @@
 
 namespace App\Ai\Support;
 
-use App\Ai\Http\AiHttpClient;
 use App\Ai\Prompts\TicketClassifyPrompt;
+use App\Ai\Schemas\TicketData;
+use App\Ai\Structured\StructuredClient;
+use App\Enums\TicketCategory;
 
 final class ClassifyTicket
 {
-    public const FALLBACK_LABEL = 'other';
+    public function __construct(private readonly StructuredClient $structured) {}
 
-    public function __construct(private readonly AiHttpClient $client) {}
-
-    public function __invoke(string $message): string
+    public function __invoke(string $message): TicketCategory
     {
-        $label = trim(strtolower((string) $this->client->chat(
+        return $this->structured->extract(
+            class: TicketData::class,
             messages: TicketClassifyPrompt::messages($message),
-            options: [
-                'profile' => 'deterministic',
-                'max_tokens' => 4,
-                'stop' => ["\n"],
-            ],
             feature: 'ticket.classify',
             promptVersion: TicketClassifyPrompt::VERSION,
-        )->content));
-
-        return in_array($label, TicketClassifyPrompt::LABELS, true)
-            ? $label
-            : self::FALLBACK_LABEL;
+        )->category;
     }
 }

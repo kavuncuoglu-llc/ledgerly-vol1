@@ -54,8 +54,8 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Console/Commands/AiSample.php` | `php artisan ai:sample`: sends a prompt with explicit sampling parameters and prints completion, finish reason, and token counts |
 | `app/Ai/Sampling` | `ChatSampler` (one chat-completions call) and `SampleResult`, the minimal plumbing behind `ai:sample` |
 | `app/Ai/Http` | `AiHttpClient` (`chat()`, the `stream()` generator, and the retrying `post()` that `Embedder` also uses), `ChatResponse`, `Usage`, `RetryPolicy` (3 attempts, exponential backoff with jitter, `Retry-After` honored), and `StreamAccumulator`. Every `chat()` and `stream()` call dispatches `ModelCalled`, so it lands in `model_calls` |
-| `app/Ai/Support` | `SupportAssistant` (the first reply, no retrieval or tools), `ClassifyTicket` (one-word ticket label, validated against the allowed set), and `TicketSamples` (reads the labeled sample file) |
-| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v2) and `TicketClassifyPrompt`. The version is logged in `model_calls.prompt_version` |
+| `app/Ai/Support` | `SupportAssistant` (the first reply, no retrieval or tools), `ClassifyTicket` (returns a `TicketCategory` through `StructuredClient`), and `TicketSamples` (reads the labeled sample file) |
+| `app/Ai/Prompts` | Prompt classes with a `VERSION`: `SupportPrompt` (v2), `TicketClassifyPrompt`, and `TicketExtractPrompt`. The version is logged in `model_calls.prompt_version` |
 | `app/Console/Commands/TicketClassify.php`, `storage/samples/tickets.json` | `php artisan ticket:classify`: classifies the twenty labeled sample messages and reports agreement and misses |
 | `app/Events/TicketReceived.php`, `app/Ai/Listeners/ClassifyReceivedTicket.php` | Classifies a received ticket and stores its category (nothing dispatches the event yet) |
 | `app/Http/Controllers/LoginController.php` | `POST /login` (JSON): session login so the `curl -b cookies.txt` examples work |
@@ -65,11 +65,15 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `app/Console/Commands/HelpEmbed.php`, `HelpSearch.php` | `php artisan help:embed` chunks and embeds the help center; `php artisan help:search "<question>"` prints the five nearest chunks |
 | `app/Models/HelpChunk.php`, `app/Casts/Vector.php` | The `help_chunks` model (with a `nearestTo` scope using pgvector's `<=>`) and its pgvector cast |
 | `database/migrations/2026_01_02_000000_create_help_chunks_table.php` | `help_chunks` with `vector(768)` and an HNSW cosine index |
-| `app/Console/Commands/InvoiceRead.php` | `php artisan invoice:read <path>`: sends an invoice image or PDF to a vision model and cross-checks the extracted total against the line items |
-| `app/Ai/Vision` | `ImageEncoder` (resize to about 1 MP, JPEG, base64 data URL), `PdfPageRenderer` (first page via `pdftoppm`), `InvoicePrompt` (prompts and lenient JSON parser), `ExtractedInvoice` (display and totals check) |
+| `app/Console/Commands/InvoiceRead.php` | `php artisan invoice:read <path>`: sends an invoice image or PDF to a vision model through `StructuredClient::extract(InvoiceData::class, ...)` and prints the fields, the line count, and whether a repair turn was needed |
+| `app/Ai/Vision` | `ImageEncoder` (resize to about 1 MP, JPEG, base64 data URL), `PdfPageRenderer` (first page via `pdftoppm`), `InvoicePrompt` (system and extraction prompts, `messages($dataUrl)`) |
+| `app/Ai/Structured` | `StructuredClient::extract()` (schema from the DTO, enforced request, assert-parse, validate, one repair turn), `StructuredData`, `ExtractionMeta` (`repaired`, `attempts`), `RepairPrompt`, and `Provenance` |
+| `app/Ai/Schema` | `SchemaBuilder` (reflects a DTO into a strict JSON Schema) and the `Describe` and `ItemsOf` attributes |
+| `app/Ai/Schemas` | `InvoiceData`, `LineItem`, and `TicketData`: readonly DTOs with `rules()`, `afterRules()`, and `fromArray()` |
+| `app/Console/Commands/TicketExtract.php` | `php artisan ticket:extract [path]`: extracts category, invoice number, email, amount, and date from the twenty sample messages and reports valid, repaired, failed, and fill counts |
 | `storage/samples/` | `clean.pdf`, `phone-photo.jpg`, `bad-scan.jpg`: three renderings of one synthetic invoice (Northgate Paper Co, NP-20931), plus `tickets.json`, twenty support messages with human labels |
 | `config/ai.php` | `provider`, `base_url`, `api_key`, `model`, `vision_model`, `embed_model`, `embed_dimensions`, timeouts, `chunking`, `token_counter`, sampling `profiles`, `budget`, `rate_limit`, and the per-model `rates` table (USD per million tokens) |
-| `database/migrations/2026_01_01_000000_create_model_calls_table.php`, `2026_01_03_000000_add_prompt_version_to_model_calls_table.php` | The usage log table, and its `prompt_version` column |
+| `database/migrations/2026_01_01_000000_create_model_calls_table.php`, `2026_01_03_000000_add_prompt_version_to_model_calls_table.php`, `2026_01_04_000000_add_repaired_to_model_calls_table.php` | The usage log table, and its `prompt_version` and `repaired` columns |
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
 | `docker-compose.yml` | Postgres with pgvector, and Redis |

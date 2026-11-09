@@ -20,9 +20,4 @@ final class UnreadableInvoice extends RuntimeException
     {
         return new self("Could not render the PDF to an image with pdftoppm (Poppler): {$reason}");
     }
-
-    public static function noJsonInReply(): self
-    {
-        return new self('The model reply contained no JSON object to parse.');
-    }
 }

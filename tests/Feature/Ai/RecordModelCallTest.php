@@ -42,6 +42,20 @@ class RecordModelCallTest extends TestCase
         $this->assertNull(ModelCall::query()->sole()->prompt_version);
     }
 
+    public function test_handle_stores_whether_the_call_was_a_repair_attempt(): void
+    {
+        event($this->modelCalled(repaired: true));
+
+        $this->assertTrue(ModelCall::query()->sole()->repaired);
+    }
+
+    public function test_handle_stores_calls_as_not_repaired_by_default(): void
+    {
+        event($this->modelCalled());
+
+        $this->assertFalse(ModelCall::query()->sole()->repaired);
+    }
+
     public function test_handle_costs_a_model_without_a_rate_at_zero(): void
     {
         event($this->modelCalled(provider: 'ollama', model: 'unlisted:1b'));
@@ -114,6 +128,7 @@ class RecordModelCallTest extends TestCase
         string $finishReason = 'stop',
         ?int $conversationId = null,
         ?string $promptVersion = null,
+        bool $repaired = false,
     ): ModelCalled {
         return new ModelCalled(
             feature: 'support.reply',
@@ -127,6 +142,7 @@ class RecordModelCallTest extends TestCase
             latencyMs: 2840,
             conversationId: $conversationId,
             promptVersion: $promptVersion,
+            repaired: $repaired,
         );
     }
 }

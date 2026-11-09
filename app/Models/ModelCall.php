@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
     'cost_micros',
     'conversation_id',
     'prompt_version',
+    'repaired',
 ])]
 class ModelCall extends Model
 {
@@ -27,6 +28,7 @@ class ModelCall extends Model
             'latency_ms' => 'integer',
             'cost_micros' => 'integer',
             'conversation_id' => 'integer',
+            'repaired' => 'boolean',
         ];
     }
 }

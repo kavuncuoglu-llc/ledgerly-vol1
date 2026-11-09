@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Ai\Exceptions\ModelRequestFailed;
+use App\Ai\Exceptions\StructuredOutputFailed;
+use App\Ai\Exceptions\StructuredRefusal;
 use App\Ai\Exceptions\UnreadableTicketSamples;
 use App\Ai\Support\ClassifyTicket;
 use App\Ai\Support\TicketSamples;
@@ -20,7 +22,7 @@ class TicketClassify extends Command
             $samples = TicketSamples::fromFile($this->absolutePath((string) $this->argument('path')));
 
             $misses = $this->collectMisses($classify, $samples);
-        } catch (UnreadableTicketSamples|ModelRequestFailed $exception) {
+        } catch (UnreadableTicketSamples|ModelRequestFailed|StructuredOutputFailed|StructuredRefusal $exception) {
             $this->error($exception->getMessage());
 
             return Command::FAILURE;
@@ -45,7 +47,7 @@ class TicketClassify extends Command
         $misses = [];
 
         foreach ($samples as $sample) {
-            $modelLabel = $classify($sample['message']);
+            $modelLabel = $classify($sample['message'])->value;
 
             if ($modelLabel === $sample['label']) {
                 continue;

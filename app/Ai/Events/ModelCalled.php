@@ -17,5 +17,6 @@ final class ModelCalled
         public readonly int $latencyMs,
         public readonly ?int $conversationId = null,
         public readonly ?string $promptVersion = null,
+        public readonly bool $repaired = false,
     ) {}
 }

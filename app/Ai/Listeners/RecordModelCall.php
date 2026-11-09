@@ -21,6 +21,7 @@ final class RecordModelCall
             'cost_micros' => $this->costMicros($event),
             'conversation_id' => $event->conversationId,
             'prompt_version' => $event->promptVersion,
+            'repaired' => $event->repaired,
         ]);
 
         $this->warnWhenTruncated($event);

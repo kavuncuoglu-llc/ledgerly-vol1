@@ -7,11 +7,14 @@ use App\Events\TicketReceived;
 use App\Models\Ticket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use Tests\Concerns\FakesChatCompletions;
 use Tests\TestCase;
 
 class ClassifyReceivedTicketTest extends TestCase
 {
+    use FakesChatCompletions;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -23,7 +26,7 @@ class ClassifyReceivedTicketTest extends TestCase
 
     public function test_handle_stores_the_label_on_the_received_ticket(): void
     {
-        Http::fake(['*' => Http::response($this->completion('account'))]);
+        Http::fake(['*' => Http::response($this->completion($this->ticketJson('account')))]);
         $ticket = Ticket::factory()->create(['category' => TicketCategory::Other]);
 
         TicketReceived::dispatch($ticket);
@@ -33,7 +36,7 @@ class ClassifyReceivedTicketTest extends TestCase
 
     public function test_handle_classifies_the_ticket_body(): void
     {
-        Http::fake(['*' => Http::response($this->completion('billing'))]);
+        Http::fake(['*' => Http::response($this->completion($this->ticketJson('billing')))]);
         $ticket = Ticket::factory()->create(['body' => 'My card was charged twice']);
 
         TicketReceived::dispatch($ticket);
@@ -45,34 +48,15 @@ class ClassifyReceivedTicketTest extends TestCase
         });
     }
 
-    public function test_handle_stores_other_when_the_model_replies_with_something_unexpected(): void
+    public function test_handle_stores_other_and_logs_a_warning_when_the_model_stays_invalid_after_the_repair(): void
     {
-        Http::fake(['*' => Http::response($this->completion('definitely billing, I think'))]);
+        Http::fake(['*' => Http::response($this->completion($this->ticketJson('definitely billing, I think')))]);
+        Log::spy();
         $ticket = Ticket::factory()->create(['category' => TicketCategory::Billing]);
 
         TicketReceived::dispatch($ticket);
 
         $this->assertSame(TicketCategory::Other, $ticket->fresh()->category);
-    }
-
-    private function completion(string $content): array
-    {
-        return [
-            'id' => 'chatcmpl-1',
-            'model' => 'llama3.1:8b',
-            'choices' => [
-                [
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => $content,
-                    ],
-                    'finish_reason' => 'stop',
-                ],
-            ],
-            'usage' => [
-                'prompt_tokens' => 120,
-                'completion_tokens' => 1,
-            ],
-        ];
+        Log::shouldHaveReceived('warning')->once();
     }
 }

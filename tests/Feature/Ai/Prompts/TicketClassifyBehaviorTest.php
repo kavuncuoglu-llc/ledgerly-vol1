@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Ai\Prompts;
 
+use App\Ai\Exceptions\EnforcementNotApplied;
 use App\Ai\Http\AiHttpClient;
 use App\Ai\Prompts\TicketClassifyPrompt;
 use App\Ai\Support\ClassifyTicket;
@@ -11,12 +12,14 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
+use Tests\Concerns\FakesChatCompletions;
 use Tests\TestCase;
 
 #[Group('model')]
 #[Group('fake-model')]
 class TicketClassifyBehaviorTest extends TestCase
 {
+    use FakesChatCompletions;
     use RefreshDatabase;
 
     private const FAKE_MODEL_LABELS = [
@@ -46,7 +49,7 @@ class TicketClassifyBehaviorTest extends TestCase
             ],
         )->content;
 
-        $this->assertContains(trim($output), TicketClassifyPrompt::LABELS);
+        $this->assertContains(json_decode($output, true)['category'], TicketClassifyPrompt::LABELS);
     }
 
     #[DataProvider('messages')]
@@ -56,7 +59,7 @@ class TicketClassifyBehaviorTest extends TestCase
 
         $label = app(ClassifyTicket::class)($message);
 
-        $this->assertSame(self::FAKE_MODEL_LABELS[$message], $label);
+        $this->assertSame(self::FAKE_MODEL_LABELS[$message], $label->value);
     }
 
     public static function messages(): array
@@ -67,19 +70,18 @@ class TicketClassifyBehaviorTest extends TestCase
         );
     }
 
-    public function test_the_action_still_returns_an_allowed_label_when_the_fake_model_misbehaves(): void
+    public function test_the_action_reports_a_reply_that_is_not_json_as_a_provider_configuration_problem(): void
     {
         Http::fake(['*' => Http::response($this->completion('I think this is a Billing question, sorry!'))]);
 
-        $label = app(ClassifyTicket::class)('My card was charged twice');
+        $this->expectException(EnforcementNotApplied::class);
 
-        $this->assertContains($label, TicketClassifyPrompt::LABELS);
-        $this->assertSame('other', $label);
+        app(ClassifyTicket::class)('My card was charged twice');
     }
 
     private function fakeScriptedModel(): void
     {
-        Http::fake(fn (Request $request) => Http::response($this->completion($this->fakeModelReply($request))));
+        Http::fake(fn (Request $request) => Http::response($this->completion($this->ticketJson($this->fakeModelReply($request)))));
     }
 
     private function fakeModelReply(Request $request): string
@@ -89,26 +91,5 @@ class TicketClassifyBehaviorTest extends TestCase
         $lastUserTurn = end($messages)['content'];
 
         return self::FAKE_MODEL_LABELS[$lastUserTurn] ?? 'other';
-    }
-
-    private function completion(string $content): array
-    {
-        return [
-            'id' => 'chatcmpl-1',
-            'model' => 'llama3.1:8b',
-            'choices' => [
-                [
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => $content,
-                    ],
-                    'finish_reason' => 'stop',
-                ],
-            ],
-            'usage' => [
-                'prompt_tokens' => 120,
-                'completion_tokens' => 1,
-            ],
-        ];
     }
 }

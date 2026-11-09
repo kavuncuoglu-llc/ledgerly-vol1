@@ -2,14 +2,18 @@
 
 namespace Tests\Feature\Console;
 
+use App\Ai\Exceptions\EnforcementNotApplied;
+use App\Models\ModelCall;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use Tests\Concerns\FakesChatCompletions;
 use Tests\TestCase;
 
 class InvoiceReadCommandTest extends TestCase
 {
+    use FakesChatCompletions;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -19,9 +23,9 @@ class InvoiceReadCommandTest extends TestCase
         Sleep::fake();
     }
 
-    public function test_handle_sends_the_image_as_a_data_url_to_the_vision_model_with_the_deterministic_profile(): void
+    public function test_handle_sends_the_image_as_a_data_url_to_the_vision_model_with_the_invoice_schema(): void
     {
-        Http::fake(['*' => Http::response($this->completion($this->reply(total: 1284.50)))]);
+        Http::fake(['*' => Http::response($this->completion($this->invoiceJson()))]);
 
         $this->artisan('invoice:read', ['path' => storage_path('samples/phone-photo.jpg')])->assertSuccessful();
 
@@ -31,6 +35,7 @@ class InvoiceReadCommandTest extends TestCase
             return $request['model'] === 'llama3.2-vision:11b'
                 && $request['temperature'] === 0
                 && $request['seed'] === 42
+                && $request['response_format']['json_schema']['name'] === 'invoice_data'
                 && $request['messages'][0]['role'] === 'system'
                 && $user['content'][0]['type'] === 'text'
                 && $user['content'][1]['type'] === 'image_url'
@@ -38,9 +43,9 @@ class InvoiceReadCommandTest extends TestCase
         });
     }
 
-    public function test_handle_prints_the_fields_and_confirms_agreeing_totals(): void
+    public function test_handle_prints_the_fields_and_reports_no_repair_when_the_first_answer_is_valid(): void
     {
-        Http::fake(['*' => Http::response($this->completion($this->reply(total: 1284.50)))]);
+        Http::fake(['*' => Http::response($this->completion($this->invoiceJson()))]);
 
         $this->artisan('invoice:read', ['path' => storage_path('samples/phone-photo.jpg')])
             ->expectsTable(
@@ -49,18 +54,21 @@ class InvoiceReadCommandTest extends TestCase
                     ['vendor', 'Northgate Paper Co'],
                     ['invoice #', 'NP-20931'],
                     ['due', '2026-04-15'],
-                    ['total (model)', '1,284.50'],
-                    ['total (lines)', '1,284.50'],
-                    ['agree?', 'yes'],
+                    ['total', '1,284.50'],
+                    ['lines', 4],
+                    ['repaired', 'no'],
                 ],
             )
-            ->expectsOutputToContain('in 742 out 118')
             ->assertSuccessful();
+
+        Http::assertSentCount(1);
     }
 
-    public function test_handle_flags_a_total_that_disagrees_with_the_line_items(): void
+    public function test_handle_repairs_a_misread_total_once_and_reports_it(): void
     {
-        Http::fake(['*' => Http::response($this->completion($this->reply(total: 1204.50)))]);
+        Http::fakeSequence()
+            ->push($this->completion($this->invoiceJson(total: 1204.50)))
+            ->push($this->completion($this->invoiceJson(total: 1284.50)));
 
         $this->artisan('invoice:read', ['path' => storage_path('samples/bad-scan.jpg')])
             ->expectsTable(
@@ -69,21 +77,74 @@ class InvoiceReadCommandTest extends TestCase
                     ['vendor', 'Northgate Paper Co'],
                     ['invoice #', 'NP-20931'],
                     ['due', '2026-04-15'],
-                    ['total (model)', '1,204.50'],
-                    ['total (lines)', '1,284.50'],
-                    ['agree?', 'NO --- review'],
+                    ['total', '1,284.50'],
+                    ['lines', 4],
+                    ['repaired', 'yes'],
                 ],
             )
             ->assertSuccessful();
     }
 
-    public function test_handle_reads_a_json_reply_wrapped_in_a_code_fence(): void
+    public function test_handle_sends_the_validation_errors_back_in_the_repair_turn(): void
     {
-        Http::fake(['*' => Http::response($this->completion("```json\n".$this->reply(total: 1284.50)."\n```"))]);
+        Http::fakeSequence()
+            ->push($this->completion($this->invoiceJson(total: 1204.50)))
+            ->push($this->completion($this->invoiceJson(total: 1284.50)));
 
-        $this->artisan('invoice:read', ['path' => storage_path('samples/phone-photo.jpg')])
-            ->expectsOutputToContain('Northgate Paper Co')
-            ->assertSuccessful();
+        $this->artisan('invoice:read', ['path' => storage_path('samples/bad-scan.jpg')])->assertSuccessful();
+
+        $requests = Http::recorded();
+
+        $repairMessages = $requests[1][0]['messages'];
+
+        $this->assertSame('assistant', $repairMessages[2]['role']);
+        $this->assertSame('user', $repairMessages[3]['role']);
+        $this->assertStringContainsString('Total 1204.50 does not equal 1284.50', $repairMessages[3]['content']);
+    }
+
+    public function test_handle_logs_both_attempts_and_marks_only_the_second_as_repaired(): void
+    {
+        Http::fakeSequence()
+            ->push($this->completion($this->invoiceJson(total: 1204.50)))
+            ->push($this->completion($this->invoiceJson(total: 1284.50)));
+
+        $this->artisan('invoice:read', ['path' => storage_path('samples/bad-scan.jpg')])->assertSuccessful();
+
+        $this->assertSame(
+            [false, true],
+            ModelCall::query()->where('feature', 'invoice.extract')->orderBy('id')->pluck('repaired')->all(),
+        );
+    }
+
+    public function test_handle_fails_when_the_answer_is_still_invalid_after_one_repair(): void
+    {
+        Http::fake(['*' => Http::response($this->completion($this->invoiceJson(total: 1204.50)))]);
+
+        $this->artisan('invoice:read', ['path' => storage_path('samples/bad-scan.jpg')])
+            ->expectsOutputToContain('still invalid after one repair')
+            ->assertFailed();
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_handle_fails_without_a_repair_when_the_model_declines_through_the_error_field(): void
+    {
+        Http::fake(['*' => Http::response($this->completion($this->invoiceJson(error: 'image too blurry to read totals')))]);
+
+        $this->artisan('invoice:read', ['path' => storage_path('samples/bad-scan.jpg')])
+            ->expectsOutputToContain('image too blurry to read totals')
+            ->assertFailed();
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_handle_fails_when_the_reply_is_not_json_because_enforcement_is_off(): void
+    {
+        Http::fake(['*' => Http::response($this->completion('I cannot read this image.'))]);
+
+        $this->expectException(EnforcementNotApplied::class);
+
+        $this->artisan('invoice:read', ['path' => storage_path('samples/phone-photo.jpg')]);
     }
 
     public function test_handle_reads_a_pdf_by_rendering_its_first_page(): void
@@ -92,7 +153,7 @@ class InvoiceReadCommandTest extends TestCase
             $this->markTestSkipped('pdftoppm (Poppler) is not installed.');
         }
 
-        Http::fake(['*' => Http::response($this->completion($this->reply(total: 1284.50)))]);
+        Http::fake(['*' => Http::response($this->completion($this->invoiceJson()))]);
 
         $this->artisan('invoice:read', ['path' => storage_path('samples/clean.pdf')])->assertSuccessful();
 
@@ -110,15 +171,6 @@ class InvoiceReadCommandTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_handle_fails_when_the_reply_has_no_json(): void
-    {
-        Http::fake(['*' => Http::response($this->completion('I cannot read this image.'))]);
-
-        $this->artisan('invoice:read', ['path' => storage_path('samples/phone-photo.jpg')])
-            ->expectsOutputToContain('no JSON object')
-            ->assertFailed();
-    }
-
     public function test_handle_reports_a_model_server_error_and_fails(): void
     {
         Http::fake(['*' => Http::response('model not found', 404)]);
@@ -133,43 +185,5 @@ class InvoiceReadCommandTest extends TestCase
         foreach (['clean.pdf', 'phone-photo.jpg', 'bad-scan.jpg'] as $sample) {
             $this->assertFileExists(storage_path("samples/{$sample}"));
         }
-    }
-
-    private function reply(float $total): string
-    {
-        return json_encode([
-            'vendor_name' => 'Northgate Paper Co',
-            'invoice_number' => 'NP-20931',
-            'invoice_date' => '2026-03-16',
-            'due_date' => '2026-04-15',
-            'currency' => 'USD',
-            'line_items' => [
-                ['description' => 'A4 copy paper', 'quantity' => 40, 'unit_price' => 14.50, 'amount' => 580.00],
-                ['description' => 'Toner cartridge', 'quantity' => 3, 'unit_price' => 89.50, 'amount' => 268.50],
-                ['description' => 'Ring binders', 'quantity' => 120, 'unit_price' => 2.50, 'amount' => 300.00],
-                ['description' => 'Delivery', 'quantity' => 1, 'unit_price' => 136.00, 'amount' => 136.00],
-            ],
-            'subtotal' => 1284.50,
-            'tax' => 0,
-            'total' => $total,
-        ]);
-    }
-
-    private function completion(string $content): array
-    {
-        return [
-            'choices' => [
-                [
-                    'message' => [
-                        'content' => $content,
-                    ],
-                    'finish_reason' => 'stop',
-                ],
-            ],
-            'usage' => [
-                'prompt_tokens' => 742,
-                'completion_tokens' => 118,
-            ],
-        ];
     }
 }

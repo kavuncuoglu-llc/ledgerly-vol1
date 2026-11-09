@@ -2,8 +2,6 @@
 
 namespace App\Ai\Vision;
 
-use App\Ai\Exceptions\UnreadableInvoice;
-
 final class InvoicePrompt
 {
     public static function system(): string
@@ -14,24 +12,32 @@ final class InvoicePrompt
     public static function extract(): string
     {
         return 'Extract vendor_name, invoice_number, invoice_date, due_date, currency, '
-            .'line_items (description, quantity, unit_price, amount), subtotal, tax, total.';
+            .'line_items (description, quantity, unit_price, amount), subtotal, tax, total. '
+            .'If the image cannot be read at all, set error to a short reason and leave the rest null.';
     }
 
-    public static function parse(string $reply): array
+    public static function messages(string $dataUrl): array
     {
-        $start = strpos($reply, '{');
-        $end = strrpos($reply, '}');
-
-        if ($start === false || $end === false || $end < $start) {
-            throw UnreadableInvoice::noJsonInReply();
-        }
-
-        $decoded = json_decode(substr($reply, $start, $end - $start + 1), true);
-
-        if (! is_array($decoded)) {
-            throw UnreadableInvoice::noJsonInReply();
-        }
-
-        return $decoded;
+        return [
+            [
+                'role' => 'system',
+                'content' => self::system(),
+            ],
+            [
+                'role' => 'user',
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => self::extract(),
+                    ],
+                    [
+                        'type' => 'image_url',
+                        'image_url' => [
+                            'url' => $dataUrl,
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

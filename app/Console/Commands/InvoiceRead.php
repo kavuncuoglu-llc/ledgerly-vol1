@@ -3,31 +3,35 @@
 namespace App\Console\Commands;
 
 use App\Ai\Exceptions\ModelRequestFailed;
+use App\Ai\Exceptions\StructuredOutputFailed;
+use App\Ai\Exceptions\StructuredRefusal;
 use App\Ai\Exceptions\UnreadableInvoice;
-use App\Ai\Sampling\ChatSampler;
-use App\Ai\Sampling\SampleResult;
-use App\Ai\Vision\ExtractedInvoice;
+use App\Ai\Schemas\InvoiceData;
+use App\Ai\Structured\StructuredClient;
 use App\Ai\Vision\ImageEncoder;
 use App\Ai\Vision\InvoicePrompt;
 use Illuminate\Console\Command;
 
 class InvoiceRead extends Command
 {
+    private const MISSING = '---';
+
     protected $signature = 'invoice:read {path : An invoice as a PDF or an image}';
 
-    protected $description = 'Read a supplier invoice with a vision model and cross-check its total against the line items';
+    protected $description = 'Read a supplier invoice with a vision model into a validated InvoiceData, repairing it once if validation fails';
 
-    public function handle(ImageEncoder $images, ChatSampler $sampler): int
+    public function handle(ImageEncoder $images, StructuredClient $structured): int
     {
         try {
-            $started = hrtime(true);
-
-            $reply = $this->askVisionModel($images, $sampler, (string) $this->argument('path'));
-
-            $seconds = (hrtime(true) - $started) / 1_000_000_000;
-
-            $invoice = new ExtractedInvoice(InvoicePrompt::parse($reply->content));
-        } catch (UnreadableInvoice|ModelRequestFailed $exception) {
+            $invoice = $structured->extract(
+                class: InvoiceData::class,
+                messages: InvoicePrompt::messages($images->dataUrl((string) $this->argument('path'))),
+                options: [
+                    'model' => config('ai.vision_model'),
+                ],
+                feature: 'invoice.extract',
+            );
+        } catch (UnreadableInvoice|ModelRequestFailed|StructuredOutputFailed|StructuredRefusal $exception) {
             $this->error($exception->getMessage());
 
             return Command::FAILURE;
@@ -35,53 +39,30 @@ class InvoiceRead extends Command
 
         $this->showTable($invoice);
 
-        $this->line(sprintf('in %d out %d · %.1fs', $reply->promptTokens, $reply->completionTokens, $seconds));
-
         return Command::SUCCESS;
     }
 
-    private function askVisionModel(ImageEncoder $images, ChatSampler $sampler, string $path): SampleResult
-    {
-        return $sampler->chat(
-            messages: [
-                [
-                    'role' => 'system',
-                    'content' => InvoicePrompt::system(),
-                ],
-                [
-                    'role' => 'user',
-                    'content' => [
-                        [
-                            'type' => 'text',
-                            'text' => InvoicePrompt::extract(),
-                        ],
-                        [
-                            'type' => 'image_url',
-                            'image_url' => [
-                                'url' => $images->dataUrl($path),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-            parameters: config('ai.profiles.deterministic'),
-            model: config('ai.vision_model'),
-            feature: 'invoice.read',
-        );
-    }
-
-    private function showTable(ExtractedInvoice $invoice): void
+    private function showTable(InvoiceData $invoice): void
     {
         $this->table(
             ['field', 'value'],
             [
-                ['vendor', $invoice->display('vendor_name')],
-                ['invoice #', $invoice->display('invoice_number')],
-                ['due', $invoice->display('due_date')],
-                ['total (model)', $invoice->displayTotal()],
-                ['total (lines)', number_format($invoice->lineItemsTotal(), 2)],
-                ['agree?', $invoice->totalsAgree() ? 'yes' : 'NO --- review'],
+                ['vendor', $invoice->vendor_name ?? self::MISSING],
+                ['invoice #', $invoice->invoice_number ?? self::MISSING],
+                ['due', $invoice->due_date ?? self::MISSING],
+                ['total', $this->formatAmount($invoice->total)],
+                ['lines', count($invoice->line_items)],
+                ['repaired', $invoice->meta->repaired ? 'yes' : 'no'],
             ],
         );
+    }
+
+    private function formatAmount(?float $amount): string
+    {
+        if ($amount === null) {
+            return self::MISSING;
+        }
+
+        return number_format($amount, 2);
     }
 }
