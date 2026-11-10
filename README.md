@@ -6,6 +6,14 @@ Ledgerly is a small, fictional invoicing product with customers, invoices, a 120
 
 The repository is public and free to use. See [LICENSE](LICENSE) for the terms (personal and educational use; not for republishing or resale).
 
+## Links
+
+- **Buy the book:** [Large Language Models for Laravel Developers, Volume 1](https://example.com/PURCHASE-LINK-PLACEHOLDER) (placeholder: replace with the purchase URL)
+- **Book site and errata:** [kavuncuoglu.com](https://kavuncuoglu.com)
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+- **Report a problem:** [GitHub Issues](https://github.com/kavuncuoglu-llc/ledgerly-vol1/issues)
+- **License:** [LICENSE](LICENSE)
+
 ## Chapter tags
 
 Every chapter that changes the app has a Git tag, and `vol2-start` marks the hand-off to Volume 2 (*Running, Training, and Securing Large Language Models*). A tag is the app exactly as that chapter leaves it.
