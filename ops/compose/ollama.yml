@@ -1,0 +1,25 @@
+name: ledgerly
+
+services:
+  ollama:
+    extends:
+      file: ../../docker-compose.yml
+      service: ollama
+    profiles: !override
+      - ollama
+
+  ollama-init:
+    extends:
+      file: ../../docker-compose.yml
+      service: ollama-init
+    profiles: !override
+      - ollama
+    depends_on: !override
+      ollama:
+        condition: service_healthy
+
+networks:
+  internal:
+
+volumes:
+  ollama-models:

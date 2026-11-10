@@ -1,0 +1,15 @@
+name: ledgerly
+
+services:
+  vllm:
+    extends:
+      file: ../../docker-compose.yml
+      service: vllm
+    profiles: !override
+      - vllm
+
+networks:
+  internal:
+
+volumes:
+  vllm-hf-cache:

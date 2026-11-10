@@ -1,0 +1,15 @@
+name: ledgerly
+
+services:
+  triton:
+    extends:
+      file: ../../docker-compose.yml
+      service: triton
+    profiles: !override
+      - triton
+
+networks:
+  internal:
+
+volumes:
+  triton-hf-cache:

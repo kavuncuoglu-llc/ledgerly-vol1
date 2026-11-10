@@ -1,0 +1,24 @@
+name: ledgerly
+
+services:
+  postgres:
+    extends:
+      file: ../../docker-compose.yml
+      service: postgres
+
+  redis:
+    extends:
+      file: ../../docker-compose.yml
+      service: redis
+
+  sidecar:
+    extends:
+      file: ../../docker-compose.yml
+      service: sidecar
+
+networks:
+  internal:
+
+volumes:
+  ledgerly-postgres:
+  ledgerly-redis:

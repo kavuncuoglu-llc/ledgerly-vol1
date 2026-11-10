@@ -1,5 +1,7 @@
 <?php
 
+$ollamaUrl = env('OLLAMA_URL', 'http://localhost:11434/v1');
+
 $localRole = match (env('AI_LOCAL_PROVIDER', 'ollama')) {
     'llama' => 'local-llama',
     'vllm' => 'vllm',
@@ -18,7 +20,7 @@ return [
     'providers' => [
         'local' => [
             'driver' => env('AI_DRIVER', 'openai-compatible'),
-            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'base_url' => env('AI_BASE_URL', $ollamaUrl),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_MODEL', 'llama3.1:8b'),
             'ollama' => env('AI_OLLAMA') === null
@@ -44,7 +46,7 @@ return [
         ],
         'local-embed' => [
             'driver' => 'openai-compatible',
-            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'base_url' => env('AI_BASE_URL', $ollamaUrl),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_EMBED_MODEL', 'nomic-embed-text'),
             'license' => env('AI_EMBED_LICENSE', 'Apache 2.0'),
@@ -57,7 +59,7 @@ return [
         ],
         'vision' => [
             'driver' => 'openai-compatible',
-            'base_url' => env('AI_BASE_URL', 'http://localhost:11434/v1'),
+            'base_url' => env('AI_BASE_URL', $ollamaUrl),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('AI_VISION_MODEL', 'llama3.2-vision:11b'),
             'license' => env('AI_VISION_LICENSE', 'Llama 3.2 Community License'),
@@ -78,7 +80,7 @@ return [
         ],
         'local-70b' => [
             'driver' => 'openai-compatible',
-            'base_url' => env('LOCAL_70B_URL', env('AI_BASE_URL', 'http://localhost:11434/v1')),
+            'base_url' => env('LOCAL_70B_URL', env('AI_BASE_URL', $ollamaUrl)),
             'api_key' => env('AI_API_KEY', 'ollama'),
             'model' => env('LOCAL_70B_MODEL', 'ledgerly-support-70b'),
             'timeout' => (int) env('LOCAL_70B_TIMEOUT', 300),

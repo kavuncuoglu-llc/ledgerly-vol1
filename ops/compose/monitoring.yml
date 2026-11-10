@@ -1,0 +1,25 @@
+name: ledgerly
+
+services:
+  prometheus:
+    extends:
+      file: ../../docker-compose.yml
+      service: prometheus
+    profiles: !override
+      - monitoring
+
+  grafana:
+    extends:
+      file: ../../docker-compose.yml
+      service: grafana
+    profiles: !override
+      - monitoring
+    depends_on: !override
+      - prometheus
+
+networks:
+  internal:
+
+volumes:
+  prometheus-data:
+  grafana-data:

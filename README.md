@@ -185,6 +185,7 @@ If port 5432 or 6379 is already taken on your machine, set `DB_PORT` and `REDIS_
 | `resources/help/{category}/{slug}.md` | The 120 help-center articles |
 | `database/seeders` | Customers, invoices, tickets |
 | `docker-compose.yml` | Postgres with pgvector, Redis and the sidecar, and the opt-in profiles `linux-gpu` (Ollama), `llama-gpu` and `llama-cpu`, `vllm`, `triton` and `monitoring` (Prometheus and Grafana, ch25). Health checks of the inference servers are a real one-token completion with a start period sized for the model load (Ollama's stays `ollama list`, because the init container that creates its models waits on it) |
+| `ops/compose/`, `ops/cloud/gpu-session.sh` | The layout Appendix L's commands use: `base.yml` (Postgres, Redis, sidecar), one file per server (`ollama.yml`, `llama.yml`, `vllm.yml`, `triton.yml`), `monitoring.yml`, `macos.override.yml`, `.env.example` and a `.env` link to the root `.env`. Each service `extends` its definition in the root `docker-compose.yml`, which stays canonical; only the profile names differ (`ollama`, `llama`, `llama-cpu`, `vllm`, `triton`, `monitoring`). Use one layout or the other on a machine, not both: the container names are fixed. `gpu-session.sh` is Appendix L.7's rented-GPU helper (unrun; see the CHANGELOG) |
 | `.env.example` | Points at the Docker services and at Ollama on localhost; `FRONTIER_*` stay empty until you have a cloud key |
 
 ## Tests

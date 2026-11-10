@@ -1,0 +1,19 @@
+name: ledgerly
+
+services:
+  llama:
+    extends:
+      file: ../../docker-compose.yml
+      service: llama
+    profiles: !override
+      - llama
+
+  llama-cpu:
+    extends:
+      file: ../../docker-compose.yml
+      service: llama-cpu
+    profiles: !override
+      - llama-cpu
+
+networks:
+  internal:
